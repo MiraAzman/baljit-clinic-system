@@ -1,0 +1,105 @@
+CREATE DEFINER=`root`@`localhost` PROCEDURE `SP_GET_STOCK_DESPATCH_RPT`(
+IN sMethod         varchar(30),
+IN sDocDateFrom    varchar(20),
+IN sDocDateTo      varchar(20),
+IN sStkCodeFrom    varchar(16),
+IN sStkCodeTo      varchar(16),
+IN sStkTypeFrom    varchar(16),
+IN sStkTypeTo      varchar(16),
+IN sStkGrpFrom     varchar(16),
+IN sStkGrpTo       varchar(16),
+IN sCompCode       varchar(10),
+IN sIssueLoc       varchar(10),
+IN sReceiveLoc     varchar(10),
+IN sStkCat         varchar(6)
+)
+BEGIN
+
+DECLARE _statement VARCHAR(8000);
+
+        IF (sMethod = 'GET_STKDESPATCH_LIST_REPORT') THEN
+
+            SET _statement = 'SELECT DATE(hdr.desh_docdate) AS DocDate, hdr.desh_docno AS DocNo, hdr.desh_company AS CompCode, dtl.desd_stockcode AS StkCode, stk.stk_desc AS StkDesc,
+                              dtl.desd_issuelocation AS IssueLoc, dtl.desd_recievelocation AS ReceiveLoc, dtl.desd_uomcode AS UOM, TRUNCATE(dtl.desd_qty,2) AS DispatchQty, TRUNCATE(dtl.desd_accepted_qty,2) AS AcceptedQty,
+                              dtl.desd_status AS DespStatus, hdr.desh_personid AS DespID, dtl.desd_remarks AS Remarks, TRUNCATE((stk_unitcost*desd_accepted_qty),2) AS StockValue, ';
+
+            SET _statement = CONCAT(_statement,"'",sDocDateFrom,"'", ' AS selDocDateFrom, ' );
+            SET _statement = CONCAT(_statement,"'",sDocDateTo,"'", ' AS selDocDateTo, ' );
+            SET _statement = CONCAT(_statement,"'",sStkCodeFrom,"'", ' AS selStkCodeFrom, ' );
+            SET _statement = CONCAT(_statement,"'",sStkCodeTo,"'", ' AS selStkCodeTo, ' );
+            SET _statement = CONCAT(_statement,"'",sCompCode,"'", ' AS selCompCode, ' );
+            SET _statement = CONCAT(_statement,"'",sIssueLoc,"'", ' AS selIssueLoc, ' );
+            SET _statement = CONCAT(_statement,"'",sReceiveLoc,"'", ' AS selReceiveLoc, ' );
+            SET _statement = CONCAT(_statement, '
+                             CASE
+                                   WHEN ',"'",sStkCat,"'",' =''0'' THEN ''Drug''
+                                   WHEN ',"'",sStkCat,"'",' =''1'' THEN ''Product''
+                                   WHEN ',"'",sStkCat,"'",' =''2'' THEN ''Consumable''
+                                   WHEN ',"'",sStkCat,"'",' ='''' THEN ''Drug / Product / Consumable''
+                             END AS selStkCat ' );
+
+            SET _statement = CONCAT(_statement,'FROM stkt_stockdespatchheader hdr
+                                                LEFT JOIN stkt_stockdespatchdetail dtl ON hdr.desh_despatchhdridx = dtl.desd_despatchhdridx
+                                                LEFT JOIN stkm_stockmaster stk ON dtl.desd_stockcode = stk.stk_stockcode
+                                                WHERE dtl.desd_despatchdtlidx IS NOT NULL' );
+
+            IF (sDocDateFrom <> '') THEN
+                    SET _statement = CONCAT(_statement, ' AND hdr.desh_docdate >= ',"'",sDocDateFrom,"'" );
+            END IF;
+
+            IF (sDocDateTo <> '') THEN
+                    SET _statement = CONCAT(_statement, ' AND hdr.desh_docdate <= ',"'",sDocDateTo," 23:59:59'" );
+            END IF;
+
+            IF (sStkCodeFrom <> '') THEN
+                    SET _statement = CONCAT(_statement, ' AND dtl.desd_stockcode >= ',"'",sStkCodeFrom,"'" );
+                    
+            END IF;
+
+            IF (sStkCodeTo <> '') THEN
+                    SET _statement = CONCAT(_statement, ' AND dtl.desd_stockcode <= ',"'",sStkCodeTo,"'" );
+                    
+            END IF;
+
+            IF  (sStkTypeFrom <> '') THEN
+                    SET _statement = CONCAT(_statement, ' AND stk.stk_typecode >= ',"'", sStkTypeFrom,"'");
+            END IF;
+
+            IF  (sStkTypeTo <> '') THEN
+                    SET _statement = CONCAT(_statement, ' AND stk.stk_typecode <= ',"'", sStkTypeTo,"'");
+            END IF;
+
+            IF  (sStkGrpFrom <> '') THEN
+                    SET _statement = CONCAT(_statement, ' AND stk.stk_groupcode >= ',"'", sStkGrpFrom,"'");
+            END IF;
+
+            IF  (sStkGrpTo <> '') THEN
+                    SET _statement = CONCAT(_statement, ' AND stk.stk_groupcode <= ',"'", sStkGrpTo,"'");
+            END IF;
+
+            IF (sCompCode <> '') THEN
+                    SET _statement = CONCAT(_statement, ' AND hdr.desh_company = ',"'", sCompCode,"'");
+            END IF;
+
+            IF (sIssueLoc <> '') THEN
+                    SET _statement = CONCAT(_statement, ' AND dtl.desd_issuelocation = ',"'", sIssueLoc,"'");
+            END IF;
+
+            IF  (sReceiveLoc <> '') THEN
+                    SET _statement = CONCAT(_statement, ' AND dtl.desd_recievelocation = ',"'", sReceiveLoc,"'");
+            END IF;
+
+            IF  (sStkCat <> '') THEN
+                    SET _statement = CONCAT(_statement, ' AND stk.stk_consumable = ',"'", sStkCat,"'");
+            END IF;
+
+            SET _statement = CONCAT(_statement, ' ORDER BY StkCode, DocDate ' );
+
+      END IF;
+
+SET @statement = _statement;
+PREPARE dynquery FROM @statement;
+EXECUTE dynquery;
+DEALLOCATE PREPARE dynquery;
+
+END

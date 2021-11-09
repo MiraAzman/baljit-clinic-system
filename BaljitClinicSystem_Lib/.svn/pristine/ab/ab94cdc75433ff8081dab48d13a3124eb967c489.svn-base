@@ -1,0 +1,112 @@
+CREATE DEFINER=`root`@`localhost` PROCEDURE `SP_TRX_CHG_ITEM`(
+IN sMethod          varchar(20),
+IN sCI_CIIDX        integer,
+IN sCI_CICATEGORY   varchar(6),
+IN sCI_CICODE       varchar(10),
+IN sCI_CIDESC       varchar(100),
+IN sCI_CIGROUP      varchar(6),
+IN sCI_CICOST       decimal(15,3),
+IN sCI_CIPRICE      decimal(15,3),
+IN sCI_CIPRICE2     decimal(15,3),
+IN sCI_CIPRICE3     decimal(15,3),
+IN sCI_CIPRICE4     decimal(15,3),
+IN sCI_CIISACTIVE   varchar(1),
+IN sCI_CIGSTSUPPTAXCODE varchar(8),
+IN sCI_CIINVGRP     varchar(100),
+IN sCI_CIDEPT       varchar(3),
+IN sCI_CIISADMIN    varchar(1),
+IN sCI_CIBILLMETHOD varchar(4),
+IN sCI_CIREPORTGROUP varchar(6),
+IN sCI_OMEGA        integer,
+IN sCI_CIGRIDTAB    integer,
+IN sCI_CIISSYSTEM   varchar(1),
+IN sBy              varchar(10),
+IN sRecStatus       varchar(4),
+OUT Result          varchar(30))
+BEGIN
+
+        DECLARE _statement VARCHAR(8000);
+
+        IF sMethod = 'ADD_CHG_ITEM' THEN
+
+           IF NOT EXISTS (SELECT ci_cicode FROM stkc_chargeitem WHERE ci_cicode = sCI_CICODE) THEN
+
+              INSERT INTO stkc_chargeitem (
+
+                      ci_cicategory,
+                      ci_cicode,
+                      ci_cidesc,
+                      ci_cigroup,
+                      ci_cicost,
+                      ci_ciprice,
+                      ci_ciprice2,
+                      ci_ciprice3,
+                      ci_ciprice4,
+                      ci_ciisactive,
+                      ci_cigstsupptaxcode,
+                      ci_ciinvgrp,
+                      ci_cidept,
+                      ci_ciisadmin,
+                      ci_cibillmethod,
+                      ci_cireportgroup,
+                      ci_omega,
+                      ci_cigridtab,
+                      ci_ciissystem,
+                      createdby,
+                      createddt,
+                      recstatus)
+
+              VALUES (
+                      sCI_CICATEGORY,
+                      sCI_CICODE,
+                      sCI_CIDESC,
+                      sCI_CIGROUP,
+                      sCI_CICOST,
+                      sCI_CIPRICE,
+                      sCI_CIPRICE2,
+                      sCI_CIPRICE3,
+                      sCI_CIPRICE4,
+                      sCI_CIISACTIVE,
+                      sCI_CIGSTSUPPTAXCODE,
+                      sCI_CIINVGRP,
+                      sCI_CIDEPT,
+                      sCI_CIISADMIN,
+                      sCI_CIBILLMETHOD,
+                      sCI_CIREPORTGROUP,
+                      sCI_OMEGA,
+                      sCI_CIGRIDTAB,
+                      sCI_CIISSYSTEM, 
+                      sBy,
+                      NOW(),
+                      sRecStatus);
+
+                     SELECT '00000' INTO Result;
+           END IF;
+        END IF;
+        
+        IF sMethod = 'EDIT_CHG_ITEM' THEN
+
+                UPDATE stkc_chargeitem
+
+                SET
+                   ci_cidesc = sCI_CIDESC,
+                   ci_cigroup = sCI_CIGROUP,
+                   ci_cicost = sCI_CICOST,
+                   ci_ciprice = sCI_CIPRICE,
+                   ci_ciprice2 = sCI_CIPRICE2,
+                   ci_ciprice3 = sCI_CIPRICE3,
+                   ci_ciprice4 = sCI_CIPRICE4,
+                   ci_ciisactive = sCI_CIISACTIVE,
+                   ci_cigstsupptaxcode = sCI_CIGSTSUPPTAXCODE,
+                   ci_cireportgroup = sCI_CIREPORTGROUP,
+                   modifiedby = sBy,
+                   modifieddt = NOW()
+
+                WHERE ci_ciidx = sCI_CIIDX;
+
+                SELECT '00000' INTO Result;
+
+        END IF;
+
+
+END

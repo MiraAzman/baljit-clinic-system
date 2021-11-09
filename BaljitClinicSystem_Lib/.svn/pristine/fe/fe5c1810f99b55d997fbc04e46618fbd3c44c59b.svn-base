@@ -1,0 +1,43 @@
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package BusinessData;
+
+import java.sql.ResultSet;
+//import BusinessLogic.BLL_CorpProvider;
+import BusinessData.BaseDAL;
+import BusinessLogic.BLL_Common;
+import java.sql.CallableStatement;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.sql.Types;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Iterator;
+
+
+/**
+ *
+ * 1) 2016-01-15 By CPK Add UOM Conversion
+ */
+public class DAL_StockCostQty {
+    BaseDAL DAL = new BaseDAL();
+     
+     
+    
+    
+    public BLL_Common.Common_Object DAL_GET_STOCK_COSTQTY_DETAILS(String SiteName, String[] sIn) {
+         return BaseDAL.Get_Multiple_QueryReturn("SP_GET_STOCK_COSTQTY(?,?,?,?,?,?)", sIn, new int[]{}, SiteName);
+    }
+     
+    public BLL_Common.Common_Object DAL_UPDATE_STOCK_COSTQTY(String SiteName, String[] sIn) {
+         return BaseDAL.Get_Multiple_QueryReturn("SP_TRX_STOCK_COSTQTY("
+                 + "?,?,?,?,?,?,?,?,?,?,"
+                 + "?,?,?,?,?,?,?,?,?,?,"
+                 + "?)"
+                 , sIn, new int[]{java.sql.Types.VARCHAR, java.sql.Types.VARCHAR, java.sql.Types.VARCHAR}, SiteName);
+    }
+    
+}

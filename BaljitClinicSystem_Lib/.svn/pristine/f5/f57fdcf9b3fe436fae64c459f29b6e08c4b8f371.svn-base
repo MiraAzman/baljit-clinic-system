@@ -1,0 +1,26 @@
+package BusinessData;
+
+import BusinessLogic.BLL_Common;
+
+/**
+ *
+ * @author N3355
+ */
+public class DAL_StockReq {
+     BaseDAL DAL = new BaseDAL();
+     
+     public BLL_Common.Common_Object DAL_GET_REQUESTLIST(String SiteName, String[] sIn) {
+        return BaseDAL.Get_Multiple_QueryReturn("SP_GET_STOCKREQ(?,?,?,?,?,?,?,?,?,?,"                  
+                    + "?,?,?)", sIn, new int[]{}, SiteName);
+    }
+     
+     //Kenji Low - Insert Stock Request
+    public BLL_Common.Common_Object DAL_ADDEDIT_STOCKREQ(String SiteName, String[] sStringIn) {
+        return BaseDAL.Get_Multiple_QueryReturn_No_Commit("SP_TRX_STOCKREQ(?,?,?,?,?,?,?,?,?,?,"
+                + "?,?,?,?,?,?,?,?,?,?,"               
+                + "?,?"
+                + ")", sStringIn, new int[]{java.sql.Types.VARCHAR, java.sql.Types.VARCHAR, java.sql.Types.VARCHAR}, SiteName);
+    }
+    //Kenji Low - End Insert Stock Request
+    
+}

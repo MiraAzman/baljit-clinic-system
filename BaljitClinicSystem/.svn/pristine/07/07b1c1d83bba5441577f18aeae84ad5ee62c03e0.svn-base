@@ -1,0 +1,460 @@
+<!-- 
+    by amira, date 19/1/2016
+Modification ID         By      Date        Comment
+-------------------------------------------------------------------------
+yesno01                 Aaron   07Dec2018   include yes-no.jsp in the code
+c01                     Aaron   07Dec2018   add confirmation box and loading status when user try to update existing record 
+c02                     Aaron   17Dec2018   add updateDetail function to be called by SaveDetail()
+font01                  Aaron   18Dec2018   change font style and color
+len01                   Aaron   18Dec2018   set maximum length for textbox 
+state01                 Aaron   18Dec2018   change state from textbox to dropdown list
+re01                    Aaron   02Jan2019   add pagefunction and validation 
+gg01                    Aaron   08Jan2019   add condition to remove box shadow
+-->
+<%@taglib prefix="jstl" uri="http://java.sun.com/jsp/jstl/core" %>
+<jsp:useBean id="DDL" scope="page" class="BusinessLogic.Servlet_PopulateData" />
+<style type="text/css">
+    .ui-jqgrid tr.jqgrow td {
+        word-wrap: break-word; /* IE 5.5+ CSS3 see http://www.w3.org/TR/css3-text/#text-wrap */
+        white-space: pre-wrap; /* CSS3 */
+        white-space: -moz-pre-wrap; /* Mozilla, since 1999 */
+        white-space: -pre-wrap; /* Opera 4-6 */
+        white-space: -o-pre-wrap; /* Opera 7 */
+        overflow: hidden;
+        height: auto;
+        vertical-align: middle;
+        padding-top: 3px;
+        padding-bottom: 3px 
+    }
+    .centered {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        margin-top: -50px;
+        margin-left: -200px;
+    }
+    div.errorContainer, div.errorContainer2{
+        display:none;
+        width:100%;
+    }
+    div.errorContainer, div.errorContainer2 ol li{
+        list-style-type:disc;
+        margin-left: 20px;
+    }
+    li{
+        list-style:none;
+    }
+    .disabledTab{
+        pointer-events: none;
+    }
+    input[type="text"].error { border: 1px solid #A94444; background-color:#FFF0F0; }
+    select.error { border: 1px solid #A94444; background-color:#FFF0F0; }
+    textarea.error { border: 1px solid #A94444; background-color:#FFF0F0; }
+    /*gg01*/
+    input[type="text"]:read-only {box-shadow: none;}
+    textarea:read-only {box-shadow: none;}
+</style>
+<link rel="stylesheet" type="text/css" href="css/your_style.css" />
+<link rel="stylesheet" type="text/css" href="js/plugin/jqgrid/ui.multiselect.css" />
+<section id="widget-grid" class="">
+    <!--<span>{{params}}</span>-->
+    <input type="hidden" value={{params}} id="hidHospCode">
+
+    <div class="col-xs-12 col-sm-7 col-md-7 col-lg-12">
+        <h1 class="page-title txt-color-blueDark">
+            <!-- PAGE HEADER -->
+            <i class="fa-fw fa fa-file fa-2x"></i> 
+            Location Info Setup                                         
+        </h1>
+    </div>
+    <div class="widget-body row">
+        <article class="col-xs-12 col-sm-12 col-md-12 col-lg-12">           
+            <div class="row" style="padding-bottom:10px;padding-left:10px;padding-right:10px;">
+                <div class="errorContainer alert alert-danger alert-block">
+                    <h4 class="alert-heading">There were some field left out or invalid inputs. Please brief through the form and reenter necessarily.</h4>
+                    <ol id="error_list">
+                    </ol>
+                </div>
+            </div>           
+            <div class="row">
+                <form id="form_Loc" name="form_Loc" method="post">
+                    <article class="col-sm-12 col-md-12 col-lg-12">
+                        <div class="jarviswidget jarviswidget-color-blueDark" id="wid-id-1"  data-widget-editbutton="false" data-widget-custombutton="false"
+                             data-widget-deletebutton="false" data-widget-colorbutton="false" data-widget-fullscreenbutton="false" data-widget-togglebutton="false">
+                            <header>
+                                <span class="widget-icon"> <i class="fa fa-file"></i></span>
+                                <span><h2>&nbsp;Information</h2></span>
+                            </header>
+                            <div class="row">
+                                <div class="widget-body">
+
+                                    <table id="tbLocInfo" class="table table-bordered table-striped" style="clear:both;">
+                                        <tbody>
+                                            <tr>
+                                                <td width="12%"><font color = "red">*</font> <b>Company</b></td>  <!--font01-->
+                                                <td width="1%">:</td>
+                                                <td width="35%"> 
+                                                    <select hidden id="ddlComp" name="ddlComp" style="width:410px;">                                  
+                                                    </select>   
+                                                    <input type="text" id="txtComp" name="txtComp" readonly class="tboxreadonly"/>
+                                                </td>
+                                                <td width="12%">Address 1</td>
+                                                <td width="1%">:</td>
+                                                <td width="65%">       
+                                                    <input type="text" id="txtAdd1" name="txtAdd1"  class="form-control" maxlength="50"/> <!--len01-->    
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td><font color="red">*</font> <b>Code</b></td> <!--font01-->
+                                                <td>:</td>
+                                                <td> 
+                                                    <input type="text" id="txtCode" name="txtCode" readonly class="tboxreadonly" />    
+                                                </td>
+                                                <td>Address 2</td>
+                                                <td>:</td>
+                                                <td>       
+                                                    <input type="text" id="txtAdd2" name="txtAdd2"  class="form-control" maxlength="50"/> <!--len01-->    
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td><font color="red">*</font> <b>Name</b></td>   <!--font01-->
+                                                <td>:</td>
+                                                <td> 
+                                                    <input type="text" id="txtName" name="txtName" class="form-control" maxlength="100"/> <!--len01-->    
+                                                </td>
+                                                <td>Address 3</td>
+                                                <td>:</td>
+                                                <td>       
+                                                    <input type="text" id="txtAdd3" name="txtAdd3"  class="form-control" maxlength="50"/> <!--len01-->    
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>Telephone</td>
+                                                <td>:</td>
+                                                <td> 
+                                                    <input type="text" id="txtPhoneNo" name="txtPhoneNo"  class="form-control" maxlength="20"/> <!--len01-->    
+                                                </td>
+                                                <td>Postcode</td>
+                                                <td>:</td>
+                                                <td> 
+                                                    <input type="text" id="txtPostcode" name="txtPostcode" class="form-control" maxlength="10"/>     <!--len01-->
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>Fax</td>
+                                                <td>:</td>
+                                                <td> 
+                                                    <input type="text" id="txtFaxNo" name="txtFaxNo"  class="form-control" maxlength="20"/> <!--len01-->    
+                                                </td>
+                                                <td>Area</td>
+                                                <td>:</td>
+                                                <td> 
+                                                    <label id="selectArea" class="searchbox">
+                                                        <select class="form-control" id="ddlArea" name="ddlArea" rel="popover-hover" data-original-title="Area" data-content="Select Area." style="width:460px;">
+                                                            <option value="">- Select Area -</option>                                       
+                                                        </select>    
+                                                    </label>   
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>Contact Person</td>
+                                                <td>:</td>
+                                                <td> 
+                                                    <input type="text" id="txtContactPerson" name="txtContactPerson"  class="form-control" maxlength="100"/> <!--len01-->    
+                                                </td>
+                                                <td>State</td>
+                                                <td>:</td>
+                                                <td> 
+                                                    <!--state01-->
+                                                    <!--<input type="text" id="txtState" name="txtState"  class="form-control"/>-->
+                                                    <label id="selectState" class="searchbox">
+                                                        <select class="form-control" id="ddlState" name="ddlState" rel="popover-hover" data-original-title="State" data-content="Select State." style="width:460px;">
+                                                            <option value="">- Select State -</option>                                       
+                                                        </select>    
+                                                    </label>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>Active ?</td>
+                                                <td>:</td>
+                                                <td> 
+                                                    <input type="checkbox" id="chkIsActive" name="chkIsActive" value="N" /> 
+                                                </td>
+                                                <td>Country</td>
+                                                <td>:</td>
+                                                <td> 
+                                                    <label id="selectCountry" class="searchbox">
+                                                        <select class="form-control" id="ddlCountry" name="ddlCountry" rel="popover-hover" data-original-title="Country" data-content="Select Country." style="width:460px;">
+                                                            <option value="">- Select Country -</option>                                       
+                                                        </select>    
+                                                    </label>      
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>Remarks</td>
+                                                <td>:</td>
+                                                <td> 
+                                                    <textarea id="txtRemarks" name="txtRemarks"  class="form-control" rows="3" cols="50" maxlength="100"></textarea>   <!--len01--> 
+                                                </td>
+                                                <td>Record Status</td>
+                                                <td>:</td>
+                                                <td> 
+                                                    <input type="checkbox" id="chkrecstatus" name="chkrecstatus" value="0"/>  
+                                                </td>
+                                            </tr>
+                                            
+                                             <tr>
+                                                
+                                                <td>Location Is Main Store</td>
+                                                <td>:</td>
+                                                <td colspan="4"> 
+                                                    <input type="checkbox" id="chkIsMainstore" name="chkIsMainstore" value="N"/>  
+                                                </td>
+                                            </tr>
+                                        </tbody>                                       
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </article>                                   
+                </form>
+            </div>
+        </article>
+                                                
+        <div>
+            <div class="row">
+                <div class="col-sm-12">
+                    <div align="center" class="padding-5" >
+                        <input type="button" Id="btnSave"  class="btn btn-default bg-color-blueDark txt-color-white" value="Save" onclick= "SaveDetail();"/>
+                        <input type="button" Id="btnCancel"  class="btn btn-default bg-color-blueDark txt-color-white"  value="Cancel" onclick="location.href = '#/LocationList'" />
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<jsp:include page="../../includes/loading-no-status.jsp"/>
+<!-- yesno01 --> <!-- Aaron include yes-no.jsp in the code-->
+<jsp:include page="../../../includes/yes-no.jsp"/>
+<script type="text/javascript">
+    pageSetUp();
+    
+    getDLL("ddlComp", "GET_COMP", "", "");
+    getDLL("ddlState", "GET_CODEDESC", "STATE", ""); //state01
+    getDLL("ddlArea", "GET_CODEDESC", "AREA", "");
+    getDLL("ddlCountry", "GET_CODEDESC", "COU", "");
+
+    function getDLL (ddl, method, param1, param2) {
+        $.get('${pageContext.request.contextPath}/Servlet_PopulateData', {SFC: 'GET_DLL', METHOD: method, P1: param1, P2: param2}, function (data) {
+            for(var i=0; i < data.length; i++){                                                          
+                $("#"+ddl).append($("<option>").val(data[i].VALUE).html(data[i].TEXT));
+            }     
+        });     
+    }          
+    
+    function bindData(sParam) {
+        
+        $(document).ready(function() {
+
+            $("#chkrecstatus").click(function(){
+                if ( $('#chkrecstatus').is(":checked") )
+                    $('#chkrecstatus').val('1'); 
+                else
+                    $('#chkrecstatus').val('0');            
+            });
+
+            $("#chkIsActive").click(function(){
+                if ( $('#chkIsActive').is(":checked") )
+                    $('#chkIsActive').val('Y'); 
+                else
+                    $('#chkIsActive').val('N');            
+            });
+            
+            $("#chkIsMainstore").click(function(){
+                if ( $('#chkIsMainstore').is(":checked") )
+                    $('#chkIsMainstore').val('Y'); 
+                else
+                    $('#chkIsMainstore').val('N');            
+            });
+
+            strCode = sParam.LOCCODE;
+            strCompCode = sParam.COMPCODE;          
+            $.ajax({
+                type:'POST',
+                url:"${pageContext.request.contextPath}/Servlet_Stock",
+                data:  {
+                    SFC: 'VIEW_LOC_DETAIL', 
+                    CODE: strCode,
+                    COMPCODE: strCompCode                   
+                },
+                dataType: 'json',
+                success: function(data) {               
+                            var arrData = data.object1[0];
+
+                            $('#ddlComp').val(arrData.loc_companycode);
+                            $('#txtCode').val(arrData.loc_code);
+                            $('#txtName').val(arrData.loc_name); 
+                            $('#txtAdd1').val(arrData.loc_add1);
+                            $('#txtAdd2').val(arrData.loc_add2);
+                            $('#txtAdd3').val(arrData.loc_add3);
+                            $('#txtPostcode').val(arrData.loc_postcode);
+                            $('#ddlState').val(arrData.loc_statecode); //state01
+                            $('#txtPhoneNo').val(arrData.loc_telephone);
+                            $('#txtFaxNo').val(arrData.loc_fax);
+                            $('#txtRemarks').val(arrData.loc_remarks);
+                            $('#txtContactPerson').val(arrData.loc_contactperson);                        
+                            $('#ddlArea').val(arrData.loc_areacode);
+                            $('#ddlCountry').val(arrData.loc_countrycode);
+
+                            if(arrData.loc_isactive === 'Y'){ 
+                                $('#chkIsActive').prop('checked', true); 
+                                $('#chkIsActive').val('Y');
+                            } else 
+                                $('#chkIsActive').val('N');
+
+                            if(arrData.recstatus === '1'){ 
+                                $('#chkrecstatus').prop('checked', true); 
+                                $('#chkrecstatus').val('1');
+                            } else 
+                                $('#chkrecstatus').val('0');
+                            
+                             if(arrData.loc_ismainstore === 'Y'){ 
+                                $('#chkIsMainstore').prop('checked', true); 
+                                $('#chkIsMainstore').val('Y');
+                            } else 
+                                $('#chkIsMainstore').val('N');
+
+                            $("#txtComp").val($('#ddlComp option:selected').text());
+                            //alert("view detail request SUCCESS "); 
+                        }      
+                //error:  AjaxError
+            });         
+        }); 
+    }
+    //re01
+    var pagefunction = function(){
+    
+        var container = $('div.errorContainer');
+        var validator = $("#form_Loc").validate({
+                rules: {
+                    txtName: "required"  //txt01
+                },
+                messages: {
+                    txtName: "Name cannot be blank" //txt01
+                },
+                errorContainer: container,
+                errorLabelContainer: $("ol", container),
+                wrapper: 'li'
+            });  
+    };
+    pagefunction();
+    function SaveDetail(){
+    
+        var $validItem = $("#form_Loc").valid();  //re01
+        
+        if ($validItem === true){
+        document.getElementById("btnSave").disabled = true;
+        //c01
+        //Aaron
+        //add confirmation box and loading status when user try to update the existing record
+        showYesNo({
+                title: "Confirmation needed",
+                width: 420,
+                noClose: true,
+                isModal: true,
+                body: [
+                "<br><h4>Are you sure to proceed this action?<h4><br>"
+                ],
+                show: function(){},
+                Yes: {
+                    text: "Yes",
+                    opt: function(){
+                    updateDetail();  //c02
+                    hideYesNo();
+                }
+                },
+                No:{
+                    text: "No",
+                    opt: function(){
+                        document.getElementById("btnSave").disabled = false
+                        hideYesNo();
+                    }
+                }
+            });
+        }
+    }
+        
+        //c01
+        //Aaron
+        
+        //c02
+        //Aaron
+        function updateDetail(){
+        var $this = $(this);
+        $.ajax({
+            type:'POST',
+            url:"${pageContext.request.contextPath}/Servlet_Stock",
+            data:  {
+                FUNCTION: 'EDIT',
+                SFC: 'UPDATE_LOCATION', 
+                CODE: $('#txtCode').val(),
+                COMPCODE: $('#ddlComp option:selected').val(),
+                NAME: $('#txtName').val(),
+                ADD1: $('#txtAdd1').val(),
+                ADD2: $('#txtAdd2').val(),
+                ADD3: $('#txtAdd3').val(),
+                POSTCODE: $('#txtPostcode').val(),
+                AREA: $('#ddlArea').val(),
+                STATE: $('#ddlState').val(), //state01
+                COUNTRY: $('#ddlCountry').val(),
+                TEL: $('#txtPhoneNo').val(),
+                FAX: $('#txtFaxNo').val(),
+                REMARKS: $('#txtRemarks').val(),
+                CONTACTPER: $('#txtContactPerson').val(),
+                ISACTIVE: $("#chkIsActive").val(),
+                recstatus: $("#chkrecstatus").val(),
+                ISMAINSTORE:  $("#chkIsMainstore").val()
+            },
+            dataType: 'json',
+            beforeSend: function(xhr){
+                $.showLoadingNoStatus();  
+            },
+            success: function(response, status, xhr) {
+                if (response.bool === true) {
+                    $.bigBoxSuccess({
+                        title: "Saved Successfully.",
+                        content: "Details updated.",
+                        timeout: 6000
+                    });
+                } 
+                else {
+                    $.bigBoxFail({
+                        title: "Details Update FAIL.",
+                        content: "There is some error when updating details.<br> Please try again...",
+                        timeout: 6000
+                    });
+                }       
+            },
+            error: function (xhr, status, error) {
+                $.bigBoxFail({
+                    title: "Transaction ERROR",
+                    content: "There is some error occur during data transfer. Please try again later",
+                    timeout: 6000
+                });
+            },
+            complete: function (xhr, status) {
+                if (xhr.status === 200) {
+                    $.hideLoadingNoStatus(function () {
+                       window.location.href = "#/LocationList";
+                    }, 500);
+                } else {
+                    $.hideLoadingNoStatus(function () {
+                    }, 0);
+                }
+            }
+        });
+    }
+    //c02
+    //Aaron
+</script>

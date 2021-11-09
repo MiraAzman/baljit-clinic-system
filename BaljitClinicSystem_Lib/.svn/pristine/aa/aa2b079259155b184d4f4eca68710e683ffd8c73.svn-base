@@ -1,0 +1,153 @@
+CREATE DEFINER=`root`@`localhost` PROCEDURE `SP_GET_CHG_ITEM`(
+IN sMethod          varchar(20),
+IN sCI_CIIDX        integer,
+IN sCI_CICATEGORY   varchar(6),
+IN sCI_CICODE       varchar(10),
+IN sCI_CIDESC       varchar(100),
+IN sPage            varchar(10),
+IN sPerPage         varchar(10))
+BEGIN
+
+       DECLARE _statement VARCHAR(8000);
+       DECLARE isString VARCHAR(1);
+
+       SET isString = 'Y';
+
+       IF sMethod = 'GET_CHGITEM_LIST' THEN
+
+                SET _statement = ' SELECT *, TRUNCATE(ci_ciprice,2) AS Price FROM stkc_chargeitem
+                                   WHERE ci_ciidx IS NOT NULL';
+
+                IF (sCI_CICATEGORY <> '') THEN
+                        SET _statement = CONCAT(_statement, ' AND ci_cicategory = ',"'",sCI_CICATEGORY,"'");
+                END IF;
+
+                IF (sCI_CICODE <> '') THEN
+                        SET _statement = CONCAT(_statement, ' AND ci_cicode LIKE ',"'%",sCI_CICODE,"%'");
+                END IF;
+
+                IF (sCI_CIDESC <> '') THEN
+                        SET _statement = CONCAT(_statement, ' AND ci_cidesc LIKE ',"'%",sCI_CIDESC,"%'");
+                END IF;
+
+                SET _statement = CONCAT(_statement, ' ORDER BY ci_cicode');
+                SET _statement = CONCAT(_statement, ' LIMIT ',  (sPage - 1) * sPerPage, ",", sPerPage );
+
+        END IF;
+
+        IF sMethod = 'COUNT_CHGITEM_LIST' THEN
+
+                SET _statement = ' SELECT Count(ci_cicode) as Total
+                                   FROM stkc_chargeitem
+                                   WHERE ci_ciidx IS NOT NULL';
+
+                IF (sCI_CICATEGORY <> '') THEN
+                        SET _statement = CONCAT(_statement, ' AND ci_cicategory = ',"'",sCI_CICATEGORY,"'");
+                END IF;
+
+                IF (sCI_CICODE <> '') THEN
+                        SET _statement = CONCAT(_statement, ' AND ci_cicode LIKE ',"'%",sCI_CICODE,"%'");
+                END IF;
+
+                IF (sCI_CIDESC <> '') THEN
+                        SET _statement = CONCAT(_statement, ' AND ci_cidesc LIKE ',"'%",sCI_CIDESC,"%'");
+                END IF;
+
+        END IF;
+
+         IF sMethod = 'GET_CHGITEM_DETAIL' THEN
+
+                SET _statement = ' SELECT ci_ciidx, ci_cicode, ci_cidesc, ci_cigroup, ci_cigstsupptaxcode,
+                                          ci_cicost, ci_ciisactive, ci_ciprice, ci_ciprice2, ci_ciprice3, ci_ciprice4 , ci_cireportgroup
+                                   FROM stkc_chargeitem';
+
+                SET _statement = CONCAT(_statement, ' WHERE ci_ciidx = ', "'",sCI_CIIDX, "'");
+
+        END IF;
+
+        IF sMethod = 'GET_DATAEX' THEN
+         SET isString = 'N';
+
+                SELECT * FROM stkc_chargeitem WHERE ci_cicode = sCI_CICODE;
+
+                /* SELECT IFNULL(wsc_url,'') AS wsc_url FROM wsm_config WHERE wsc_url is not null AND wsc_url <> ''; */
+                
+                SELECT IFNULL(wsc_url,'') AS wsc_url, IFNULL(wsc_companycode,'') AS wsc_companycode
+     , IFNULL(wsc_locationcode,'') AS wsc_locationcode
+     FROM wsm_config; /* WHERE wsc_url is not null AND wsc_url <> ''; */
+        END IF;
+
+        IF sMethod = 'GET_CHGITEM_HIS' THEN
+
+                SET _statement = ' SELECT DISTINCT(bld_chgcode), bld_chgdesc, bld_category, bld_uom, bld_chggrp
+                                   FROM his_billdetail
+                                   WHERE bld_idx IS NOT NULL ';
+
+                IF (sCI_CICODE <> '') THEN
+                        SET _statement = CONCAT(_statement, ' AND bld_chgcode LIKE ',"'%",sCI_CICODE,"%'");
+                END IF;
+
+                IF (sCI_CIDESC <> '') THEN
+                        SET _statement = CONCAT(_statement, ' AND bld_chgdesc LIKE ',"'%",sCI_CIDESC,"%'");
+                END IF;
+
+                SET _statement = CONCAT(_statement, ' ORDER BY bld_chgdesc');
+                SET _statement = CONCAT(_statement, ' LIMIT ',  (sPage - 1) * sPerPage, ",", sPerPage );
+        END IF;
+
+        IF sMethod = 'COUNT_CHGITEM_HIS' THEN
+
+                SET _statement = ' SELECT Count(DISTINCT(bld_chgcode)) as Total
+                                   FROM his_billdetail
+                                   WHERE bld_idx IS NOT NULL';
+
+                IF (sCI_CICODE <> '') THEN
+                        SET _statement = CONCAT(_statement, ' AND bld_chgcode LIKE ',"'%",sCI_CICODE,"%'");
+                END IF;
+
+                IF (sCI_CIDESC <> '') THEN
+                        SET _statement = CONCAT(_statement, ' AND bld_chgdesc LIKE ',"'%",sCI_CIDESC,"%'");
+                END IF;
+        END IF;
+
+        IF sMethod = 'GET_CHGGROUP_HIS' THEN
+
+                SET _statement = ' SELECT DISTINCT(bld_chggrp), cd_cddesc
+                                   FROM his_billdetail
+                                   LEFT JOIN stkc_codedesc ON bld_chggrp = cd_cdcode
+                                   WHERE bld_idx IS NOT NULL ';
+
+                IF (sCI_CICODE <> '') THEN
+                        SET _statement = CONCAT(_statement, ' AND bld_chggrp LIKE ',"'%",sCI_CICODE,"%'");
+                END IF;
+
+                IF (sCI_CIDESC <> '') THEN
+                        SET _statement = CONCAT(_statement, ' AND cd_cddesc LIKE ',"'%",sCI_CIDESC,"%'");
+                END IF;
+
+                SET _statement = CONCAT(_statement, ' ORDER BY cd_cddesc');
+                SET _statement = CONCAT(_statement, ' LIMIT ',  (sPage - 1) * sPerPage, ",", sPerPage );
+        END IF;
+
+        IF sMethod = 'COUNT_CHGGROUP_HIS' THEN
+
+                SET _statement = ' SELECT Count(DISTINCT(bld_chggrp)) as Total FROM his_billdetail
+                                   LEFT JOIN stkc_codedesc ON bld_chggrp = cd_cdcode WHERE bld_idx IS NOT NULL';
+
+                IF (sCI_CICODE <> '') THEN
+                        SET _statement = CONCAT(_statement, ' AND bld_chggrp LIKE ',"'%",sCI_CICODE,"%'");
+                END IF;
+
+                IF (sCI_CIDESC <> '') THEN
+                        SET _statement = CONCAT(_statement, ' AND cd_cddesc LIKE ',"'%",sCI_CIDESC,"%'");
+                END IF;
+        END IF;
+
+        IF isString = 'Y' THEN
+         SET @statement = _statement;
+         PREPARE dynquery FROM @statement;
+         EXECUTE dynquery;
+         DEALLOCATE PREPARE dynquery;
+        END IF;
+
+END

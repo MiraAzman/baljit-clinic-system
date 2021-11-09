@@ -1,0 +1,534 @@
+CREATE DEFINER=`root`@`localhost` PROCEDURE `SP_GET_STOCK_LEDGER`(
+IN sMethod          varchar(30) ,
+IN sDateFrom         varchar(20),
+IN sDateTo         varchar(20),
+IN sStkCodeFrom         varchar(20),
+IN sStkCodeTo         varchar(20),
+IN sCompCode        varchar(20),
+IN sLocCode         varchar(20),
+
+IN sIsActive         varchar(2),
+IN sConsumable        varchar(10),
+IN sStkTypeFrom         varchar(10),
+IN sStkTypeTo         varchar(10),
+IN sStkGrpFrom         varchar(10),
+IN sStkGrpTo         varchar(10)
+
+)
+BEGIN
+
+ DECLARE lockTime    VARCHAR(20);
+ DECLARE _statement         VARCHAR(8000);
+ DECLARE _CosttingMethod    VARCHAR(10);
+
+ DECLARE vLoc VARCHAR(20);
+ DECLARE vHdrIdx integer;
+ DECLARE done INT DEFAULT FALSE;
+
+ DECLARE cursor_dataex CURSOR FOR
+         select distinct d.sldl_stockledgerhdridx, d.sldl_location from  stkt_stockledgerdetail d
+                WHERE d.dataexchangestatus = "I" AND d.dataexchangelocked is null
+                        and d.sldl_location in (select wsc_locationcode from wsm_config);
+        DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = TRUE;                        
+
+ set  _CosttingMethod = F_GET_APPLICATION_SETTING('APP_COSTING_METHOD');
+
+   IF sMethod = 'GET_DATAEX_NEW_RESERVED' THEN
+
+              SET lockTime = now();
+
+            /*
+                 DECLARE cursor_i CURSOR FOR
+                select distinct d.sldl_stockledgerhdridx, d.sldl_location from  stkt_stockledgerdetail d
+                WHERE d.dataexchangestatus = "I" AND d.dataexchangelocked is null
+                        and d.sldl_location in (select wsc_locationcode from wsm_config);
+                         DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = TRUE;
+
+                         OPEN cursor_i;
+
+                read_loop: LOOP
+                FETCH cursor_i INTO vHdrIdx, vLoc;
+                        IF done THEN
+                                LEAVE read_loop;
+                        END IF;
+
+                        UPDATE stkt_stockledgerheader h
+                              SET h.dataexchangelocked = lockTime
+                              WHERE h.dataexchangestatus = 'I' AND h.dataexchangelocked is null
+                        and h.sldg_stockledgerhdridx = vHdrIdx;
+
+                        UPDATE stkt_stockledgerdetail d
+                              SET d.dataexchangelocked = lockTime
+                              WHERE d.dataexchangestatus = 'I' AND d.dataexchangelocked is null
+                              and d.sldl_stockledgerhdridx = vHdrIdx
+                              and d.sldl_location = vLoc;
+
+                END LOOP;
+
+         CLOSE cursor_i;
+
+          */
+
+          /*  only update details because one header could tie to multiple details of different branch which require Dataexchange */
+          /*  this update is to avoid unnecessary overhead over requery record with DE Status I */
+          update stkt_stockledgerdetail d set d.dataexchangestatus = "N"
+                where d.dataexchangestatus = "I" AND d.dataexchangelocked is null
+                        and d.sldl_location not in (select wsc_locationcode from wsm_config);
+
+          OPEN cursor_dataex;
+
+                read_loop: LOOP
+                FETCH cursor_dataex INTO vHdrIdx, vLoc;
+                        IF done THEN
+                                LEAVE read_loop;
+                        END IF;
+
+                        UPDATE stkt_stockledgerheader h
+                              SET h.dataexchangelocked = lockTime
+                              WHERE h.dataexchangestatus = 'I' AND h.dataexchangelocked is null
+                        and h.sldg_stockledgerhdridx = vHdrIdx;
+
+                        UPDATE stkt_stockledgerdetail d
+                              SET d.dataexchangelocked = lockTime
+                              WHERE d.dataexchangestatus = 'I' AND d.dataexchangelocked is null
+                              and d.sldl_stockledgerhdridx = vHdrIdx
+                              and d.sldl_location = vLoc;
+
+                END LOOP;
+
+         CLOSE cursor_dataex;
+
+
+
+
+
+
+
+         --
+
+
+              -- DROP TEMPORARY TABLE IF EXISTS temp_stkldgidx;
+
+              -- set _statement = 'create temporary table temp_stkldgidx ( select d.sldl_stockledgerhdridx hdridx, d.sldl_location from  stkt_stockledgerdetail d
+              --  WHERE d.dataexchangestatus = "I" AND d.dataexchangelocked is null
+              --          and d.sldl_location in (select wsc_locationcode from wsm_config); )';
+
+              -- UPDATE stkt_stockledgerheader h
+              --         SET h.dataexchangelocked = lockTime
+              -- WHERE h.dataexchangestatus = 'I' AND h.dataexchangelocked is null
+              --   and h.sldg_stockledgerhdridx in (select hdridx from temp_stkldgidx);
+
+              -- UPDATE stkt_stockledgerdetail d
+              --        SET d.dataexchangelocked = lockTime
+              -- WHERE h.dataexchangestatus = 'I' AND h.dataexchangelocked is null
+              --  and h.sldl_stockledgerhdridx in (select hdridx from temp_stkldgidx);
+
+            -- UPDATE stkt_stockledgerheader h LEFT OUTER JOIN stkt_stockledgerdetail d
+            --        ON h.sldg_stockledgerhdridx = d.sldl_stockledgerhdridx AND d.dataexchangestatus = 'I'
+            -- LEFT OUTER JOIN wsm_config
+            --        ON d.sldl_location = wsc_locationcode
+            -- SET h.dataexchangelocked = lockTime, d.dataexchangelocked = lockTime
+            -- WHERE h.dataexchangestatus = 'I' AND (h.dataexchangelocked is null) AND wsc_locationcode IS NOT NULL;
+
+
+            SELECT *, IFNULL(wsc_locationcode,'') as wsc_locationcode, IFNULL(wsc_url,'') as wsc_url,
+            IFNULL(wsc_userid,'') as wsc_userid, IFNULL(wsc_password,'') as wsc_password, d.sldl_location as Location
+   FROM stkt_stockledgerheader h LEFT OUTER JOIN stkt_stockledgerdetail d
+   ON h.sldg_stockledgerhdridx = d.sldl_stockledgerhdridx AND d.dataexchangestatus = 'I'
+   LEFT OUTER JOIN wsm_config
+   ON d.sldl_location = wsc_locationcode
+            WHERE h.dataexchangestatus = 'I' AND h.dataexchangelocked = lockTime
+            ORDER by h.sldg_stockledgerhdridx;
+             
+            SELECT DISTINCT d.sldl_location as Location, wsc_url, wsc_userid, wsc_password
+            FROM stkt_stockledgerheader h LEFT OUTER JOIN stkt_stockledgerdetail d
+            ON h.sldg_stockledgerhdridx = d.sldl_stockledgerhdridx AND d.dataexchangestatus = 'I'
+            LEFT OUTER JOIN wsm_config
+            ON d.sldl_location = wsc_locationcode
+            WHERE h.dataexchangestatus = 'I' AND h.dataexchangelocked = lockTime AND wsc_locationcode IS NOT NULL;
+
+   END IF;
+
+   IF sMethod = 'GET_DATAEX' THEN
+   SET lockTime = now();
+
+            UPDATE stkt_stockledgerheader h LEFT OUTER JOIN stkt_stockledgerdetail d
+   ON h.sldg_stockledgerhdridx = d.sldl_stockledgerhdridx AND d.dataexchangestatus = 'I'
+            LEFT OUTER JOIN wsm_config
+   ON d.sldl_location = wsc_locationcode
+            SET h.dataexchangelocked = lockTime, d.dataexchangelocked = lockTime
+            WHERE h.dataexchangestatus = 'I' AND  wsc_locationcode IS NOT NULL;
+
+            SELECT *, IFNULL(wsc_locationcode,'') as wsc_locationcode, IFNULL(wsc_url,'') as wsc_url,
+            IFNULL(wsc_userid,'') as wsc_userid, IFNULL(wsc_password,'') as wsc_password, d.sldl_location as Location
+   FROM stkt_stockledgerheader h LEFT OUTER JOIN stkt_stockledgerdetail d
+   ON h.sldg_stockledgerhdridx = d.sldl_stockledgerhdridx AND d.dataexchangestatus = 'I' 
+   LEFT OUTER JOIN wsm_config
+   ON d.sldl_location = wsc_locationcode
+            WHERE h.dataexchangestatus = 'I' AND h.dataexchangelocked = lockTime
+            ORDER by h.sldg_stockledgerhdridx;
+
+            SELECT DISTINCT d.sldl_location as Location, wsc_url, wsc_userid, wsc_password
+            FROM stkt_stockledgerheader h LEFT OUTER JOIN stkt_stockledgerdetail d
+            ON h.sldg_stockledgerhdridx = d.sldl_stockledgerhdridx AND d.dataexchangestatus = 'I'
+            LEFT OUTER JOIN wsm_config
+            ON d.sldl_location = wsc_locationcode
+            WHERE h.dataexchangestatus = 'I' AND h.dataexchangelocked = lockTime AND wsc_locationcode IS NOT NULL;
+
+   END IF;
+
+   IF sMethod = 'GET_DATAEX_24APR2017' THEN
+   SET lockTime = now();
+
+            UPDATE stkt_stockledgerheader h LEFT OUTER JOIN stkt_stockledgerdetail d
+   ON h.sldg_stockledgerhdridx = d.sldl_stockledgerhdridx AND d.dataexchangestatus = 'I'
+            LEFT OUTER JOIN wsm_config
+   ON d.sldl_location = wsc_locationcode
+            SET h.dataexchangelocked = lockTime, d.dataexchangelocked = lockTime
+            WHERE h.dataexchangestatus = 'I' AND (h.dataexchangelocked is null) AND wsc_locationcode IS NOT NULL;
+
+            SELECT *, IFNULL(wsc_locationcode,'') as wsc_locationcode, IFNULL(wsc_url,'') as wsc_url,
+            IFNULL(wsc_userid,'') as wsc_userid, IFNULL(wsc_password,'') as wsc_password, d.sldl_location as Location
+   FROM stkt_stockledgerheader h LEFT OUTER JOIN stkt_stockledgerdetail d
+   ON h.sldg_stockledgerhdridx = d.sldl_stockledgerhdridx AND d.dataexchangestatus = 'I' 
+   LEFT OUTER JOIN wsm_config
+   ON d.sldl_location = wsc_locationcode
+            WHERE h.dataexchangestatus = 'I' AND h.dataexchangelocked = lockTime
+            ORDER by h.sldg_stockledgerhdridx;
+            
+            SELECT DISTINCT d.sldl_location as Location, wsc_url, wsc_userid, wsc_password
+            FROM stkt_stockledgerheader h LEFT OUTER JOIN stkt_stockledgerdetail d
+            ON h.sldg_stockledgerhdridx = d.sldl_stockledgerhdridx AND d.dataexchangestatus = 'I'
+            LEFT OUTER JOIN wsm_config
+            ON d.sldl_location = wsc_locationcode
+            WHERE h.dataexchangestatus = 'I' AND h.dataexchangelocked = lockTime AND wsc_locationcode IS NOT NULL;
+
+   END IF;
+
+   IF (sMethod = 'GET_MOVEMENT_DETAILS_BAK') THEN
+
+
+              set _statement = 'select
+                h.sldg_stockledgerhdridx AS HdrIdx,
+                h.sldg_docdate as DocDate,
+                h.sldg_company as Company,
+
+                d.sldl_location AS Location,
+                h.sldg_trxtype as TrxType,
+
+                F_GET_OPENING_BALANCE_BY_LOCATION(s.stk_baseuomcode, d.sldl_stockcode, h.sldg_company, d.sldl_location, ';
+
+                 if sDateFrom = '' THEN
+                         set _statement = concat(_statement, '"', now(), '") as OPENING_QTY,');
+                 ELSE
+                        set _statement = concat(_statement, '"', sDateFrom, '") as OPENING_QTY,');
+                 END IF;
+                 
+                         set _statement = concat(_statement,  ' F_GET_CLOSING_VALUE(', _CosttingMethod, "',", ' d.sldl_stockcode, h.sldg_company, d.sldl_location, ', "'", sDateFrom, "',", "'", sDateFrom, "')" );
+                 
+
+                 
+
+                set _statement = concat(_statement, 'IF(h.sldg_trxtype = "XFR" or h.sldg_trxtype = "XFRD", F_CONVERT_UOM( IFNULL(d.sldl_qty,0) + IFNULL(d.sldl_bonusqty,0) , s.stk_baseuomcode, d.sldl_uomcode, d.sldl_stockcode) , 0) as XFR_QTY,
+
+                IF(h.sldg_trxtype = "GRN", F_CONVERT_UOM( IFNULL(d.sldl_qty,0) + IFNULL(d.sldl_bonusqty,0) , s.stk_baseuomcode, d.sldl_uomcode, d.sldl_stockcode) , 0) as GRN_QTY,
+
+                IF(h.sldg_trxtype = "DISP", F_CONVERT_UOM( IFNULL(d.sldl_qty,0) + IFNULL(d.sldl_bonusqty,0) , s.stk_baseuomcode, d.sldl_uomcode, d.sldl_stockcode) , 0) as DISP_QTY,
+
+                IF(h.sldg_trxtype = "SALE", F_CONVERT_UOM( IFNULL(d.sldl_qty,0) + IFNULL(d.sldl_bonusqty,0) , s.stk_baseuomcode, d.sldl_uomcode, d.sldl_stockcode) , 0) as SALE_QTY,
+
+                IF(h.sldg_trxtype = "RETURN", F_CONVERT_UOM( IFNULL(d.sldl_qty,0) + IFNULL(d.sldl_bonusqty,0) , s.stk_baseuomcode, d.sldl_uomcode, d.sldl_stockcode ) , 0) as RETURN_QTY,
+
+                IF(h.sldg_trxtype = "ADJ", F_CONVERT_UOM( IFNULL(d.sldl_qty,0) + IFNULL(d.sldl_bonusqty,0) , s.stk_baseuomcode, d.sldl_uomcode, d.sldl_stockcode ) , 0) as ADJ_QTY,
+
+                IF(h.sldg_trxtype = "WROFF", F_CONVERT_UOM( IFNULL(d.sldl_qty,0) + IFNULL(d.sldl_bonusqty,0) , s.stk_baseuomcode, d.sldl_uomcode, d.sldl_stockcode) , 0) as WRITEOFF_QTY,
+                F_CONVERT_UOM( IFNULL(d.sldl_qty,0) + IFNULL(d.sldl_bonusqty,0) , s.stk_baseuomcode, d.sldl_uomcode, d.sldl_stockcode)  as QTY ,
+                d.sldl_stockcode as StockCode,
+                s.stk_baseuomcode as BaseUOM,
+                s.stk_desc as StockDesc, s.stk_isactive as IsActive,
+                s.stk_consumable as Consumable,
+                s.stk_groupcode as StockGroup,
+                s.stk_typecode as StockType,
+                d.sldl_stockledgerdtlidx as DtlIdx,
+                d.sldl_uomcode as UOM,
+                d.sldl_qty AS Qty,
+                d.sldl_bonusqty as Bonus_Qty
+
+                from stkt_stockledgerheader h
+                left join stkt_stockledgerdetail d on d.sldl_stockledgerhdridx = h.sldg_stockledgerhdridx
+                left join stkm_stockmaster s on s.stk_stockcode = d.sldl_stockcode
+                WHERE IFNULL(d.sldl_qty,0) + IFNULL(d.sldl_bonusqty,0) <> 0 ');
+
+                if (sCompCode <> '') THEN
+                        set  _statement = concat(_statement, ' and h.sldg_company ="', sCompCode, '"');
+                END IF;
+                if (sLocCode <> '') THEN
+                        set  _statement = concat(_statement, ' and d.sldl_location = "', sLocCode, '"');
+                END IF;
+
+                if (sStkCodeFrom <> '' and sStkCodeTo <> '') THEN
+                        set  _statement = concat(_statement, ' and (d.sldl_stockcode >="', sStkCodeFrom, '" and d.sldl_stockcode <= "', sStkCodeTo, '")');
+                END IF;
+
+
+
+                 if (sIsActive <> '') THEN
+                set  _statement = concat(_statement, ' and s.stk_isactive = "', sIsActive, '"');
+                  end if;
+
+                if (sConsumable <> '') THEN
+                        set  _statement = concat(_statement, ' and s.stk_consumable ="', sConsumable, '"');
+                END IF;
+
+
+                if (sStkGrpFrom <> '' and sStkGrpTo <> '') THEN
+                        set  _statement = concat(_statement, ' and (s.stk_groupcode >="', sStkGrpFrom, '" and s.stk_groupcode <= "', sStkGrpTo, '")');
+                END IF;
+
+                if (sStkTypeFrom <> '' and sStkTypeTo <> '') THEN
+                        set  _statement = concat(_statement, ' and (s.stk_typecode >="', sStkTypeFrom, '" and s.stk_typecode <= "', sStkTypeTo, '")');
+                END IF;
+
+               if (sDateFrom <> '' and sDateTo <> '') THEN
+                        set  _statement = concat(_statement, ' and h.sldg_docdate between "', sDateFrom, '" and "', sDateTo,'"');
+                END IF;
+
+
+                 SET @statement = _statement;
+        PREPARE dynquery FROM @statement;
+        EXECUTE dynquery;
+        DEALLOCATE PREPARE dynquery;
+
+        END IF;
+
+
+ IF (sMethod = 'GET_MOVEMENT_SUMMARY') THEN
+
+              set @Date = null;
+              if sDateFrom = '' THEN
+                      set @Date = now();
+              ELSE
+                      set @Date =  sDateFrom;
+              END IF;
+              
+              
+
+              SET @@session.sql_notes = 0;
+              DROP TEMPORARY TABLE IF EXISTS TEMP_MOVEMENT;
+
+              SET @@session.sql_notes = 0;
+              DROP TEMPORARY TABLE IF EXISTS TEMP_MOVEMENT_SUMMARY;
+
+              set _statement = 'create temporary table TEMP_MOVEMENT ( select  distinct
+
+                h.sldg_company as Company, ';
+
+                
+                set  _statement = concat(_statement, 'IF(h.sldg_trxtype = "SALE", h.sldg_location, d.sldl_location) as Location,');
+
+
+                set _statement = concat(_statement, 'SUM(IF(h.sldg_trxtype = "XFR" or h.sldg_trxtype = "XFRD", ( F_CONVERT_UOM( IFNULL(d.sldl_qty,0) + IFNULL(d.sldl_bonusqty,0) , s.stk_baseuomcode, d.sldl_uomcode, d.sldl_stockcode) ), 0) ) as XFR_QTY,
+
+                (IF(h.sldg_trxtype = "GRN", SUM( F_CONVERT_UOM( IFNULL(d.sldl_qty,0) + IFNULL(d.sldl_bonusqty,0) , s.stk_baseuomcode, d.sldl_uomcode, d.sldl_stockcode) ) , 0) ) as GRN_QTY,
+
+                (IF(h.sldg_trxtype = "DISP", SUM( F_CONVERT_UOM( IFNULL(d.sldl_qty,0) + IFNULL(d.sldl_bonusqty,0) , s.stk_baseuomcode, d.sldl_uomcode, d.sldl_stockcode) ) , 0) ) as DISP_QTY,
+
+                (IF(h.sldg_trxtype = "SALE", SUM( F_CONVERT_UOM( IFNULL(d.sldl_qty,0) + IFNULL(d.sldl_bonusqty,0) , s.stk_baseuomcode, d.sldl_uomcode, d.sldl_stockcode) ), 0) ) as SALE_QTY,
+
+    SUM(IF(h.sldg_trxtype = "RETURN" or h.sldg_trxtype = "RTN_IN", ( F_CONVERT_UOM( IFNULL(d.sldl_qty,0) + IFNULL(d.sldl_bonusqty,0) , s.stk_baseuomcode, d.sldl_uomcode, d.sldl_stockcode) ), 0) ) as RETURN_QTY,
+
+                /* (IF(h.sldg_trxtype = "RETURN", SUM( F_CONVERT_UOM( IFNULL(d.sldl_qty,0) + IFNULL(d.sldl_bonusqty,0) , s.stk_baseuomcode, d.sldl_uomcode, d.sldl_stockcode ) ), 0) ) as RETURN_QTY, */
+
+                (IF(h.sldg_trxtype = "ADJ", SUM( F_CONVERT_UOM( IFNULL(d.sldl_qty,0) + IFNULL(d.sldl_bonusqty,0) , s.stk_baseuomcode, d.sldl_uomcode, d.sldl_stockcode ) ), 0) ) as ADJ_QTY,
+
+                (IF(h.sldg_trxtype = "WROFF", SUM( F_CONVERT_UOM( IFNULL(d.sldl_qty,0) + IFNULL(d.sldl_bonusqty,0) , s.stk_baseuomcode, d.sldl_uomcode, d.sldl_stockcode) ), 0) ) as WRITEOFF_QTY,
+
+                SUM( F_CONVERT_UOM( IFNULL(d.sldl_qty,0) + IFNULL(d.sldl_bonusqty,0) , s.stk_baseuomcode, d.sldl_uomcode, d.sldl_stockcode) ) as QTY,
+                0 as CLOSING_QTY,
+                0 as OPENING_QTY,
+                d.sldl_stockcode as StockCode,
+                s.stk_baseuomcode as BaseUOM,
+                s.stk_desc as StockDesc, s.stk_isactive as IsActive,
+                s.stk_consumable as Consumable,
+                s.stk_groupcode as StockGroup,
+                s.stk_typecode as StockType
+
+
+                from stkt_stockledgerheader h
+                left join stkt_stockledgerdetail d on d.sldl_stockledgerhdridx = h.sldg_stockledgerhdridx
+                left join stkm_stockmaster s on s.stk_stockcode = d.sldl_stockcode
+                WHERE IFNULL(d.sldl_qty,0) + IFNULL(d.sldl_bonusqty,0) <> 0 ');
+
+                if (sCompCode <> '') THEN
+                        set  _statement = concat(_statement, ' and h.sldg_company ="', sCompCode, '"');
+                END IF;
+                if (sLocCode <> '') THEN
+                   set  _statement = concat(_statement, ' and IF(h.sldg_trxtype = "SALE", h.sldg_location = ', "'", sLocCode, "', ", ' d.sldl_location = ', "'", sLocCode, "')");
+
+
+                        
+                END IF;
+
+                if (sStkCodeFrom <> '' and sStkCodeTo <> '') THEN
+                        set  _statement = concat(_statement, ' and (d.sldl_stockcode >="', sStkCodeFrom, '" and d.sldl_stockcode <= "', sStkCodeTo, '")');
+                END IF;
+
+
+
+                 if (sIsActive <> '') THEN
+                set  _statement = concat(_statement, ' and s.stk_isactive = "', sIsActive, '"');
+                  end if;
+
+                if (sConsumable <> '') THEN
+                        set  _statement = concat(_statement, ' and s.stk_consumable ="', sConsumable, '"');
+                END IF;
+
+
+                if (sStkGrpFrom <> '' and sStkGrpTo <> '') THEN
+                        set  _statement = concat(_statement, ' and (s.stk_groupcode >="', sStkGrpFrom, '" and s.stk_groupcode <= "', sStkGrpTo, '")');
+                END IF;
+
+                if (sStkTypeFrom <> '' and sStkTypeTo <> '') THEN
+                        set  _statement = concat(_statement, ' and (s.stk_typecode >="', sStkTypeFrom, '" and s.stk_typecode <= "', sStkTypeTo, '")');
+                END IF;
+
+               if (sDateFrom <> '' and sDateTo <> '') THEN
+                        set  _statement = concat(_statement, ' and h.sldg_docdate between "', sDateFrom, '" and "', sDateTo,' 23:59:59"');
+               END IF;
+
+               set  _statement = concat(_statement, ' group by  h.sldg_company, Location, d.sldl_stockcode, h.sldg_trxtype, s.stk_baseuomcode, s.stk_desc, s.stk_isactive, s.stk_consumable, s.stk_groupcode, s.stk_typecode');
+                
+
+                
+                set  _statement = concat(_statement, ' order by d.sldl_stockcode,  h.sldg_company, Location ');
+
+                set  _statement = concat(_statement, ')');
+
+                SET @statement = _statement;
+
+
+        PREPARE dynquery FROM @statement;
+        EXECUTE dynquery;
+        DEALLOCATE PREPARE dynquery;
+
+
+        if (sDateTo <> '') THEN
+                set @DateTo = sDateTo + ' 23:59:59';
+        ELSE
+                set @DateTo = now();
+        END IF;
+
+
+
+
+        CREATE TEMPORARY TABLE TEMP_MOVEMENT_SUMMARY (
+               SELECT Company, Location, SUM(XFR_QTY) as XFR_QTY, SUM(GRN_QTY) as GRN_QTY, SUM(DISP_QTY) as DISP_QTY,
+                       SUM(SALE_QTY) as SALE_QTY, SUM(RETURN_QTY) as RETURN_QTY, SUM(ADJ_QTY) as ADJ_QTY, SUM(WRITEOFF_QTY) as WRITEOFF_QTY,
+                       SUM(QTY) as QTY, SUM(CLOSING_QTY) as CLOSING_QTY, SUM(OPENING_QTY) as OPENING_QTY,  0 as CLOSING_VALUE, 0 as CLOSING_COST,
+                       StockCode, BaseUOM, StockDesc, IsActive, Consumable, StockGroup, StockType
+                  FROM TEMP_MOVEMENT
+               GROUP BY  Company, Location, StockCode, BaseUOM, StockDesc, IsActive, Consumable, StockGroup, StockType
+        );
+
+        UPDATE  TEMP_MOVEMENT_SUMMARY set OPENING_QTY = F_GET_OPENING_BALANCE_BY_LOCATION(BaseUOM, StockCode, Company, Location, @Date);
+
+
+        UPDATE  TEMP_MOVEMENT_SUMMARY set CLOSING_QTY = OPENING_QTY  + QTY;
+
+
+        UPDATE  TEMP_MOVEMENT_SUMMARY set  CLOSING_VALUE = CLOSING_QTY * F_GET_CLOSING_VALUE(_CosttingMethod,  StockCode,  Company, Location, @Date, @DateTo),
+        CLOSING_COST = F_GET_CLOSING_COST(_CosttingMethod,  StockCode,  Company, Location, @Date, @DateTo) ;
+
+
+         
+        select * from TEMP_MOVEMENT_SUMMARY;
+        
+
+        END IF;
+
+        IF (sMethod = 'GET_STKSALES_LIST') THEN
+
+            SET _statement = ' SELECT DATE(HDR.sldg_docdate) AS DocDate, HDR.sldg_docno AS DocNo, DTL.sldl_stockcode AS StkCode, STK.stk_desc AS StkDesc, STK.stk_typecode AS StkType,
+
+                                      CASE
+                                           WHEN STK.stk_consumable=''0'' THEN ''Drug''
+                                           WHEN STK.stk_consumable=''1'' THEN ''Product''
+                                           WHEN STK.stk_consumable=''2'' THEN ''Consumable''
+                                       END AS StkCat,
+
+                                      STK.stk_groupcode AS StkGrp, HDR.sldg_company AS CompCode, DTL.sldl_location AS LocCode, DTL.sldl_uomcode AS UOM, HDR.sldg_trxtype AS TrxType,
+
+                                      TRUNCATE(DTL.sldl_unitprice,2) AS UnitPrice, TRUNCATE(DTL.sldl_qty,2) AS Qty, TRUNCATE(DTL.sldl_gsttaxrates,2) AS GSTTaxRates,
+
+                                      TRUNCATE(DTL.sldl_gstamt,2) AS GSTAmt, TRUNCATE(DTL.sldl_discamt,2) AS DiscAmt, TRUNCATE(DTL.sldl_grosstotal,2) AS GrossTotal,
+
+                                      TRUNCATE(DTL.sldl_subtotalamt,2) AS SubTotalAmt, ';
+
+                              SET _statement = CONCAT(_statement,"'",sDateFrom,"'", ' AS selDateFrom, ' );
+
+                              SET _statement = CONCAT(_statement,"'",sDateTo,"'", ' AS selDateTo ' );
+
+                              SET _statement = CONCAT(_statement,'
+                              FROM stkt_stockledgerheader HDR
+                              JOIN stkt_stockledgerdetail DTL ON HDR.sldg_stockledgerhdridx = DTL.sldl_stockledgerhdridx
+                              JOIN stkm_stockmaster STK ON DTL.sldl_stockcode = STK.stk_stockcode
+
+                              WHERE (HDR.sldg_trxtype = ''DISP'' OR HDR.sldg_trxtype = ''SALE'') ' );
+
+            IF (sDateFrom <> '') THEN
+                    SET _statement = CONCAT(_statement, ' AND HDR.sldg_docdate >= ',"'",sDateFrom,"'" );
+            END IF;
+
+            IF (sDateTo <> '') THEN
+                    SET _statement = CONCAT(_statement, ' AND HDR.sldg_docdate <= ',"'",sDateTo,"'" );
+            END IF;
+
+            IF (sCompCode <> '') THEN
+                    SET _statement = CONCAT(_statement, ' AND HDR.sldg_company = ',"'",sCompCode,"'" );
+            END IF;
+
+            IF (sLocCode <> '') THEN
+                    SET _statement = CONCAT(_statement, ' AND DTL.sldl_location = ',"'",sLocCode,"'" );
+            END IF;
+
+            IF (sStkCodeFrom <> '') THEN
+                    SET _statement = CONCAT(_statement, ' AND DTL.sldl_stockcode >= ',"'",sStkCodeFrom,"'" );
+                    
+            END IF;
+
+            IF (sStkCodeTo <> '') THEN
+                    SET _statement = CONCAT(_statement, ' AND DTL.sldl_stockcode <= ',"'",sStkCodeTo,"'" );
+                    
+            END IF;
+
+            IF  (sStkTypeFrom <> '') THEN
+                    SET _statement = CONCAT(_statement, ' AND STK.stk_typecode >= ',"'", sStkTypeFrom,"'");
+            END IF;
+
+            IF  (sStkTypeTo <> '') THEN
+                    SET _statement = CONCAT(_statement, ' AND STK.stk_typecode <= ',"'", sStkTypeTo,"'");
+            END IF;
+
+            IF  (sStkGrpFrom <> '') THEN
+                    SET _statement = CONCAT(_statement, ' AND STK.stk_groupcode >= ',"'", sStkGrpFrom,"'");
+            END IF;
+
+            IF  (sStkGrpTo <> '') THEN
+                    SET _statement = CONCAT(_statement, ' AND STK.stk_groupcode <= ',"'", sStkGrpTo,"'");
+            END IF;
+
+            IF (sConsumable <> '') THEN
+                    SET _statement = CONCAT(_statement, ' AND STK.stk_consumable = ',"'",sConsumable,"'" );
+            END IF;
+
+            SET _statement = CONCAT(_statement, ' ORDER BY CompCode, LocCode, DocDate ' );
+
+            SET @statement = _statement;
+            PREPARE dynquery FROM @statement;
+            EXECUTE dynquery;
+            DEALLOCATE PREPARE dynquery;
+
+      END IF;
+
+
+END

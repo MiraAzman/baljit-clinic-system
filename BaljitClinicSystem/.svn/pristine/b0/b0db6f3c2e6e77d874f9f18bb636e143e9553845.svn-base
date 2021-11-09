@@ -1,0 +1,546 @@
+<%@taglib prefix="jstl" uri="http://java.sun.com/jsp/jstl/core" %>
+<jsp:useBean id="DDL" scope="page" class="BusinessLogic.Servlet_PopulateData" />
+<style type="text/css">
+    .ui-jqgrid tr.jqgrow td {
+        word-wrap: break-word; /* IE 5.5+ CSS3 see http://www.w3.org/TR/css3-text/#text-wrap */
+        white-space: pre-wrap; /* CSS3 */
+        white-space: -moz-pre-wrap; /* Mozilla, since 1999 */
+        white-space: -pre-wrap; /* Opera 4-6 */
+        white-space: -o-pre-wrap; /* Opera 7 */
+        overflow: hidden;
+        height: auto;
+        vertical-align: middle;
+        padding-top: 3px;
+        padding-bottom: 3px 
+    }
+    .centered {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        margin-top: -50px;
+        margin-left: -200px;
+    }
+    select:disabled{
+        background: #dddddd;
+    }
+    li{
+        list-style:none;
+    }
+    .disabledTab{
+        pointer-events: none;
+    }
+</style>
+<link rel="stylesheet" type="text/css" href="css/your_style.css" />
+<link rel="stylesheet" type="text/css" href="js/plugin/jqgrid/ui.multiselect.css" />
+<section id="widget-grid" class="">
+    <!--<span>{{params}}</span>-->
+    <input type="hidden" value={{params}} id="hidHospCode">
+
+    <div class="col-xs-12 col-sm-7 col-md-7 col-lg-12">
+        <h1 class="page-title txt-color-blueDark">
+            <!-- PAGE HEADER -->
+            <i class="fa-fw fa fa-file fa-2x"></i> 
+            Acknowledge Receive of Returned Stock
+            <input type="hidden" id="ControlDateTime" value="DT" />
+        </h1>
+    </div>
+    <div class="widget-body row">
+        <article class="col-sm-12 col-md-12 col-lg-12">
+            <div class="jarviswidget jarviswidget-color-blueDark" id="wid-id-1"  data-widget-editbutton="false" data-widget-custombutton="false"
+                 data-widget-deletebutton="false" data-widget-colorbutton="false" data-widget-fullscreenbutton="false" data-widget-togglebutton="false">
+                <header>
+                    <span class="widget-icon"> <i class="fa fa-file"></i></span>
+                    <span><h2>&nbsp;Stock Return</h2></span>
+                </header>
+                <div class="row">
+                    <div class="widget-body">
+                        <table id="tbReturnHeader" class="table table-bordered table-striped" style="clear:both;">
+                            <tbody>
+                                <tr>
+                                    <td width="12%">Document No</td>
+                                    <td width="1%">:</td>
+                                    <td width="25%"> 
+                                        <input type="text" id="lblDocNo" name="lblPrdCode" lblDocNo  class="tboxreadonly" />    
+                                    </td>
+                                    <td width="12%">Date</td>
+                                    <td width="1%">:</td>
+                                    <td width="75%">       
+                                        <input type="text" id="lblDocDate" name="lblDocDate" readonly  class="tboxreadonly" />    
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>Company</td>
+                                    <td>:</td>
+                                    <td>     
+                                        <input type="text" id="lblCompany" name="lblCompany" readonly class="tboxreadonly" />
+                                        <input type="hidden" id="hidCompany" name="hidCompany" />
+                                    </td>
+                                    <td>Return By</td>
+                                    <td>:</td>
+                                    <td>   
+                                        <input type="text" id="lblPersonName" name="lblPersonName" readonly class="tboxreadonly" />    
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>Location</td>
+                                    <td>:</td>
+                                    <td>     
+                                        <input type="text" id="lblLocation" name="lblLocation" readonly class="tboxreadonly" />
+                                        <input type="hidden" id="hidLocation" name="hidLocation" />
+                                        <input type="hidden" id="hidRecvLocation" name="hidRecvLocation" />
+                                    </td>
+                                    <td>Remarks</td>
+                                    <td>:</td>
+                                    <td>     
+                                        <input type="text" id="lblRemarks" name="lblRemarks" readonly class="tboxreadonly" />
+                                    </td>
+                                </tr>                               
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </article>       
+        <article class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+            <div class="row">
+                <form id="form_RetDetail" name="form_RetDetail">                  
+                    <article class="col-sm-12 col-md-12 col-lg-12">
+                        <div class="jarviswidget jarviswidget-color-blueDark" id="wid-id-4"  data-widget-editbutton="false" data-widget-custombutton="false"
+                             data-widget-deletebutton="false" data-widget-colorbutton="false" data-widget-fullscreenbutton="false" data-widget-togglebutton="false">
+                            <header>
+                                <span class="widget-icon"> <i class="fa fa-file"></i></span>
+                                <span><h2>&nbsp;Stock Return Details</h2></span>
+                            </header>
+                            <div class="padding-10">                                               
+                                <div id="gridReturnDetail" class="" >
+                                    <table  class="table table-striped" id="tbItems" >
+                                        <thead>                                        
+                                            <th>Action</th>
+                                                                                 
+                                            <th id="PROD">Product</th>                                        
+                                            <th id="UOM">UOM</th>
+                                            <th id="UNITCOST">U.Cost</th>
+                                            <th id="BATCHNO">Batch#</th>
+                                            <th id="EXPDATE">Exp Date</th>
+                                            <th id="RETQTY">Ret Qty</th>
+                                            <th id="ACCPQTY">Acpt Qty</th>
+                                            <th id="REMARKS">Remarks</th>
+                                            <th id="STATUS">Status</th>
+                                        </thead>
+                                        <tbody id="ReturnDetailGrid" >
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </article>
+                    <div hidden>
+                        <input type="hidden" id="hidRetItems" name="hidRetItems"/>
+                        <input type="hidden" id="hidRetHdrIdx" name="hidRetHdrIdx"/>
+                    </div>
+                </form>
+            </div>
+        </article>
+        <div>
+            <div class="row">
+                <div class="col-sm-12">
+                    <div align="center" class="padding-5" >
+                    <input type="text" id="lblURLStatus" name="lblRecv" readonly class="tboxreadonly"  />    
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-sm-12">
+                    <div align="center" class="padding-5" >                      
+                        <input type="button" id="btnConfirm" class="btn btn-default bg-color-blueDark txt-color-white" value="Confirm" style="margin-right:20px;" />
+                        <input type="button" id="btnCancel" class="btn btn-default bg-color-blueDark txt-color-white" value="Cancel" onclick="location.href = '#/StockReturnList'" />
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<jsp:include page="../../includes/loading-no-status.jsp"/>
+<jsp:include page="../../../includes/yes-no.jsp"/>
+<script type="text/javascript">
+    
+    var SaveDisabled = false;
+    var RejectDisabled = false;
+    var issuloc = "";
+    var bServerOK = false;
+    
+    pageSetUp();
+
+    $.get('${pageContext.request.contextPath}/Servlet_SystemEnvironmentSettings', {SFC: 'GET_CURRENTDATETIME'}, function (data) {
+        var arrData = String(data);
+        $("#ControlDateTime").val(arrData);            
+    });
+
+//2016Jun06 CPK
+        $.get('${pageContext.request.contextPath}/Servlet_Role', {SFC: 'GET_MENU_BY_ROLE', MNUCODE: "MNU000025", ROLECODE:'<%= session.getAttribute("UsrRole")%>' }, function (data) {
+            var arrData = JSON.parse(data);
+            if (arrData.rows[0].AllowApprove === '0'){                 
+                  $("#btnConfirm").css("display", "none");
+            }            
+        });
+        
+function CheckServerAvailability()
+        {    
+            //alert(issuloc);
+            $.get('${pageContext.request.contextPath}/Servlet_ApplicationSetting', {SFC: 'GET_LOCATION_URL_STATUS', LOCATION:issuloc}, function (data) {
+            var arrData = String(data);
+//alert(arrData);
+            if (arrData === 'N'){                 
+                 
+                bServerOK = false;      
+                               
+            }     
+            else
+            {
+                bServerOK = true;
+            }
+            
+//            alert(bServerOK);
+            
+            
+             if (bServerOK === false){                 
+                  $("#btnConfirm").prop('disabled', true);
+                 
+                  var sMsg = "Web Server for " + $("#lblLocation").val() + " is not available, please contact System Administrator!!!";
+                  $("#lblURLStatus").val(sMsg);
+ 
+                  
+                   $.bigBoxFail({
+                        title: "Unabe to connect Web Server",
+                        content: sMsg,
+                        timeout: 6000
+                       
+                        });
+                         
+                               
+            }     
+            else
+            {
+                //$("#lblURLStatus").val("");
+               
+//                $("#btnConfirm").prop('disabled', SaveDisabled);
+                //$("#btnReject").prop('disabled', RejectDisabled);
+
+            }
+
+
+            
+            
+        });
+            
+        };
+        
+    function bindData(sParam) {
+        
+        $().ready(function() {
+            
+            var RetHdrID = sParam.RETHDRIDX;
+            $("#hidRetHdrIdx").val(RetHdrID);
+            
+            $.ajax({
+                type:'POST',
+                url:"${pageContext.request.contextPath}/Servlet_StockReturn",
+                data:  {
+                    SFC: 'GET_STKRETURN_HEADER', 
+                    RETHDRIDX: RetHdrID                 
+                },
+                dataType: 'json',
+                success: function(data) {
+                    var arrData = data.object1[0];
+
+                    $("#lblDocNo").val(arrData.reth_docno);
+                    $("#lblDocDate").val(arrData.reth_docdate);                      
+                    $("#lblCompany").val(arrData.reth_company + ' - ' + arrData.comp_name); $("#hidCompany").val(arrData.reth_company);
+                    $("#lblLocation").val(arrData.reth_issuelocation + ' - ' + arrData.loc_name); $("#hidLocation").val(arrData.reth_issuelocation);
+                    $("#hidRecvLocation").val(arrData.reth_recievelocation);
+                    
+                    $("#lblPersonName").val(arrData.reth_personname);
+                    $("#lblRemarks").val(arrData.reth_remark);   
+issuloc = arrData.reth_issuelocation;                    
+CheckServerAvailability();                
+                }
+            });          
+
+            $.ajax({
+                type:'POST',
+                url:"${pageContext.request.contextPath}/Servlet_StockReturn",
+                data:  {
+                    SFC: 'GET_STKRETURN_ITEMS', 
+                    RETHDRIDX: RetHdrID               
+                },
+                dataType: 'json',
+                success: function(data) {                                      
+                    var arrItemData = data;  
+                    var j = 0;   
+                    var countAcptRjct = 0;
+                    for (var i = 0; i < arrItemData.rows.length; i++) {           
+                        
+                        j = j+1;                      
+                        var readonly = '';
+                        var dropdowndisable = '';
+                        var sStatus = arrItemData.rows[i].Status; 
+                        
+                        if (sStatus === 'O') {
+                           readonly = '';
+                           dropdowndisable = '';
+                        } 
+                        else if (sStatus === 'R' || sStatus === 'A' || sStatus === 'W') {
+                           countAcptRjct++;
+                           readonly = 'readonly';
+                           dropdowndisable = 'disabled';
+                        }
+
+                        $("#tbItems tbody").append("<tr id=tr" + j + ">" +
+                            "<td> <select class='form-control' " + dropdowndisable +  " ID='ddlStatus" + j + "' name='ddlStatus" + j + "' style='width:90px'><option value='O'></option><option value='A'>Accept</option><option value='R'>Reject</option><option value='W'>Dispose</option></select></td>" +                                    
+                            
+                            "<td><input type='text' class='form-control' readonly ID='txtStkDesc" + j + "' name='txtStkDesc" + j + "' style='width:230px'/></td>" +
+                            "<td><input type='text' class='form-control' readonly ID='txtUOM" + j + "' name='txtUOM" + j + "' style='width:80px'/></td>" +
+                            "<td><input type='text' class='form-control' readonly ID='txtUnitCost" + j + "' name='txtUnitCost" + j + "' style='width:80px'/></td>" +
+                            "<td><input type='text' class='form-control' readonly ID='txtBatchNo" + j + "' name='txtBatchNo" + j + "' style='width:80px'/></td>" +
+                            "<td><input type='text' class='form-control' readonly ID='txtExpiryDate" + j + "' name='txtExpiryDate" + j + "' style='width:95px'/></td>" +
+                            "<td><input type='text' class='form-control' readonly ID='txtReturnQty" + j + "' name='txtReturnQty" + j + "' style='width:85px' value='0'/></td>" +
+                            "<td><input type='text' class='form-control' " + readonly + " ID='txtAcceptQty" + j + "' name='txtAcceptQty" + j + "' style='width:80px' value='0'/></td>" +
+                            "<td><input type='text' class='form-control' " + readonly + " ID='txtRemarks" + j + "' name='txtRemarks" + j + "' style='width:140px'/></td>" + 
+                            "<td><input type='text' class='form-control' readonly ID='txtStatus" + j + "' name='txtStatus" + j + "' style='width:100px'/></td>" + 
+                            "<td><input type='hidden' class='form-control' ID='hidRetDtlIdx" + j + "' name='hidRetDtlIdx" + j + "' style='width:50px'/></td>" +
+                            "<td><input type='hidden' class='form-control' ID='hidStkCode" + j + "' name='hidStkCode" + j + "' style='width:50px'/></td>" +
+                            "<td><input type='hidden' class='form-control' ID='hidStatus" + j + "' name='hidStatus" + j + "' style='width:50px'/></td>" +
+                            "</tr>"
+                        );                                             
+                        $("#ddlStatus"+ j).val(sStatus);
+                        $("#txtStkDesc"+ j).val(arrItemData.rows[i].StkDesc);                     
+                        $("#txtUOM"+ j).val(arrItemData.rows[i].UOM);
+                        $("#txtUnitCost"+ j).val(arrItemData.rows[i].UnitCost);
+                        $("#txtBatchNo"+ j).val(arrItemData.rows[i].BatchNo);
+                        $("#txtExpiryDate"+ j).val(arrItemData.rows[i].ExpiryDate);
+                        $("#txtReturnQty"+ j).val(arrItemData.rows[i].RetQty);
+                        $("#txtAcceptQty"+ j).val(arrItemData.rows[i].AccpQty);
+                        $("#txtRemarks"+ j).val(arrItemData.rows[i].Remarks);
+                        $("#txtStatus"+ j).val(arrItemData.rows[i].StatusDesc);
+                        $("#hidRetDtlIdx"+ j).val(arrItemData.rows[i].DtlIdx);     
+                        $("#hidStkCode"+ j).val(arrItemData.rows[i].StkCode);   
+                        $("#hidStatus"+ j).val(arrItemData.rows[i].Status);   
+                    }
+                    if (countAcptRjct === arrItemData.rows.length)
+                        $("#btnConfirm").prop("disabled",true);
+                    
+                    $('#tbItems tr').each(function (row, th) {
+                        if (row > 0) {
+                            var rowid = $(this).closest('tr').attr('id');
+                            var rowno = rowid.substring(2);
+
+                            $("#ddlStatus"+rowno).change(function(){ 
+                                if (this.value === 'R') {
+                                    $("#txtAcceptQty"+rowno).val(0);
+                                    $("#txtAcceptQty"+rowno).prop("disabled",true);
+                                } else 
+                                    $("#txtAcceptQty"+rowno).prop("disabled",false);
+                            });
+                        }
+                    });
+                }
+            });           
+        }); 
+    }
+   
+    $("#btnConfirm").click(function () {
+    
+        var bAcceptReject = false;
+        $('#tbItems tr').each(function (row, th) {
+            if (row > 0) {
+                var rowid = $(this).closest('tr').attr('id');
+                var rowno = rowid.substring(2);             
+                var sStatus = $('#ddlStatus' + rowno).val();
+                var sCurrentStatus = $('#hidStatus' + rowno).val();
+                
+                if ((sStatus === "R" || sStatus === "A" || sStatus === "W") && sCurrentStatus === "O") {
+                    bAcceptReject = true;
+                    return;
+                }
+            }
+        });
+        if (bAcceptReject === false) {
+            $.bigBoxWarning({
+                title: "Stock Return.",
+                content: "No item was selected for Update.<br> Please try again.",
+                timeout: 6000
+            });
+            return;
+        }
+        
+        var bValidate = true;
+        var RetItemData = new Array();
+        var rowRet = 0;       
+        $('#tbItems tr').each(function (row, th) {
+            if (row > 0) {
+                var rowid = $(this).closest('tr').attr('id');
+                var rowno = rowid.substring(2);
+
+                var sStatus = $('#ddlStatus' + rowno).val();
+                var sCurrentStatus = $('#hidStatus' + rowno).val();
+                var acceptQty = parseFloat($('#txtAcceptQty' + rowno).val());
+                var returnQty = parseFloat($('#txtReturnQty' + rowno).val());
+
+                if (sStatus === "R" || sStatus === "A" || sStatus === "W") {                                  
+                    if (sCurrentStatus === "R" || sCurrentStatus === "A" || sCurrentStatus === "W") {
+                        //nothing happens
+                    }
+                    else if ((acceptQty < 0) || isNaN(acceptQty)) { 
+                        $.bigBoxWarning({
+                            title: "Stock Return.",
+                            content: "Quantity entered is incorrect.<br> Please try again.",
+                            timeout: 6000
+                        });
+                        bValidate = false;
+                        return;                         
+                    }
+                    else if (returnQty < acceptQty) { 
+                        $.bigBoxWarning({
+                            title: "Stock Return.",
+                            content: "Accepted quantity is larger than returned quantity. <br>Please try again.",
+                            timeout: 6000
+                        });
+                        bValidate = false;
+                        return;                     
+                    } 
+                    else if ((sStatus === "A" && acceptQty === 0) || (sStatus === "W" && acceptQty === 0)) {
+                        $.bigBoxWarning({
+                            title: "Stock Return.",
+                            content: "Accepted quantity must be entered. <br>Please try again.",
+                            timeout: 6000
+                        });
+                        bValidate = false;
+                        return;                     
+                    }
+                    else { 
+                        RetItemData[rowRet] = {
+                            FUNCTION: 'UPDATE',
+                            "RETHDRIDX": $('#hidRetHdrIdx').val(),
+                            "RETDTLIDX": $('#hidRetDtlIdx' + rowno).val(),
+                            "STATUS": sStatus,
+                            "ACCEPTED_QTY": acceptQty,
+                            "REMARKS": $('#txtRemarks' + rowno).val(),
+                            "STKCODE": $('#hidStkCode' + rowno).val(), 
+                            "UOMCODE": $('#txtUOM' + rowno).val(),
+                            "RETURN_QTY": $('#txtReturnQty' + rowno).val(), 
+                            "UNITCOST": $('#txtUnitCost' + rowno).val(),  
+                            "BATCHNO": $('#txtBatchNo' + rowno).val(),
+                            "EXPIRYDATE": $('#txtExpiryDate' + rowno).val(),
+                            "CONTROL_DATETIME":  $('#ControlDateTime').val()
+                        };
+                        rowRet = rowRet + 1;
+                    }
+                }
+            }
+        });
+
+        if (bValidate) {          
+            var sHdrStatus = 'O';
+            $('#tbItems tr').each(function (row, th) {
+                if (row > 0) {
+                    var rowid = $(this).closest('tr').attr('id');
+                    var rowno = rowid.substring(2);
+                    var sStatus = $('#ddlStatus' + rowno).val();
+                    if ((sStatus === 'A') || (sStatus === 'R') || (sStatus === 'W')) {
+                        sHdrStatus = 'P';
+                        return;
+                    }
+                }
+            });               
+            var ItemToSend = JSON.stringify(RetItemData);
+            $('#hidRetItems').load().val(ItemToSend).valid();
+            //alert(ItemToSend);
+            document.getElementById("btnConfirm").disabled = true;
+            showYesNo({
+                title: "Confirmation needed",
+                width: 420,
+                noClose: true,
+                isModal: true,
+                body: [
+                    "<br><h4>Are you sure to proceed Acknowledged Receive Stock Returned?<h4><br>"
+                ],
+                show: function () {
+                },
+                Yes: {
+                     text: "Yes",
+                    opt: function () {           
+
+                        hideYesNo();
+                        $.ajax({
+                type: "POST",
+                url: "${pageContext.request.contextPath}/Servlet_StockReturn?SFC=UPDATE_STOCK_RETURN",
+                data: {
+                    FUNCTION: 'UPDATE',
+                    RETHDRIDX: $('#hidRetHdrIdx').val(),
+                    ITEMS: $('#hidRetItems').val(),                
+                    COMPANY: $('#hidCompany').val(),
+                    LOCATION: $('#hidLocation').val(),
+                    RECVLOCATION: $("#hidRecvLocation").val(),
+                    PERSONNAME: "",
+                    REMARKS: "",
+                    DOCNO: $('#lblDocNo').val(),
+                    DOCDATE: $('#lblDocDate').val(),
+                    STATUS: sHdrStatus,
+                    CONTROL_DATETIME: $('#ControlDateTime').val()
+                },
+                dataType: 'json',
+                beforeSend: function () {
+                    $.showLoadingNoStatus();
+                        },
+                        success: function(data) {
+                            var arrReturn = data;                  
+                            if (arrReturn.bool === true) {
+                    $.bigBoxSuccess({
+                        title: "Update Stock Return Successful.",
+                        content: "Stock Return Updated Successfully.",
+                        timeout: 6000
+                    });                      
+                } else {
+                    $.bigBoxFail({
+                        title: "Update Stock Return FAIL.",
+                        content: "There is some error during Stock Return update.<br> Please try again...",
+                        timeout: 6000
+                    });
+                }
+                         },
+                         error: function (xhr, status, error) {
+                             $.bigBoxFail({
+                                 title: "ERROR : FAILED To Create Request!!",
+                                 content: "There is some error occur during create request. Please try again later",
+                                 timeout: 6000
+            });
+                        },
+                        complete: function (xhr, status) {
+                            if (xhr.status === 200) {
+                                $.hideLoadingNoStatus(function () {
+                                   location.reload();
+                                }, 500);
+                            } else {
+                                $.hideLoadingNoStatus(function () {
+                                }, 0);
+                            }
+                        } 
+                    });
+                     hideYesNo();
+                    }
+                },
+                No: {
+                    text: "No",
+                    opt: function () {
+                        document.getElementById("btnConfirm").disabled = false;
+                        hideYesNo();
+                    }
+                }
+            });
+            
+        }
+    });
+   
+</script>

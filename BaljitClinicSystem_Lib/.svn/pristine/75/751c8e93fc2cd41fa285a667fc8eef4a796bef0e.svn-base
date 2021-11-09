@@ -1,0 +1,96 @@
+CREATE DEFINER=`root`@`localhost` PROCEDURE `SP_GET_STOCK_STATUS`(
+IN sMethod         varchar(30),
+IN sCompCode       varchar(10),
+IN sLocCode        varchar(10),
+IN sReorderStatus  varchar(1),
+IN sStkCategory    varchar(6)
+)
+BEGIN
+
+
+
+
+
+
+ DECLARE _statement VARCHAR(8000);
+                                          
+
+   IF sMethod = 'GET_STKSTATUS_LIST' THEN
+
+            SET _statement = ' SELECT RORD.rord_stockcode AS StkCode, STK.stk_desc AS StkDesc,
+
+                               CASE
+                                   WHEN STK.stk_consumable=''0'' THEN ''Drug''
+                                   WHEN STK.stk_consumable=''1'' THEN ''Product''
+                                   WHEN STK.stk_consumable=''2'' THEN ''Consumable''
+                               END AS StkCat,
+
+                               STK.stk_groupcode AS StkGrp, STK.stk_typecode AS StkType, RORD.rord_companycode AS CompCode, RORD.rord_locationcode AS LocCode, STK.stk_baseuomcode AS UOM, RORD.rord_reorderlevel,
+
+                               TRUNCATE(RORD.rord_reorderlevel,2) AS RordLvl, TRUNCATE(SUM(F_CONVERT_UOM(StkBal.bal_balanceqty, STK.stk_baseuomcode,StkBal.bal_uom,RORD.rord_stockcode)),2) AS OnHandQty,
+
+                               CASE
+                                   WHEN RORD.rord_reorderlevel > SUM(F_CONVERT_UOM(StkBal.bal_balanceqty,STK.stk_baseuomcode,StkBal.bal_uom,RORD.rord_stockcode)) THEN ''Low''
+                                   WHEN RORD.rord_reorderlevel < SUM(F_CONVERT_UOM(StkBal.bal_balanceqty,STK.stk_baseuomcode,StkBal.bal_uom,RORD.rord_stockcode)) THEN ''Sufficient''
+                                   WHEN RORD.rord_reorderlevel = SUM(F_CONVERT_UOM(StkBal.bal_balanceqty,STK.stk_baseuomcode,StkBal.bal_uom,RORD.rord_stockcode)) THEN ''''
+                               END AS StkStatus, ';
+
+                               SET _statement = CONCAT(_statement,"'",sCompCode,"'", ' AS selComp, ' );
+
+                               SET _statement = CONCAT(_statement,"'",sLocCode,"'", ' AS selLoc, ' );
+
+                               SET _statement = CONCAT(_statement, '
+
+                               CASE
+                                   WHEN ',"'",sStkCategory,"'",' =''0'' THEN ''Drug''
+                                   WHEN ',"'",sStkCategory,"'",' =''1'' THEN ''Product''
+                                   WHEN ',"'",sStkCategory,"'",' =''2'' THEN ''Consumable''
+                                   WHEN ',"'",sStkCategory,"'",' ='''' THEN ''Drug / Product / Consumable''
+                               END AS selStkCat, ' );
+
+                               SET _statement = CONCAT(_statement, '
+
+                               CASE
+                                   WHEN ',"'",sReorderStatus,"'",' =''L'' THEN ''Low''
+                                   WHEN ',"'",sReorderStatus,"'",' =''S'' THEN ''Sufficient''
+                                   WHEN ',"'",sReorderStatus,"'",' ='''' THEN ''Low / Sufficient''
+                               END AS selStatus ' );
+
+                               SET _statement = CONCAT(_statement,'
+                               FROM stkm_stockbalance StkBal
+                               JOIN stkm_stockmaster STK ON STK.stk_stockcode = StkBal.bal_stockcode
+                               JOIN stkm_stockreorderlevel RORD ON StkBal.bal_stockcode = RORD.rord_stockcode
+                                                               AND StkBal.bal_companycode = RORD.rord_companycode
+                                                               AND StkBal.bal_location = RORD.rord_locationcode
+                               WHERE STK.stk_stockcode IS NOT NULL' );
+
+            IF (sCompCode <> '') THEN
+                    SET _statement = CONCAT(_statement, ' AND RORD.rord_companycode = ',"'",sCompCode,"'" );
+            END IF;
+
+            IF (sLocCode <> '') THEN
+                    SET _statement = CONCAT(_statement, ' AND RORD.rord_locationcode = ',"'",sLocCode,"'" );
+            END IF;
+
+            IF (sStkCategory <> '') THEN
+                    SET _statement = CONCAT(_statement, ' AND STK.stk_consumable = ',"'",sStkCategory,"'" );
+            END IF;
+
+            SET _statement = CONCAT(_statement, ' GROUP BY STK.stk_desc, RORD.rord_companycode, RORD.rord_locationcode');
+
+            IF (sReorderStatus = 'L') THEN
+                    SET _statement = CONCAT(_statement, ' HAVING (RORD.rord_reorderlevel > SUM(F_CONVERT_UOM(StkBal.bal_balanceqty,STK.stk_baseuomcode,StkBal.bal_uom,RORD.rord_stockcode)))' );
+            ELSEIF (sReorderStatus = 'S') THEN
+                    SET _statement = CONCAT(_statement, ' HAVING (RORD.rord_reorderlevel < SUM(F_CONVERT_UOM(StkBal.bal_balanceqty,STK.stk_baseuomcode,StkBal.bal_uom,RORD.rord_stockcode)))' );
+            END IF;
+
+   END IF;
+
+
+
+SET @statement = _statement;
+PREPARE dynquery FROM @statement;
+EXECUTE dynquery;
+DEALLOCATE PREPARE dynquery;
+
+END

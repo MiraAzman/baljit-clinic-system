@@ -1,0 +1,26 @@
+package BusinessData;
+
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.CallableStatement;
+import java.sql.Connection;
+import java.sql.Types;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Iterator;
+import BusinessData.BaseDAL;
+import BusinessLogic.BLL_Common;
+
+public class DAL_ChargeItem {
+    BaseDAL DAL = new BaseDAL();
+    
+    public BLL_Common.Common_Object DAL_GET_CHARGEITEM(String SiteName, String[] sIn) {        
+        return BaseDAL.Get_Multiple_QueryReturn("SP_GET_CHG_ITEM(?,?,?,?,?,?,?)", sIn, new int[]{}, SiteName);
+    }
+
+    public BLL_Common.Common_Object DAL_UPDATE_CHARGEITEM(String SiteName, String[] sIn) {   
+        return BaseDAL.Get_Multiple_QueryReturn_No_Commit("SP_TRX_CHG_ITEM(?,?,?,?,?,?,?,?,?,?,"
+                + "?,?,?,?,?,?,?,?,?,?,"
+                + "?,?,?,?)", sIn, new int[]{java.sql.Types.VARCHAR}, SiteName);
+    } 
+}

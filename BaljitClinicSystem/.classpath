@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="src" path="BusinessLogic"/>
+	<classpathentry kind="lib" path="build/web/WEB-INF/jstl-1.2.jar"/>
+	<classpathentry kind="lib" path="build/web/WEB-INF/lib/BaljitClinicSystem_Lib.jar"/>
+	<classpathentry kind="lib" path="build/web/WEB-INF/lib/com.mysql.jdbc_5.1.5.jar"/>
+	<classpathentry kind="lib" path="build/web/WEB-INF/lib/commons-beanutils-1.8.2.jar"/>
+	<classpathentry kind="lib" path="build/web/WEB-INF/lib/commons-collections-3.2.1.jar"/>
+	<classpathentry kind="lib" path="build/web/WEB-INF/lib/commons-digester-2.1.jar"/>
+	<classpathentry kind="lib" path="build/web/WEB-INF/lib/commons-lang-2.5.jar"/>
+	<classpathentry kind="lib" path="build/web/WEB-INF/lib/commons-logging-1.1.jar"/>
+	<classpathentry kind="lib" path="build/web/WEB-INF/lib/ezmorph-1.0.6.jar"/>
+	<classpathentry kind="lib" path="build/web/WEB-INF/lib/google-collections-1.0.jar"/>
+	<classpathentry kind="lib" path="build/web/WEB-INF/lib/iText-2.1.7.js2.jar"/>
+	<classpathentry kind="lib" path="build/web/WEB-INF/lib/itextpdf-5.4.3.jar"/>
+	<classpathentry kind="lib" path="build/web/WEB-INF/lib/jasperreports-6.1.0.jar"/>
+	<classpathentry kind="lib" path="build/web/WEB-INF/lib/javax.servlet-api-3.0.1.jar"/>
+	<classpathentry kind="lib" path="build/web/WEB-INF/lib/jcommon-1.0.15.jar"/>
+	<classpathentry kind="lib" path="build/web/WEB-INF/lib/jdt-compiler-3.1.1.jar"/>
+	<classpathentry kind="lib" path="build/web/WEB-INF/lib/jfreechart-1.0.19.jar"/>
+	<classpathentry kind="lib" path="build/web/WEB-INF/lib/json-lib-2.4-jdk15.jar"/>
+	<classpathentry kind="lib" path="build/web/WEB-INF/lib/json-simple-1.1.1.jar"/>
+	<classpathentry kind="lib" path="build/web/WEB-INF/lib/jstl-1.2.jar"/>
+	<classpathentry kind="lib" path="build/web/WEB-INF/lib/org-apache-commons-codec.jar"/>
+	<classpathentry kind="lib" path="build/web/WEB-INF/lib/org-apache-commons-logging.jar"/>
+	<classpathentry kind="lib" path="build/web/WEB-INF/lib/poi-3.7-20101029.jar"/>
+	<classpathentry kind="lib" path="build/web/WEB-INF/lib/poi-3.9-20121203.jar"/>
+	<classpathentry kind="lib" path="web/WEB-INF/jstl-1.2.jar"/>
+	<classpathentry kind="con" path="org.eclipse.jst.j2ee.internal.web.container"/>
+	<classpathentry kind="con" path="org.eclipse.jst.j2ee.internal.module.container"/>
+	<classpathentry kind="output" path="build/web/WEB-INF/classes"/>
+</classpath>

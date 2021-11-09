@@ -1,0 +1,57 @@
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package BusinessData;
+
+import java.sql.ResultSet;
+//import BusinessLogic.BLL_CorpProvider;
+import BusinessData.BaseDAL;
+import BusinessLogic.BLL_Common;
+import java.sql.CallableStatement;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.sql.Types;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Iterator;
+
+
+/**
+ *
+ * @author N3355
+ */
+public class DAL_StockTransfer {
+    BaseDAL DAL = new BaseDAL();
+    
+    public BLL_Common.Common_Object DAL_GET_STOCKLIST(String SiteName, String[] sIn) {
+        return BaseDAL.Get_Multiple_QueryReturn("SP_GET_PRODUCT(?,?,?,?,?,"                  
+                    + "?,?,?,?,?,?)", sIn, new int[]{}, SiteName);
+    }
+    
+     public BLL_Common.Common_Object DAL_GETCOMPLIST(String SiteName, String[] sIn) {                   
+        return BaseDAL.Get_Multiple_QueryReturn("SP_GET_COMPANY_STOCK_BAL(?,?,?,?,?,?)", sIn, new int[]{}, SiteName);
+    }
+           
+    public BLL_Common.Common_Object DAL_GET_LOCATION_STK_BAL(String SiteName, String[] sIn) {
+         return BaseDAL.Get_Multiple_QueryReturn("SP_GET_LOCATION_STK_BAL(?,?,?,?,?)", sIn, new int[]{}, SiteName);
+    }
+    
+    public BLL_Common.Common_Object DAL_ADDEDIT_STOCKTRANSFER(String SiteName, String[] sStringIn) {
+        return BaseDAL.Get_Multiple_QueryReturn_No_Commit("SP_TRX_STOCKTRANSFER(?,?,?,?,?,?,?,?,?,?,"
+                + "?,?,?,?,?,?,?,?,?,?,"
+                + "?,?,?,?,?,?,?,?,?,?,"
+                + "?,?,?,?,?,?,?,?,?,?,"
+                + "?,?,?,?,?,?,?,?"
+                
+                + ")", sStringIn, new int[]{java.sql.Types.VARCHAR, java.sql.Types.VARCHAR, java.sql.Types.VARCHAR, java.sql.Types.VARCHAR}, SiteName);
+    }
+    
+    public BLL_Common.Common_Object DAL_GET_STOCK_TRANSFER(String SiteName, String[] sIn) { 
+         //return BaseDAL.Get_Multiple_QueryReturn("SP_GET_STOCK_TRANSFER_ALLOCATION(?,?,?)", sIn, new int[]{});
+        return BaseDAL.Get_Multiple_QueryReturn("SP_GET_STOCK_TRANSFER(?,?,?,?,?,?,?,?,?,?,?,?,?,?)", sIn, new int[]{}, SiteName);
+        //return BaseDAL.Get_Multiple_QueryReturn("SP_GET_STOCK_TRANSFER(?,?,?,?,?,?,?,?,?,?,?,?,?,?)", sIn, new int[]{}, SiteName); //2018JUL30
+    }
+    
+}

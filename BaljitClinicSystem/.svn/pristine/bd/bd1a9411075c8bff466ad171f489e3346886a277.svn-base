@@ -1,0 +1,292 @@
+<%@taglib prefix="jstl" uri="http://java.sun.com/jsp/jstl/core" %>
+<jsp:useBean id="DDL" scope="page" class="BusinessLogic.Servlet_PopulateData" />
+<style type="text/css">
+    .ui-jqgrid tr.jqgrow td {
+        word-wrap: break-word; /* IE 5.5+ CSS3 see http://www.w3.org/TR/css3-text/#text-wrap */
+        white-space: pre-wrap; /* CSS3 */
+        white-space: -moz-pre-wrap; /* Mozilla, since 1999 */
+        white-space: -pre-wrap; /* Opera 4-6 */
+        white-space: -o-pre-wrap; /* Opera 7 */
+        overflow: hidden;
+        height: auto;
+        vertical-align: middle;
+        padding-top: 3px;
+        padding-bottom: 3px
+    }    
+</style>
+<link rel="stylesheet" type="text/css" href="css/your_style.css" />
+<link rel="stylesheet" type="text/css" href="js/plugin/jqgrid/ui.multiselect.css" />
+<section id="widget-grid" class="">
+    <!--<input type="text" id="lblUserCode" value="<%= session.getAttribute("s_usercode")%>"  class="tboxreadonlyShort"/>-->
+    <div class="col-xs-12 col-sm-7 col-md-7 col-lg-4">
+        <h1 class="page-title txt-color-blueDark">
+            <!-- PAGE HEADER -->
+            <i class="fa-fw fa fa-file fa-2x"></i> 
+            Stock Return Report                                   
+        </h1>
+    </div>
+    <div class="row">
+        <form id='form_StkXfer_Report'>
+        <article class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+            <div class="jarviswidget jarviswidget-color-blueDark" id="wid-id-2"  data-widget-editbutton="false" data-widget-colorbutton="false" data-widget-fullscreenbutton="false" data-widget-custombutton="false" data-widget-deletebutton="false">
+                <header>
+                    <span class="widget-icon"> <i class="fa fa-search"></i></span>
+                    <span><h2>&nbsp;Generate Stock Return Report</h2></span>
+                </header>
+                <div class="no-padding">
+                    <div class="widget-body">
+                        <div id="selectCriTab" class="tab-content">
+                            <div class="tab-pane fade active in padding-5 no-padding-bottom" id="selectCriTab_s1">
+                                <table id="tblSearch" class="selection-criteria">
+                                    <tr>
+                                        <td width="15%">Document Date:</td>
+                                        <td width="20%"><input id="txtDocDateFrom" name="txtDocDateFrom" placeholder="Document Date From" class="searchbox-date" style="width:300px"/></td>
+                                        <td width="5%" align="center">To</td>
+                                        <td width="60%"><input id="txtDocDateTo" name="txtDocDateTo" placeholder="Document Date To" class="searchbox-date" style="width:300px"/></td>                                           
+                                    </tr>
+<!--                                    <tr>
+                                        <td>Stock/Product:</td>
+                                        <td>                                             
+                                            <div style="float:left">
+                                                <input type="text" id="txtStkFrom" name="txtStkFrom" placeholder="--Enter Product Code--" class="searchbox-text" style="width:255px;"/>
+                                            </div>
+                                            <div style="float:left;padding-left:2px">
+                                                <button class='btn btn-default bg-color-blueDark txt-color-white' type="button" onclick="StkLookup('Stock','From');" ><i class="fa fa-search fa-lg"></i></button>
+                                            </div>
+                                        </td>
+                                        <td align="center">To</td>
+                                        <td>                                             
+                                            <div style="float:left">
+                                                <input type="text" id="txtStkTo" name="txtStkTo" placeholder="--Enter Product Code--" class="searchbox-text" style="width:255px;"/>
+                                            </div>
+                                            <div style="float:left;padding-left:2px">
+                                                <button class='btn btn-default bg-color-blueDark txt-color-white' type="button" onclick="StkLookup('Stock','To');" ><i class="fa fa-search fa-lg"></i></button>
+                                            </div>
+                                        </td>
+                                    </tr>-->
+                                    <tr>
+                                        <td>Company:</td>
+                                        <td>                                            
+                                            <label id="selectCompany" class="searchbox">
+                                            <select class="form-control" id="ddlComp" name="ddlComp" rel="popover-hover" data-original-title="Company" data-content="Select Company." style="width:300px;">
+                                                <option value="">- Select Company -</option>
+                                                <jstl:forEach var="ddl_Comp" items="${DDL.ddlGet('GET_COMP', '', '', sessionScope.SiteName)}">
+                                                    <option value="${ddl_Comp.VALUE}">${ddl_Comp.VALUE}</option>
+                                                </jstl:forEach>     
+                                            </select>    
+                                            </label>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>Location:</td>
+                                        <td>                                            
+                                            <label id="selectLocation" class="searchbox">
+                                            <select class="form-control" id="ddlIssLocation" name="ddlIssLocation" rel="popover-hover" data-original-title="Issue Location" data-content="Select Issue Location." style="width:300px;cursor:default;">
+                                                <option value="">- Select Receive Location -</option>
+                                            </select>    
+                                            </label>
+                                        </td>   
+                                        <td colspan="3">                                         
+                                            <label id="selectLocation" class="searchbox">
+            
+                                            <select class="form-control" id="ddlRecvLocation" name="ddlRecvLocation" rel="popover-hover" data-original-title="Receive Location" data-content="Select Receive Location." style="width:300px;cursor:default;">
+                                                <option value="">- Select Issue Location -</option>
+                                            </select>   
+                                            </label>
+                                        </td>
+                                    </tr> 
+                                    <tr>    
+                                        <th>Return Item Status</th>
+                                        <td colspan="4">
+                                            <!-- AF,AP,RA,RF,DF,DP,O -->
+                                            <div id="chkDtlStatusType"> 
+                                               
+                                                <input type="checkbox" id="chkDtlStatusType1" name="chkDtlStatusType"  value="ALL" checked="checked" /><label for="chkDtlStatusType1" class="label-option btn">All</label>
+                                                <input type="checkbox" id="chkDtlStatusType2" name="chkDtlStatusType" value="AF"/><label for="chkDtlStatusType2" class="label-option btn">Fully Accepted</label>
+                                                <input type="checkbox" id="chkDtlStatusType3" name="chkDtlStatusType" value="AP"/><label for="chkDtlStatusType3" class="label-option btn">Partially Accepted</label>
+                                                <input type="checkbox" id="chkDtlStatusType4" name="chkDtlStatusType" value="RF"/><label for="chkDtlStatusType4" class="label-option btn">Fully Rejected</label>
+                                                <input type="checkbox" id="chkDtlStatusType5" name="chkDtlStatusType" value="RP"/><label for="chkDtlStatusType5" class="label-option btn">Partially Rejected</label>
+                                                <input type="checkbox" id="chkDtlStatusType6" name="chkDtlStatusType" value="DF"/><label for="chkDtlStatusType6" class="label-option btn">Fully Disposed</label>
+                                                <input type="checkbox" id="chkDtlStatusType7" name="chkDtlStatusType" value="DP"/><label for="chkDtlStatusType7" class="label-option btn">Partially Disposed</label>
+                                                <input type="checkbox" id="chkDtlStatusType8" name="chkDtlStatusType" value="O"/><label for="chkDtlStatusType8" class="label-option btn">Open(unprocessed)</label>
+                                            </div>
+                                        </td>
+                                    </tr>                                                                
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>                            
+        </article>
+        </form>                             
+    </div>
+    <div class="row" style="padding-left:20px;padding-bottom:20px;">
+        <div align="center" class="padding-5" >
+            <input type="button" class="btn btn-default bg-color-blueDark txt-color-white" id="btnPrintPrev" name="btnPrintPrev" onclick="LoadPrintPreview();" data-toggle='modal' data-target='#printPreview' value="Print Preview" style="margin-right:20px;"/>
+            <!--<input type="button" class="btn btn-default bg-color-blueDark txt-color-white" id="btnExport" name="btnExport" onclick="location.href = '#/dashboard'" value="Export" style="margin-right:20px;"/>-->
+            <input type="button" class="btn btn-default bg-color-blueDark txt-color-white" id="btnCancel" name="btnCancel" onclick="location.href = '#/dashboard'" value="Cancel" style="margin-right:20px"/>
+        </div>
+    </div>
+</section>
+<jsp:include page="../../../includes/loading-no-status.jsp"/>  
+<jsp:include page="../../../includes/PopUpInitPage.jsp"/>
+<script src="js/buttonset.js"></script>
+<script type="text/javascript">
+   
+    pageSetUp();
+    $('#chkDtlStatusType').buttonset();
+    
+    function StkLookup(lookupType, ToFrom) {
+        if (lookupType === 'Stock') {
+            showProduct({width: 800, height: 600}).done(function (rowIn) {
+                //alert(JSON.stringify(rowIn));
+                $("#txtStk"+ToFrom).val(rowIn.stk_stockcode);
+            });
+        } 
+    }
+    
+    $().ready(function(){
+        
+        loadScript("js/buttonset.js", function () {
+            loadScript("js/excel-export.js", function () {
+            });
+        });
+    
+        var tempDate = new Date();
+        $("#txtDocDateFrom").datepicker({
+            numberOfMonths: 2,
+            changeMonth: true,
+            changeYear: true,
+            dateFormat: "yy-mm-dd",
+            onSelect: function (selected) {
+                $("#txtDocDateTo").datepicker("option", "minDate", selected);
+            }
+        });       
+        var fromDate = $.datepicker.formatDate('yy-mm-dd', new Date(tempDate.getFullYear(), tempDate.getMonth() - 2, tempDate.getDate()));
+        $("#txtDocDateFrom").val(fromDate);
+        $("#txtDocDateTo").datepicker({
+            numberOfMonths: 2,
+            changeMonth: true,
+            changeYear: true,
+            dateFormat: "yy-mm-dd",
+            onSelect: function (selected) {
+                $("#txtDocDateFrom").datepicker("option", "maxDate", selected);
+            }
+        });
+        $("#txtDocDateTo").datepicker("option", "minDate", fromDate);
+        $("#txtDocDateTo").val($.datepicker.formatDate('yy-mm-dd', tempDate));
+        $("#txtDocDateFrom").datepicker("option", "maxDate", tempDate);
+                
+        $("#ddlRecvLocation,#ddlIssLocation").prop("disabled", true);    
+        $("#ddlComp").change(function(){             
+            $('#ddlRecvLocation,#ddlIssLocation').empty();   
+            var sCompany = this.value;
+            if (sCompany !== "") {                
+                $.ajax({
+                    type: "GET",
+                    url: "${pageContext.request.contextPath}/Servlet_Stock?SFC=GET_REL_XFER_LOCATION",
+                    data: {
+                        COMPANY: sCompany,
+                        LOCATION: 'GET_ISSUE_LOC'
+                    },
+                    dataType: 'json',
+                    success: function(data) { 
+                        $("select#ddlRecvLocation").append( $("<option>").val("").html("- Select Receive Location -")); 
+                        for (var a=0 ; a<data.object1.length ; a++) {                   
+                            var arrData = data.object1[a];                
+                            $("select#ddlRecvLocation").append( $("<option>")
+                                .val(arrData.ISSUE_LOC)
+                                .html(arrData.ISSUE_LOC)
+                            ); 
+                        }
+                    }
+                });           
+                $.ajax({
+                    type: "GET",
+                    url: "${pageContext.request.contextPath}/Servlet_Stock?SFC=GET_REL_XFER_LOCATION",
+                    data: {
+                        COMPANY: sCompany,
+                        LOCATION: 'GET_RECEIVE_LOC'
+                    },
+                    dataType: 'json',
+                    success: function(data) { 
+                        $("select#ddlIssLocation").append( $("<option>").val("").html("- Select Issue Location -")); 
+                        for (var a=0 ; a<data.object1.length ; a++) {                   
+                            var arrData = data.object1[a];                
+                            $("select#ddlIssLocation").append( $("<option>")
+                                .val(arrData.REC_LOC)
+                                .html(arrData.REC_LOC)
+                            ); 
+                        }
+                    }
+                });
+                $("#ddlRecvLocation,#ddlIssLocation").prop("disabled", false); 
+            } else { 
+                $("select#ddlRecvLocation").append( $("<option>").val("").html("- Select Issue Location -")); 
+                $("select#ddlIssLocation").append( $("<option>").val("").html("- Select Receive Location -"));
+            }
+        });
+    });
+
+    function LoadPrintPreview() {
+    
+        var sRetStatus = "", selRetStatus = "";
+        
+        var retStatusLen = $('input[name="chkDtlStatusType"]').length;
+        for (var a=1 ; a<=retStatusLen ; a++) {
+            if ( $('#chkDtlStatusType'+a).is(":checked") ) {
+                sRetStatus += $('#chkDtlStatusType'+a).val() + ",";
+                selRetStatus += $("label[for='chkDtlStatusType"+a+"']").text() + " / ";
+            }
+        }          
+        sRetStatus = sRetStatus.substring(0, sRetStatus.length - 1);
+        selRetStatus = selRetStatus.substring(0, selRetStatus.length - 3); 
+        
+         
+    
+        if (sRetStatus.indexOf("All") != -1)
+        { 
+            sRetStatus = "";
+            selRetStatus = "All";
+        }
+            loadScript("js/print-preview.js", function () {
+            
+//            alert(sRetStatus);
+//            alert($('#ddlComp').val());
+//            alert($('#ddlRecvLocation').val());
+//            alert($('#ddlIssLocation').val());
+//            alert($('#txtDocDateFrom').val());
+//            alert($('#txtDocDateTo').val());
+            var jObj = {              
+                1: "GET_STOCK_RETURN_STATUS_REPORT",
+//                2: $('input[name=chkDtlStatusType]:checked').val(),
+                2: sRetStatus,
+                3: $('#ddlComp').val(), 
+//                4: $('#ddlRecvLocation').val(), 
+//                5: $('#ddlIssLocation').val(), 
+                
+                4: $('#ddlIssLocation').val(), 
+                5: $('#ddlRecvLocation').val(), 
+                6: $('#txtDocDateFrom').val(), 
+                7: $('#txtDocDateTo').val(), 
+                8: selRetStatus               
+            }; 
+
+
+            //for fix parameter
+            var param = {     
+                // PO_NO: sPoNo               
+            };           
+            //alert(JSON.stringify(jObj));               
+            var object = {};
+            object.procParam = jObj;
+            object.jasperName = 'Stk_Return_Report';
+            object.procString = 'SP_GET_STOCK_RETURN_RPT(?,?,?,?,?,?,?,?)';
+            object.fixParam = param;
+            //alert(JSON.stringify(funcIn));
+            printToPage(object);                                           
+        });      
+    };
+        
+</script>

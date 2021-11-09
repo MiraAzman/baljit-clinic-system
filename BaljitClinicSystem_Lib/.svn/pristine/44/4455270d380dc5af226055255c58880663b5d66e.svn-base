@@ -1,0 +1,67 @@
+CREATE DEFINER=`root`@`localhost` PROCEDURE `SP_GET_CONVERTED_UOM`(
+IN sMethod      varchar(30),
+IN sPrdCode     varchar(20),
+IN sQty         varchar(30),
+IN sCurrUOM     varchar(20),
+IN sPrevUOM     varchar(20),
+IN sUnitCost varchar(20)
+)
+BEGIN
+
+DECLARE _statement VARCHAR(8000);
+
+IF sMethod = 'CONVERT_UOM2' THEN
+ 
+    -- select F_CONVERT_UOM(sQty,sCurrUOM,sPrevUOM,sPrdCode) as RcvQty , F_CONVERT_UOM(sQty,sCurrUOM,sPrevUOM,sPrdCode) * sUnitCost as Cost ;
+    select F_CONVERT_UOM(sQty,sPrevUOM,sCurrUOM,sPrdCode) as RcvQty , F_CONVERT_UOM(1,sPrevUOM,sCurrUOM,sPrdCode) * sUnitCost as Cost ;
+    
+END IF;
+
+IF sMethod = 'CONVERT_UOM' THEN
+
+		IF (EXISTS (SELECT * FROM stkm_uomconversion WHERE uomc_stockcode = sPrdCode AND uomc_baseuomcode = sPrevUOM AND uomc_convuomcode = sCurrUOM)) THEN
+	
+			SET _statement = CONCAT(
+				'SELECT (',"'", sQty ,"'", ' * uomc_convfactor) AS RcvQty, (',"'", sUnitCost ,"'",' / uomc_convfactor) AS Cost  FROM stkm_uomconversion  
+				WHERE uomc_stockcode = ',"'", sPrdCode ,"'",' AND uomc_baseuomcode = ',"'", sPrevUOM ,"'",' AND uomc_convuomcode = ',"'", sCurrUOM ,"'"); 
+ 
+		ELSEIF (EXISTS (SELECT * FROM stkm_uomconversion WHERE uomc_stockcode = sPrdCode AND uomc_baseuomcode = sCurrUOM AND uomc_convuomcode = sPrevUOM)) THEN
+
+			SET _statement = CONCAT(
+				'SELECT (',"'", sQty ,"'", ' / uomc_convfactor) AS RcvQty, (',"'", sUnitCost ,"'",' * uomc_convfactor) AS Cost FROM stkm_uomconversion                  
+				WHERE uomc_stockcode = ',"'", sPrdCode ,"'",' AND uomc_baseuomcode = ',"'", sCurrUOM ,"'",' AND uomc_convuomcode = ',"'", sPrevUOM ,"'"); 
+
+		END IF;
+
+	/*IF (((SELECT uomc_convuomcode FROM stkm_uomconversion 
+   WHERE uomc_stockcode = sPrdCode AND uomc_convuomcode <> uomc_baseuomcode) = sCurrUOM) 
+        AND 
+        ((SELECT uomc_baseuomcode FROM stkm_uomconversion 
+        WHERE uomc_stockcode = sPrdCode AND uomc_convuomcode <> uomc_baseuomcode) = sPrevUOM)) THEN
+
+   SET _statement = CONCAT(
+    'SELECT (',"'", sQty ,"'", '*uomc_convfactor) AS RcvQty, (',"'", sUnitCost ,"'",'/uomc_convfactor) AS Cost FROM stkm_uomconversion  
+    WHERE uomc_stockcode = ',"'", sPrdCode ,"'",
+    ' AND uomc_convuomcode = ',"'", sCurrUOM ,"'",
+    ' AND uomc_baseuomcode = ',"'", sPrevUOM ,"'"); 
+ 
+    ELSEIF (((SELECT uomc_convuomcode FROM stkm_uomconversion 
+    WHERE uomc_stockcode = sPrdCode AND uomc_convuomcode <> uomc_baseuomcode) = sPrevUOM) 
+   AND 
+            ((SELECT uomc_baseuomcode FROM stkm_uomconversion 
+            WHERE uomc_stockcode = sPrdCode AND uomc_convuomcode <> uomc_baseuomcode) = sCurrUOM)) THEN
+
+    SET _statement = CONCAT(
+                'SELECT (',"'", sQty ,"'", '/uomc_convfactor) AS RcvQty, (',"'", sUnitCost ,"'",'*uomc_convfactor) AS Cost FROM stkm_uomconversion                  
+    WHERE uomc_stockcode = ',"'", sPrdCode ,"'",
+    ' AND uomc_convuomcode = ',"'", sPrevUOM ,"'",
+    ' AND uomc_baseuomcode = ',"'", sCurrUOM ,"'"); 
+	END IF;*/
+    
+    SET @statement = _statement;
+PREPARE dynquery FROM @statement;
+EXECUTE dynquery;
+DEALLOCATE PREPARE dynquery;
+END IF;
+
+END

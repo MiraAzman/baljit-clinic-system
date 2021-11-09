@@ -1,0 +1,66 @@
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package BusinessData;
+
+import java.sql.ResultSet;
+//import BusinessLogic.BLL_CorpProvider;
+import BusinessData.BaseDAL;
+import static BusinessData.BaseDAL.Object_BLL_Common;
+import BusinessLogic.BLL_Common;
+import java.sql.CallableStatement;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.sql.Types;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Iterator;
+
+
+
+/**
+ *
+ * @author N3359
+ */
+public class DAL_StockLedger {
+    BaseDAL DAL = new BaseDAL();
+    public BLL_Common.Common_Object DAL_UPDATE_STOCK_LEDGER(String SiteName, String[] sIn) {
+         return BaseDAL.Get_Multiple_QueryReturn("SP_TRX_STOCK_LEDGER("
+                 + "?,?,?,?,?,?,?,?,?,?,"
+                 + "?,?,?,?,?,?,?,?,?,?,"
+                 + "?,?,?,?,?,?,?,?,?,?,"
+                 + "?,?,?,?,?,?,?,?,?,?,"
+                 + "?,?,?,?,?,?,?,?,?,?,"
+                 + "?,?,?,?,?,?,?,?,?,?)" 
+                 
+                 , sIn, new int[]{java.sql.Types.VARCHAR, java.sql.Types.VARCHAR, java.sql.Types.VARCHAR, java.sql.Types.VARCHAR},
+                 SiteName);
+        }
+    
+    public BLL_Common.Common_Object DAL_GET_STOCK_LEDGER(String SiteName, String[] sIn) {
+         return BaseDAL.Get_Multiple_QueryReturn("SP_GET_STOCK_LEDGER("
+                 + "?,?,?,?,?,?,?,?,?,?,"
+                 + "?,?,?)"
+                 , sIn, new int[]{}, SiteName);
+    }
+    
+    public String DAL_REMOVE_STOCK_LEDGER(String s_comp, String s_loc, String s_stkcode, String s_path, String SiteName) {
+        String s_Return = "";
+        
+        
+        try
+        {
+            s_Return = BaseDAL.RemoveStockLedger(s_comp,s_loc,s_stkcode,s_path, SiteName);
+
+        }catch(SQLException ex) {
+            ex.toString();
+            String returnSqlState = ex.getSQLState();
+            s_Return  = returnSqlState;
+        
+        }
+        
+        return s_Return;
+    }
+}

@@ -1,0 +1,3100 @@
+package BusinessLogic;
+
+import BusinessData.BaseDAL;
+import BusinessData.DAL_PopulateData;
+import java.io.PrintWriter;
+import java.sql.SQLException;
+import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+import net.sf.json.JSONArray;
+import net.sf.json.JSONObject;
+import BusinessData.DAL_Stock;
+import net.sf.json.JSONSerializer;
+import BusinessData.DAL_ShowGrid;
+import BusinessData.DAL_StockUOM;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URL;
+
+
+//-----
+/**
+ *
+ * @author N3355
+ */
+@WebServlet(name = "Servlet_Stock", urlPatterns = {"/Servlet_Stock"})
+public class Servlet_Stock extends HttpServlet {
+
+    /**
+     * Processes requests for both HTTP <code>GET</code> and <code>POST</code>
+     * methods.
+     *
+     * @param request servlet request
+     * @param response servlet response
+     * @throws ServletException if a servlet-specific error occurs
+     * @throws IOException if an I/O error occurs
+     */
+//    protected void processRequest(HttpServletRequest request, HttpServletResponse response)
+//            throws ServletException, IOException {
+//        response.setContentType("text/html;charset=UTF-8");
+//        try (PrintWriter out = response.getWriter()) {
+//            /* TODO output your page here. You may use following sample code. */
+//            out.println("<!DOCTYPE html>");
+//            out.println("<html>");
+//            out.println("<head>");
+//            out.println("<title>Servlet Servlet_Stock</title>");            
+//            out.println("</head>");
+//            out.println("<body>");
+//            out.println("<h1>Servlet Servlet_Stock at " + request.getContextPath() + "</h1>");
+//            out.println("</body>");
+//            out.println("</html>");
+//        }
+//    }
+    
+    
+    // author - amira, date 19/4/2016
+    public void GET_RELATED_XFER_LOCATION(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException, SQLException {
+        
+        HttpSession session = request.getSession();
+        String SiteName = (String) session.getAttribute("SiteName");
+        
+        response.setContentType("text/html");
+        PrintWriter out = response.getWriter();
+
+        net.sf.json.JSONObject json = new net.sf.json.JSONObject();
+     
+        String sCompCode = request.getParameter("COMPANY");
+        String sLoc = request.getParameter("LOCATION");
+        
+        DAL_PopulateData CodeDescList = new DAL_PopulateData();
+        BLL_Common.Common_Object obj = CodeDescList.Get_DAL_CODEDESC_Info(SiteName, new String[]{"GET_XFER_LOCATION", sCompCode, sLoc});
+        
+        //Execute all queries here
+        try {
+            json.put("rows", obj.getJSONArray(0));
+            out.print(obj.getJSONArrayAsJSONObject("object"));
+            //} catch (SQLException e1) {
+        } catch (NullPointerException e1) {
+            e1.printStackTrace();
+        }
+    }
+    
+    public void SEARCH_Product_List(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException, SQLException{
+        
+        HttpSession session = request.getSession();
+        String SiteName = (String) session.getAttribute("SiteName");
+        
+        response.setContentType("text/html");
+        PrintWriter out = response.getWriter();
+
+        String sPrdCode = "";
+        String sPrdName = "";
+      
+        net.sf.json.JSONObject json = new net.sf.json.JSONObject();
+
+        sPrdCode = request.getParameter("PRDCODE");
+        sPrdName = request.getParameter("PRDNAME");
+        
+
+        //Calculate offset value
+        //int offset = (page - 1) * rows;
+        DAL_Stock DAL_product = new DAL_Stock();
+
+        int total = 0;
+        double pageval = 0;
+
+        BLL_Common.Common_Object PrdList = DAL_product.DAL_GET_STOCKLIST(SiteName, new String[]{
+            "SEARCH_PRODUCT_LIST", sPrdCode, sPrdName, "", "", "", "", "", "", "", ""});
+     
+        //Execute all queries here
+        try {
+            json.put("rows", PrdList.getJSONArray(0));
+            //} catch (SQLException e1) {
+        } catch (NullPointerException e1) {
+            // TODO Auto-generated catch block
+            e1.printStackTrace();
+        } finally {
+
+        }
+
+        //return json data to JSP page
+        out.print(json);
+        out.flush();
+        out.close();
+    }
+    
+    public void Bind_Product_List(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException, SQLException {
+        
+        HttpSession session = request.getSession();
+        String SiteName = (String) session.getAttribute("SiteName");
+        
+        response.setContentType("text/html");
+        PrintWriter out = response.getWriter();
+ 
+        String sPrdCode = "";
+        String sPrdName = "";
+        String sPrdGrpFrom = "";
+        String sPrdGrpTo = "";
+        String sPrdTypeFrom = "";
+        String sPrdTypeTo = "";
+        String sPrdCat = "";
+
+        //JSON object
+        net.sf.json.JSONObject json = new net.sf.json.JSONObject();
+
+        //Get page and rows value from JSP page
+        int page = Integer.parseInt(request.getParameter("page"));
+        int rows = Integer.parseInt(request.getParameter("rows"));
+        sPrdCode = request.getParameter("PRDCODE");
+        sPrdName = request.getParameter("PRDNAME");
+        sPrdGrpFrom = request.getParameter("PRDGRPFROM");
+        sPrdGrpTo = request.getParameter("PRDGRPTO");
+        sPrdTypeFrom = request.getParameter("PRDTYPFROM");
+        sPrdTypeTo = request.getParameter("PRDTYPTO");
+        sPrdCat = request.getParameter("PRDCAT");
+
+        String sortName = request.getParameter("sidx");
+        String sortOrder = request.getParameter("sord");
+        String sOrder = "";
+        if (sortName != null) {
+            sOrder = sortName + " " + sortOrder;
+        }
+
+        //Calculate offset value
+        //int offset = (page - 1) * rows;
+        DAL_Stock DAL_product = new DAL_Stock();
+
+        int total = 0;
+        double pageval = 0;
+
+        BLL_Common.Common_Object PrdList = DAL_product.DAL_GET_STOCKLIST(SiteName, new String[]{
+            "GET_PRODUCT_LIST", sPrdCode, sPrdName, sPrdGrpFrom, sPrdGrpTo, sPrdTypeFrom, sPrdTypeTo, sPrdCat, sOrder, Integer.toString(page), Integer.toString(rows)});
+
+        BLL_Common.Common_Object PrdTotalRow = DAL_product.DAL_GET_STOCKLIST(SiteName, new String[]{
+            "COUNT_PRODUCT_LIST", sPrdCode, sPrdName, sPrdGrpFrom, sPrdGrpTo, sPrdTypeFrom, sPrdTypeTo, sPrdCat, "", "", ""});
+
+        //Execute all queries here
+        try {
+
+            total = PrdTotalRow.getJSONArray(0).getJSONObject(0).getInt("Total");
+
+            if (total > 0) {
+                pageval = (double) total / rows;
+            } else {
+                pageval = 0;
+            }
+
+            //put total no records in json object with total key           
+            json.put("total", (int) (Math.ceil(pageval)));
+            json.put("page", page);
+            json.put("records", total);
+
+            json.put("rows", PrdList.getJSONArray(0));
+
+            //} catch (SQLException e1) {
+        } catch (NullPointerException e1) {
+            e1.printStackTrace();
+        } finally {
+
+        }
+
+        //return json data to JSP page
+        out.print(json);
+        out.flush();
+        out.close();
+    }
+
+    public void Bind_ProductUOM_List(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException, SQLException {
+        
+        HttpSession session = request.getSession();
+        String SiteName = (String) session.getAttribute("SiteName");
+        
+        response.setContentType("text/html");
+        PrintWriter out = response.getWriter();
+
+        String sPrdCode = "";
+
+        //JSON object
+        net.sf.json.JSONObject json = new net.sf.json.JSONObject();
+
+        //Get page and rows value from JSP page
+        int page = Integer.parseInt(request.getParameter("page"));
+        int rows = Integer.parseInt(request.getParameter("rows"));
+        sPrdCode = request.getParameter("PRDCODE");
+
+        String sortName = request.getParameter("sidx");
+        String sortOrder = request.getParameter("sord");
+        String sOrder = "";
+        if (sortName != null) {
+            sOrder = sortName + " " + sortOrder;
+        }
+
+        //Calculate offset value
+        //int offset = (page - 1) * rows;
+        DAL_Stock DAL_product = new DAL_Stock();
+
+        int total = 0;
+        double pageval = 0;
+
+        BLL_Common.Common_Object PrdUOMList = DAL_product.DAL_GET_STOCKLIST(SiteName, new String[]{
+            "PRODUCT_UOMCONV", sPrdCode, "", "", "", "", "", "", "", Integer.toString(page), Integer.toString(rows)});
+
+        BLL_Common.Common_Object PrdUOMListRow = DAL_product.DAL_GET_STOCKLIST(SiteName, new String[]{
+            "COUNT_PRODUCT_UOMCONV", sPrdCode, "", "", "", "", "", "", "", "", ""});
+
+        //Execute all queries here
+        try {
+
+            total = PrdUOMListRow.getJSONArray(0).getJSONObject(0).getInt("Total");
+
+            if (total > 0) {
+                pageval = (double) total / rows;
+            } else {
+                pageval = 0;
+            }
+
+            //put total no records in json object with total key           
+            json.put("total", (int) (Math.ceil(pageval)));
+            json.put("page", page);
+            json.put("records", total);
+
+            json.put("rows", PrdUOMList.getJSONArray(0));
+
+            //} catch (SQLException e1) {
+        } catch (NullPointerException e1) {
+            e1.printStackTrace();
+        } finally {
+
+        }
+
+        //return json data to JSP page
+        out.print(json);
+        out.flush();
+        out.close();
+    }
+
+    public void Bind_ProductPrice_List(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException, SQLException {
+        
+        HttpSession session = request.getSession();
+        String SiteName = (String) session.getAttribute("SiteName");
+        
+        response.setContentType("text/html");
+        PrintWriter out = response.getWriter();
+
+        String sPrdCode = "";
+
+        //JSON object
+        net.sf.json.JSONObject json = new net.sf.json.JSONObject();
+
+        //Get page and rows value from JSP page
+        int page = Integer.parseInt(request.getParameter("page"));
+        int rows = Integer.parseInt(request.getParameter("rows"));
+        sPrdCode = request.getParameter("PRDCODE");
+
+        String sortName = request.getParameter("sidx");
+        String sortOrder = request.getParameter("sord"); 
+        String sOrder = "";
+        if (sortName != null) {
+            sOrder = sortName + " " + sortOrder;
+        }
+
+        //Calculate offset value
+        //int offset = (page - 1) * rows;
+        DAL_Stock DAL_product = new DAL_Stock();
+
+        int total = 0;
+        double pageval = 0;
+
+        BLL_Common.Common_Object PrdPriceList = DAL_product.DAL_GET_STOCKLIST(SiteName, new String[]{
+            "PRODUCT_PRICE", sPrdCode, "", "", "", "", "", "", "", Integer.toString(page), Integer.toString(rows)});
+
+        BLL_Common.Common_Object PrdPriceListRow = DAL_product.DAL_GET_STOCKLIST(SiteName, new String[]{
+            "COUNT_PRODUCT_PRICE", sPrdCode, "", "", "", "", "", "", "", "", ""});
+
+        //Execute all queries here
+        try {
+
+            total = PrdPriceListRow.getJSONArray(0).getJSONObject(0).getInt("Total");
+
+            if (total > 0) {
+                pageval = (double) total / rows;
+            } else {
+                pageval = 0;
+            }
+
+            //put total no records in json object with total key           
+            json.put("total", (int) (Math.ceil(pageval)));
+            json.put("page", page);
+            json.put("records", total);
+
+            json.put("rows", PrdPriceList.getJSONArray(0));
+
+            //} catch (SQLException e1) {
+        } catch (NullPointerException e1) {
+            e1.printStackTrace();
+        } finally {
+
+        }
+
+        //return json data to JSP page
+        out.print(json);
+        out.flush();
+        out.close();
+    }
+
+    protected void INSERT_PRODUCT(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException, SQLException {
+        
+        HttpSession session = request.getSession();
+        String SiteName = (String) session.getAttribute("SiteName");
+        
+        response.setContentType("text/html");
+        PrintWriter out = response.getWriter();
+        net.sf.json.JSONObject json = new net.sf.json.JSONObject();
+        //JSONParser parser = new JSONParser();
+        //boolean return_bool = false;
+        //String return_msg = "";
+
+        String sMessage = "";
+        JSONArray jsonProduct = JSONArray.fromObject(request.getParameter("ADDPROD"));
+        
+        String JsonString = request.getParameter("UOMCONV");
+        String JsonPrice = request.getParameter("PRDPRICE");
+        String sIsActive = request.getParameter("ISACTIVE");
+        String sPrdAPI = request.getParameter("PRD_API");
+        DAL_Stock obj_product = new DAL_Stock();
+        String[] aryProduct = {
+            "ADD_PRODUCTMASTER" /*sMethod VARCHAR(30)*/,
+            "" /*1-sStockCode VARCHAR(20)*/,
+            ""/*2-sStockDesc VARCHAR(100)*/,
+            ""/*3-sStockGrpCode VARCHAR(6)*/,
+            ""/*4-sStockTypeCode VARCHAR(6)*/,
+            ""/*5-sBaseUOMCode VARCHAR(6)*/,
+            ""/*""/*6-sBarCode VARCHAR(50)*/,
+            ""/*""/*7-sPrecautionCode VARCHAR(10)*/,
+            ""/*""/*8-sInstructionCode VARCHAR(10)*/,
+            ""/*""/*9-sIndicationCode VARCHAR(10)*/,
+            sIsActive/*""/*10-sIsActive VARCHAR(1)*/,
+            "N"/*""/*11-sIsRestrict VARCHAR(1)*/,
+            "N"/*""/*12-sIsPsychotropic VARCHAR(1)*/,
+            ""/*""/*13-sDosageCode VARCHAR(10)*/,
+            ""/*""/*14-sFrequencyCode VARCHAR(10)*/,
+            "0"/*""/*15-sBaseUOMIdx VARCHAR(10)*/,
+            "0"/*""/*16-sUnitCost VARCHAR(10)*/,
+            "Y"/*""/*17-sPrintLabel VARCHAR(1)*/,
+            ""/*""/*18-sConsumable VARCHAR(6)*/,
+            "N"/*""/*19-sIsOTC VARCHAR(1)*/,
+            ""/*""/*20-sOTCGroup VARCHAR(6)*/,
+            "N"/*""/*21-sIsVCN VARCHAR(1)*/,
+            ""/*""/*22-sShortName VARCHAR(50)*/,
+            ""/*""/*23-sGSTPurCode VARCHAR(8)*/,
+            ""/*""/*24-sGSTMedSupCode VARCHAR(8)*/,
+            ""/*""/*25-sGSTOTCSupCode VARCHAR(8)*/,
+            ""/*""/*26-sBy VARCHAR(10)*/,
+            "1"/*""/*27-srecstatus VARCHAR(4)*/,
+            ""/*""/*28-sConvTo VARCHAR(10)*/,
+            ""/*""/*29-sFactor VARCHAR(10)*/,
+            ""/*""/*30-sPrice1 VARCHAR(10)*/,
+            ""/*""/*31-sPrice2 VARCHAR(10)*/,
+            ""/*""/*32-sPrice3 VARCHAR(10)*/,
+            ""/*""/*33-sPrice4 VARCHAR(10)*/,
+            ""/*""/*34-sIDX VARCHAR(10)*/,
+            ""/*""/*35-sFunction VARCHAR(20)*/,
+            ""/*36-sAccGrp VARCHAR(6)*/,
+            ""/*37-sBrandOwner VARCHAR(10)*/,
+            sPrdAPI/*38-sPrdAPI VARCHAR(5000)*/,
+            ""/*39-sDurationCode VARCHAR(10)*/,
+            ""/*40-sBaseUOMCode2 VARCHAR(6)*/,
+            "0"/*41-sBaseUOMIdx VARCHAR(10)*/,
+            "0"/*42-sUnitCost2 VARCHAR(10)*/
+        };
+
+        int length = jsonProduct.size();
+        for (int i = 0; i < length; i++) {
+            JSONObject jsonObject = jsonProduct.getJSONObject(i);
+            String tempValue = jsonObject.getString("value");
+
+            if (jsonObject.getString("name").equals("txtPrdCode")) {
+//                aryProduct[1] = tempValue.toUpperCase();
+                aryProduct[1] = tempValue; //pengkee 2018May
+
+            } else if (jsonObject.getString("name").equals("txtPrdName")) {
+                //aryProduct[2] = tempValue.toUpperCase();
+                aryProduct[2] = tempValue;
+
+            } else if (jsonObject.getString("name").equals("ddlPrdGrp")) {
+                aryProduct[3] = tempValue.toUpperCase();
+
+            } else if (jsonObject.getString("name").equals("ddlPrdType")) {
+                aryProduct[4] = tempValue.toUpperCase();
+
+            } else if (jsonObject.getString("name").equals("ddlPrdUOM")) {
+                aryProduct[5] = tempValue.toUpperCase();
+
+            } else if (jsonObject.getString("name").equals("txtBarCode")) {
+                aryProduct[6] = tempValue.toUpperCase();
+
+            } else if (jsonObject.getString("name").equals("ddlPrecaution")) {
+                aryProduct[7] = tempValue.toUpperCase();
+
+            } else if (jsonObject.getString("name").equals("ddlInstruction")) {
+                aryProduct[8] = tempValue.toUpperCase();
+            } else if (jsonObject.getString("name").equals("ddlIndication")) {
+                aryProduct[9] = tempValue.toUpperCase();
+
+            } else if (jsonObject.getString("name").equals("ddlDosage")) {
+                aryProduct[13] = tempValue.toUpperCase();
+            } else if (jsonObject.getString("name").equals("ddlFreq")) {
+                aryProduct[14] = tempValue.toUpperCase();
+            } else if (jsonObject.getString("name").equals("rdPrdCat")) {
+                aryProduct[18] = tempValue.toUpperCase();
+            } else if (jsonObject.getString("name").equals("txtShortName")) {
+                aryProduct[22] = tempValue.toUpperCase();
+            } else if (jsonObject.getString("name").equals("ddlGSTPurCode")) {
+                aryProduct[23] = tempValue.toUpperCase();
+            } else if (jsonObject.getString("name").equals("ddlGSTMedSupCode")) {
+                aryProduct[24] = tempValue.toUpperCase();
+            } else if (jsonObject.getString("name").equals("ddlGSTOTCSupCode")) {
+                aryProduct[25] = tempValue.toUpperCase();
+			} else if (jsonObject.getString("name").equals("ddlAccGrp")) {
+                aryProduct[36] = tempValue.toUpperCase();
+            } else if (jsonObject.getString("name").equals("ddlBrandOwner")) {
+                aryProduct[37] = tempValue.toUpperCase();
+            } else if (jsonObject.getString("name").equals("ddlDuration")) {
+                aryProduct[39] = tempValue.toUpperCase();
+            } else if (jsonObject.getString("name").equals("txtUnitCost")) {
+                aryProduct[16] = tempValue.toUpperCase();
+            } else if (jsonObject.getString("name").equals("ddlPharmacyUOM")) {
+                aryProduct[40] = tempValue.toUpperCase();
+            } else if (jsonObject.getString("name").equals("hdnPharmacyUnitCost")) {
+                aryProduct[42] = tempValue.toUpperCase();
+            }
+        }
+
+        BLL_Common.Common_Object obj = obj_product.DAL_ADDEDIT_PRODUCT(SiteName, aryProduct);
+       // BLL_Common.Common_Object objUom = new BLL_Common.Common_Object();
+        // BLL_Common.Common_Object objPrice = new BLL_Common.Common_Object();
+        boolean bReturn = false;
+
+        try {
+            if (obj.getObjectArray(0).toString().equals("00000")) {
+
+               // JSONArray UOMConvert_array = (JSONArray) JSONSerializer.toJSON(JsonString);
+                // JSONArray PrdPrice_array = (JSONArray) JSONSerializer.toJSON(JsonPrice);
+                TRX_UOM_CONVERT(JsonString, SiteName);
+                //System.out.println("UomReturn-->" + UomReturn);
+
+                Product_Pricing(JsonPrice, SiteName);
+
+                obj.commit();
+
+                // } 
+                bReturn = true;
+                sMessage = obj.getObjectArray(1).toString();
+                
+                //DATA EXCHANGE - LLT 2016-05-10
+                DataTransfer_Stock(aryProduct[1], SiteName);
+            } else {
+                // objPrice.rollback();
+                //  objUom.rollback();
+                obj.rollback();
+            }
+        } catch (Exception e) {
+            try {
+                obj.rollback();
+            } catch (SQLException ex) {
+                bReturn = false;
+            }
+        }
+
+        json.put("bool", bReturn);
+        json.put("msg", sMessage);
+        //json.put("CorpCode", sCorpCode);
+        out.println(json);
+
+    }
+
+    protected void UPDATE_PRODUCT(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException, SQLException {
+        
+        HttpSession session = request.getSession();
+        String SiteName = (String) session.getAttribute("SiteName");
+        
+        response.setContentType("text/html");
+        PrintWriter out = response.getWriter();
+        net.sf.json.JSONObject json = new net.sf.json.JSONObject();
+        //JSONParser parser = new JSONParser();
+        //boolean return_bool = false;
+        //String return_msg = "";
+
+        String sMessage = "";
+        JSONArray jsonProduct = JSONArray.fromObject(request.getParameter("UPDPROD"));
+        String JsonString = request.getParameter("UOMCONV");
+        String JsonPrice = request.getParameter("PRDPRICE");
+        String sIsActive = request.getParameter("ISACTIVE");
+        String sPrdAPI = request.getParameter("PRD_API");
+        DAL_Stock obj_product = new DAL_Stock();
+        String[] aryProduct = {
+            "UPDATE_PRODUCTMASTER" /*sMethod VARCHAR(30)*/,
+            "" /*1-sStockCode VARCHAR(20)*/,
+            ""/*2-sStockDesc VARCHAR(100)*/,
+            ""/*3-sStockGrpCode VARCHAR(6)*/,
+            ""/*4-sStockTypeCode VARCHAR(6)*/,
+            ""/*5-sBaseUOMCode VARCHAR(6)*/,
+            ""/*""/*6-sBarCode VARCHAR(50)*/,
+            ""/*""/*7-sPrecautionCode VARCHAR(10)*/,
+            ""/*""/*8-sInstructionCode VARCHAR(10)*/,
+            ""/*""/*9-sIndicationCode VARCHAR(10)*/,
+            sIsActive/*""/*10-sIsActive VARCHAR(1)*/,
+            "N"/*""/*11-sIsRestrict VARCHAR(1)*/,
+            "N"/*""/*12-sIsPsychotropic VARCHAR(1)*/,
+            ""/*""/*13-sDosageCode VARCHAR(10)*/,
+            ""/*""/*14-sFrequencyCode VARCHAR(10)*/,
+            "0"/*""/*15-sBaseUOMIdx VARCHAR(10)*/,
+            "0"/*""/*16-sUnitCost VARCHAR(10)*/,
+            "Y"/*""/*17-sPrintLabel VARCHAR(1)*/,
+            ""/*""/*18-sConsumable VARCHAR(6)*/,
+            "N"/*""/*19-sIsOTC VARCHAR(1)*/,
+            ""/*""/*20-sOTCGroup VARCHAR(6)*/,
+            "N"/*""/*21-sIsVCN VARCHAR(1)*/,
+            ""/*""/*22-sShortName VARCHAR(50)*/,
+            ""/*""/*23-sGSTPurCode VARCHAR(8)*/,
+            ""/*""/*24-sGSTMedSupCode VARCHAR(8)*/,
+            ""/*""/*25-sGSTOTCSupCode VARCHAR(8)*/,
+            ""/*""/*26-sBy VARCHAR(10)*/,
+            "1"/*""/*27-srecstatus VARCHAR(4)*/,
+            ""/*""/*28-sConvTo VARCHAR(10)*/,
+            ""/*""/*29-sFactor VARCHAR(10)*/,
+            ""/*""/*30-sPrice1 VARCHAR(10)*/,
+            ""/*""/*31-sPrice2 VARCHAR(10)*/,
+            ""/*""/*32-sPrice3 VARCHAR(10)*/,
+            ""/*""/*33-sPrice4 VARCHAR(10)*/,
+            ""/*""/*34-sIDX VARCHAR(10)*/,
+            ""/*""/*35-sFunction VARCHAR(20)*/,
+            ""/*""/*36-sAccGrp VARCHAR(6)*/,
+            ""/*37-sBrandOwner VARCHAR(10)*/,
+            sPrdAPI/*38-sPrdAPI VARCHAR(5000) */,
+            ""/*""/*39-sDurationCode VARCHAR(10)*/,
+            ""/*40-sBaseUOMCode2 VARCHAR(6)*/,
+            "0"/*41-sBaseUOMIdx VARCHAR(10)*/,
+            "0"/*42-sUnitCost2 VARCHAR(10)*/
+		};
+
+        int length = jsonProduct.size();
+        for (int i = 0; i < length; i++) {
+            JSONObject jsonObject = jsonProduct.getJSONObject(i);
+            String tempValue = jsonObject.getString("value");
+
+            if (jsonObject.getString("name").equals("lblPrdCode")) {
+//                aryProduct[1] = tempValue.toUpperCase();
+                aryProduct[1] = tempValue; //pengkee 2018May
+
+            } else if (jsonObject.getString("name").equals("txtPrdName")) {
+                //aryProduct[2] = tempValue.toUpperCase();
+                aryProduct[2] = tempValue;
+                
+            } else if (jsonObject.getString("name").equals("ddlPrdGrp")) {
+                aryProduct[3] = tempValue.toUpperCase();
+
+            } else if (jsonObject.getString("name").equals("ddlPrdType")) {
+                aryProduct[4] = tempValue.toUpperCase();
+
+            } else if (jsonObject.getString("name").equals("ddlPrdUOM")) {
+                aryProduct[5] = tempValue.toUpperCase();
+
+            } else if (jsonObject.getString("name").equals("txtBarCode")) {
+                aryProduct[6] = tempValue.toUpperCase();
+
+            } else if (jsonObject.getString("name").equals("ddlPrecaution")) {
+                aryProduct[7] = tempValue.toUpperCase();
+
+            } else if (jsonObject.getString("name").equals("ddlInstruction")) {
+                aryProduct[8] = tempValue.toUpperCase();
+                
+            } else if (jsonObject.getString("name").equals("ddlIndication")) {
+                aryProduct[9] = tempValue.toUpperCase();
+
+            } else if (jsonObject.getString("name").equals("ddlDosage")) {
+                aryProduct[13] = tempValue.toUpperCase();
+            } else if (jsonObject.getString("name").equals("ddlFreq")) {
+                aryProduct[14] = tempValue.toUpperCase();
+            } else if (jsonObject.getString("name").equals("rdPrdCat")) {
+                aryProduct[18] = tempValue.toUpperCase();
+            } else if (jsonObject.getString("name").equals("txtShortName")) {
+                aryProduct[22] = tempValue.toUpperCase();
+            } else if (jsonObject.getString("name").equals("ddlGSTPurCode")) {
+                aryProduct[23] = tempValue.toUpperCase();
+            } else if (jsonObject.getString("name").equals("ddlGSTMedSupCode")) {
+                aryProduct[24] = tempValue.toUpperCase();
+            } else if (jsonObject.getString("name").equals("ddlGSTOTCSupCode")) {
+                aryProduct[25] = tempValue.toUpperCase();
+            } else if (jsonObject.getString("name").equals("ddlAccGrp")) {
+                aryProduct[36] = tempValue.toUpperCase();
+            } else if (jsonObject.getString("name").equals("ddlBrandOwner")) {
+                aryProduct[37] = tempValue.toUpperCase();
+            } else if (jsonObject.getString("name").equals("ddlDuration")) {
+                aryProduct[39] = tempValue.toUpperCase();
+            } else if (jsonObject.getString("name").equals("txtUnitCost")) {
+                aryProduct[16] = tempValue.toUpperCase();
+            } else if (jsonObject.getString("name").equals("ddlPharmacyUOM")) {
+                aryProduct[40] = tempValue.toUpperCase();
+            } else if (jsonObject.getString("name").equals("hdnPharmacyUnitCost")) {
+                aryProduct[42] = tempValue.toUpperCase();
+            }
+        }
+
+        BLL_Common.Common_Object obj = obj_product.DAL_ADDEDIT_PRODUCT(SiteName, aryProduct);
+
+        boolean bReturn = false;
+        //boolean UomReturn = false;
+        // String sMethod = null;
+        try {
+            if (obj.getObjectArray(0).toString().equals("00000")) {
+                // Remove_UomConvert(JsonString);
+                TRX_UOM_CONVERT(JsonString, SiteName);
+                //System.out.println("UomReturn-->" + UomReturn);
+
+                Product_Pricing(JsonPrice, SiteName);
+
+                obj.commit();
+                bReturn = true;
+                sMessage = obj.getObjectArray(1).toString();
+                
+                //DATA EXCHANGE - LLT 2016-05-10
+                DataTransfer_Stock(aryProduct[1], SiteName);
+            } else {
+                // objPrice.rollback();
+                //  objUom.rollback();
+                obj.rollback();
+            }
+        } catch (Exception e) {
+            try {
+                obj.rollback();
+            } catch (SQLException ex) {
+                bReturn = false;
+            }
+        }
+
+        json.put("bool", bReturn);
+        json.put("msg", sMessage);
+        //json.put("CorpCode", sCorpCode);
+        out.println(json);
+
+    }
+
+    public void Bind_Product_Detail(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException, SQLException {
+        
+        HttpSession session = request.getSession();
+        String SiteName = (String) session.getAttribute("SiteName");
+        
+        PrintWriter out = response.getWriter();
+        response.setContentType("text/json");
+        //JSON object
+        net.sf.json.JSONObject json = new net.sf.json.JSONObject();
+
+        try {
+            String sPrdCode = request.getParameter("PRDCODE");
+            DAL_Stock StkDetail = new DAL_Stock();
+            BLL_Common.Common_Object rsPrdDetail = StkDetail.DAL_GET_STOCKLIST(SiteName, new String[]{
+                "PRODUCT_DETAIL", sPrdCode, "", "", "", "", "", "", "", "", ""});
+             
+            json.put("rows", rsPrdDetail.getJSONArray(0));
+            out.print(rsPrdDetail.getJSONArrayAsJSONObject("object"));
+
+        } catch (Exception e) {
+            out.println("Exception Error.");
+            e.printStackTrace();
+        } finally {
+            // BLL_Common.closeResultSet(rs,"");
+        }
+    }
+
+    public static boolean TRX_UOM_CONVERT(String JsonString, String SiteName) throws IOException, SQLException {
+        String sMethod = null;
+        String sIdx = null;
+        String sStockCode = null;
+        boolean b = false;
+        DAL_Stock obj_product = new DAL_Stock();
+        BLL_Common.Common_Object objUom = new BLL_Common.Common_Object();
+        JSONArray UOMConvert_array = (JSONArray) JSONSerializer.toJSON(JsonString);
+        //JSONArray PrdPrice_array = (JSONArray) JSONSerializer.toJSON(JsonPrice);
+        if (UOMConvert_array.size() > 0) {
+            for (Object jsUom : UOMConvert_array) {
+                JSONObject Uomjson = (JSONObject) jsUom;
+
+                //sIdx = sIdx + "," + Uomjson.get("IDX").toString().toUpperCase();
+                // sStockCode = Uomjson.get("STOCKCODE").toString().toUpperCase();
+                // System.out.println("sIdx-->" + sIdx.replace("null,", ""));
+                switch (Uomjson.getString("FUNCTION")) {
+                    case "INSERT":
+                        sMethod = "ADD_UOMCONV";
+                        break;
+                    case "UPDATE":
+                        sMethod = "UPDATE_UOMCONV";
+                        break;
+                    case "DELETE":
+                        sMethod = "DEL_UOMCONV";
+                        break;
+                    case "NO":
+                        break;
+                }
+                if (sMethod != null) {
+
+                    String[] aryUomConv = {
+                        sMethod/*sMethod VARCHAR(30)*/,
+                        Uomjson.get("STOCKCODE").toString().toUpperCase() /*1-sStockCode VARCHAR(20)*/,
+                        ""/*2-sStockDesc VARCHAR(100)*/,
+                        ""/*3-sStockGrpCode VARCHAR(6)*/,
+                        ""/*4-sStockTypeCode VARCHAR(6)*/,
+                        Uomjson.get("BASEDUOM").toString().toUpperCase()/*5-sBaseUOMCode VARCHAR(6)*/,
+                        ""/*""/*6-sBarCode VARCHAR(50)*/,
+                        ""/*""/*7-sPrecautionCode VARCHAR(10)*/,
+                        ""/*""/*8-sInstructionCode VARCHAR(10)*/,
+                        ""/*""/*9-sIndicationCode VARCHAR(10)*/,
+                        ""/*""/*10-sIsActive VARCHAR(1)*/,
+                        ""/*""/*11-sIsRestrict VARCHAR(1)*/,
+                        ""/*""/*12-sIsPsychotropic VARCHAR(1)*/,
+                        ""/*""/*13-sDosageCode VARCHAR(10)*/,
+                        ""/*""/*14-sFrequencyCode VARCHAR(10)*/,
+                        ""/*""/*15-sBaseUOMIdx VARCHAR(10)*/,
+                        ""/*""/*16-sUnitCost VARCHAR(10)*/,
+                        ""/*""/*17-sPrintLabel VARCHAR(1)*/,
+                        ""/*""/*18-sConsumable VARCHAR(6)*/,
+                        ""/*""/*19-sIsOTC VARCHAR(1)*/,
+                        ""/*""/*20-sOTCGroup VARCHAR(6)*/,
+                        ""/*""/*21-sIsVCN VARCHAR(1)*/,
+                        ""/*""/*22-sShortName VARCHAR(50)*/,
+                        ""/*""/*23-sGSTPurCode VARCHAR(8)*/,
+                        ""/*""/*24-sGSTMedSupCode VARCHAR(8)*/,
+                        ""/*""/*25-sGSTOTCSupCode VARCHAR(8)*/,
+                        ""/*""/*26-sBy VARCHAR(10)*/,
+                        "1"/*""/*27-srecstatus VARCHAR(4)*/,
+                        Uomjson.get("TOUOM").toString().toUpperCase()/*""/*28-sConvTo VARCHAR(10)*/,
+                        Uomjson.get("FACTOR").toString().toUpperCase()/*""/*29-sFactor VARCHAR(10)*/,
+                        ""/*""/*30-sPrice1 VARCHAR(10)*/,
+                        ""/*""/*31-sPrice2 VARCHAR(10)*/,
+                        ""/*""/*32-sPrice3 VARCHAR(10)*/,
+                        ""/*""/*33-sPrice4 VARCHAR(10)*/,
+                        Uomjson.get("IDX").toString().toUpperCase()/*""/*34-sIDX VARCHAR(10)*/,
+                        ""/*""/*35-sFunction VARCHAR(20)*/,
+                        ""/*""/*36-ACCGRP VARCHAR(6)*/,
+                        ""/*37-sBrandOwner VARCHAR(10)*/,
+                        ""/*38-sPrdAPI VARCHAR(5000)*/,
+                        ""/*39-sDurationCode VARCHAR(5000)*/,
+                        ""/*40-sBaseUOMCode2 VARCHAR(6)*/,
+                        "0"/*41-sBaseUOMIdx VARCHAR(10)*/,
+                        "0"/*42-sUnitCost2 VARCHAR(10)*/
+                    };
+
+                    objUom = obj_product.DAL_ADDEDIT_PRODUCT(SiteName, aryUomConv);
+
+                    if (objUom.getObjectArray(0).toString().equals("00000")) {
+                        b = objUom.getObjectArray(0).toString().equals("00000");
+                        sMethod = null;
+                        objUom.commit();
+                    } else {
+                        sMethod = null;
+                        objUom.rollback();
+                    }
+                }
+            }
+
+        }
+
+       // Remove_UomConvert(sStockCode, sIdx.replace("null,", ""));
+        //b = objUom.getObjectArray(0).toString().equals("00000");
+        return b;//objUom.getObjectArray(0).toString().equals("00000");
+    }
+
+    public static boolean Product_Pricing(String JsonPrice, String SiteName) throws IOException, SQLException {
+        boolean b = false;
+        String sMethod = null;
+        DAL_Stock obj_product = new DAL_Stock();
+        BLL_Common.Common_Object objPrice = new BLL_Common.Common_Object();
+        JSONArray PrdPrice_array = (JSONArray) JSONSerializer.toJSON(JsonPrice);
+        if (PrdPrice_array.size() > 0) {
+            for (Object js : PrdPrice_array) {
+                JSONObject Pricejson = (JSONObject) js;
+
+                switch (Pricejson.getString("FUNCTION")) {
+                    case "INSERT":
+                        sMethod = "ADD_PRDPRICE";
+                        break;
+                    case "UPDATE":
+                        sMethod = "UPDATE_PRDPRICE";
+                        break;
+                    case "DELETE":
+                        sMethod = "DEL_PRDPRICE";
+                        break;
+                    case "NO":
+                        break;
+                }
+
+                if (sMethod != null) {
+                    String[] aryPrice = {
+                        sMethod /*sMethod VARCHAR(30)*/,
+                        Pricejson.get("STOCKCODE").toString().toUpperCase() /*1-sStockCode VARCHAR(20)*/,
+                        ""/*2-sStockDesc VARCHAR(100)*/,
+                        ""/*3-sStockGrpCode VARCHAR(6)*/,
+                        ""/*4-sStockTypeCode VARCHAR(6)*/,
+                        Pricejson.get("UOM").toString().toUpperCase()/*5-sBaseUOMCode VARCHAR(6)*/,
+                        ""/*""/*6-sBarCode VARCHAR(50)*/,
+                        ""/*""/*7-sPrecautionCode VARCHAR(10)*/,
+                        ""/*""/*8-sInstructionCode VARCHAR(10)*/,
+                        ""/*""/*9-sIndicationCode VARCHAR(10)*/,
+                        ""/*""/*10-sIsActive VARCHAR(1)*/,
+                        ""/*""/*11-sIsRestrict VARCHAR(1)*/,
+                        ""/*""/*12-sIsPsychotropic VARCHAR(1)*/,
+                        ""/*""/*13-sDosageCode VARCHAR(10)*/,
+                        ""/*""/*14-sFrequencyCode VARCHAR(10)*/,
+                        ""/*""/*15-sBaseUOMIdx VARCHAR(10)*/,
+                        ""/*""/*16-sUnitCost VARCHAR(10)*/,
+                        ""/*""/*17-sPrintLabel VARCHAR(1)*/,
+                        ""/*""/*18-sConsumable VARCHAR(6)*/,
+                        ""/*""/*19-sIsOTC VARCHAR(1)*/,
+                        ""/*""/*20-sOTCGroup VARCHAR(6)*/,
+                        ""/*""/*21-sIsVCN VARCHAR(1)*/,
+                        ""/*""/*22-sShortName VARCHAR(50)*/,
+                        ""/*""/*23-sGSTPurCode VARCHAR(8)*/,
+                        ""/*""/*24-sGSTMedSupCode VARCHAR(8)*/,
+                        ""/*""/*25-sGSTOTCSupCode VARCHAR(8)*/,
+                        ""/*""/*26-sBy VARCHAR(10)*/,
+                        "1"/*""/*27-srecstatus VARCHAR(4)*/,
+                        ""/*""/*28-sConvTo VARCHAR(10)*/,
+                        Pricejson.get("FACTOR").toString().toUpperCase()/*""/*29-sFactor VARCHAR(10)*/,
+                        Pricejson.get("PRICE1").toString().toUpperCase()/*""/*30-sPrice1 VARCHAR(10)*/,
+                        Pricejson.get("PRICE2").toString().toUpperCase()/*""/*31-sPrice2 VARCHAR(10)*/,
+                        Pricejson.get("PRICE3").toString().toUpperCase()/*""/*32-sPrice3 VARCHAR(10)*/,
+                        Pricejson.get("PRICE4").toString().toUpperCase()/*""/*33-sPrice4 VARCHAR(10)*/,
+                        Pricejson.get("IDX").toString().toUpperCase()/*""/*34-sIDX VARCHAR(10)*/,
+                        ""/*""/*35-sFunction VARCHAR(20)*/,
+                        ""/*""/*36-ACCGRP VARCHAR(6)*/,
+                        ""/*37-sBrandOwner VARCHAR(10)*/,
+                        ""/*38-sPrdAPI VARCHAR(5000)*/,
+			""/*39-sDurationCode VARCHAR(10)*/,
+                        ""/*40-sBaseUOMCode2 VARCHAR(6)*/,
+                        "0"/*41-sBaseUOMIdx VARCHAR(10)*/,
+                        "0"/*42-sUnitCost2 VARCHAR(10)*/
+                    };
+                    
+                    objPrice = obj_product.DAL_ADDEDIT_PRODUCT(SiteName, aryPrice);
+                    // System.out.println();
+                    if (objPrice.getObjectArray(0).toString().equals("00000")) {
+                        sMethod = null;
+                        objPrice.commit();
+                        b = objPrice.getObjectArray(0).toString().equals("00000");
+                    } else {
+                        sMethod = null;
+                        objPrice.rollback();
+                    }
+                }
+            }
+        }
+
+        return b;//objPrice.getObjectArray(0).toString().equals("00000");
+    }
+
+    public void PO_AUTO_ALLOCATION(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException, SQLException {
+        
+        HttpSession session = request.getSession();
+        String SiteName = (String) session.getAttribute("SiteName");
+        
+        response.setContentType("text/html");
+        PrintWriter out = response.getWriter();
+
+        String sCompCode = "";
+        String sStkCode = "";
+        String sSuppCode = "";
+
+        //JSON object
+        net.sf.json.JSONObject json = new net.sf.json.JSONObject();
+
+        //Get page and rows value from JSP page
+        // int page = Integer.parseInt(request.getParameter("page"));
+        // int rows = Integer.parseInt(request.getParameter("rows"));
+        sCompCode = request.getParameter("COMPCODE");
+        sStkCode = request.getParameter("STKCODE");
+        sSuppCode = request.getParameter("SUPPCODE");
+      //  sState = request.getParameter("COMPSTATE");
+
+        //String sortName = request.getParameter("sidx");
+        //String sortOrder = request.getParameter("sord");
+        //Calculate offset value
+        //int offset = (page - 1) * rows;
+        DAL_Stock obj_Po = new DAL_Stock();
+
+        BLL_Common.Common_Object rsPoQty = obj_Po.DAL_PO_AUTOALLOCATION(SiteName, new String[]{
+            "GET_PO_AUTOALLO", sStkCode, "", "", "", "", ""});
+
+        //Execute all queries here
+        try {
+
+            json.put("rows", rsPoQty.getJSONArray(0));
+
+            //} catch (SQLException e1) {
+        } catch (NullPointerException e1) {
+            e1.printStackTrace();
+        } finally {
+
+        }
+
+        //return json data to JSP page
+        out.print(json);
+        out.flush();
+        out.close();
+    }
+
+    public void STOCK_QTY_CONV_UOM(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException, SQLException {
+        
+        HttpSession session = request.getSession();
+        String SiteName = (String) session.getAttribute("SiteName");
+        
+        response.setContentType("text/html");
+        PrintWriter out = response.getWriter();
+
+        String sStkCode = "", sQty = "", sSuppUOM = "", sOriUOM = "";
+        double sActualQty = 0;
+
+        //JSON object
+        net.sf.json.JSONObject json = new net.sf.json.JSONObject();
+
+        //Get page and rows value from JSP page
+        // int page = Integer.parseInt(request.getParameter("page"));
+        // int rows = Integer.parseInt(request.getParameter("rows"));
+        //sCompCode = request.getParameter("COMPCODE");        
+        // sSuppCode = request.getParameter("SUPPCODE");
+        //  sState = request.getParameter("COMPSTATE");
+        sStkCode = request.getParameter("STKCODE");
+        sQty = request.getParameter("ORDQTY");
+        sSuppUOM = request.getParameter("SUPPUOM");
+        sOriUOM = request.getParameter("BASEUOM");
+
+        //String sortName = request.getParameter("sidx");
+        //String sortOrder = request.getParameter("sord");
+        //Calculate offset value
+        //int offset = (page - 1) * rows;
+        DAL_Stock DAL_product = new DAL_Stock();
+
+        BLL_Common.Common_Object objUOM = DAL_product.DAL_GET_STOCKLIST(SiteName, new String[]{
+            "PRODUCT_UOMCONV", sStkCode, "", "", "", "", "", "", "", "", ""});
+
+        //Execute all queries here
+        try {
+
+          sActualQty =  GENERAL_UOM_CONVERT(objUOM.getJSONArray(0), Double.parseDouble(sQty), sSuppUOM, sOriUOM);
+           //  System.out.println("sActualQty-->" + (double) Math.abs(sActualQty));
+          //json.put("total",  (double) (Math.ceil(sActualQty)));
+          json.put("total",  (double) Math.ceil(sActualQty));
+            
+          //json.put("total",  (int) (Math.ceil(sActualQty)));
+           // json.put("rows", sActualQty);
+            //} catch (SQLException e1) {
+        } catch (NullPointerException e1) {
+            // TODO Auto-generated catch block
+            e1.printStackTrace();
+        } finally {
+
+        }
+
+        //return json data to JSP page
+        out.print(json);
+        out.flush();
+        out.close();
+    }
+
+    public static double GENERAL_UOM_CONVERT(JSONArray JsonString, double sQty, String sTargetUom, String sSourceUom) throws IOException, SQLException {
+
+        String sUomBase = "", sToUom = "";
+        double dFactor = 0, dFac = 1, dActualQty = 0;
+        boolean bFound = false;
+        DAL_Stock obj_product = new DAL_Stock();
+        BLL_Common.Common_Object objUom = new BLL_Common.Common_Object();
+        JSONArray UOMConvert_array = (JSONArray) JSONSerializer.toJSON(JsonString);
+        //JSONArray PrdPrice_array = (JSONArray) JSONSerializer.toJSON(JsonPrice);
+        if (UOMConvert_array.size() > 0) {
+            for (Object jsUom : UOMConvert_array) {
+                JSONObject Uomjson = (JSONObject) jsUom;
+
+                sUomBase = Uomjson.get("uomc_baseuomcode").toString().toUpperCase();
+                sToUom = Uomjson.get("uomc_convuomcode").toString().toUpperCase();
+               // sFactor = Uomjson.get("uomc_convfactor").toString().toUpperCase();
+
+                if (sUomBase.equals(sSourceUom) && sToUom.equals(sTargetUom)) {
+                    dFactor = Double.parseDouble(Uomjson.get("uomc_convfactor").toString());
+                    bFound = true;
+                }
+
+            }
+            
+             for (Object jsUom : UOMConvert_array) {
+                JSONObject Uomjson = (JSONObject) jsUom;
+
+                sUomBase = Uomjson.get("uomc_convuomcode").toString().toUpperCase();
+                sToUom = Uomjson.get("uomc_baseuomcode").toString().toUpperCase();
+               // sFactor = Uomjson.get("uomc_convfactor").toString().toUpperCase();
+
+                if (sUomBase.equals(sSourceUom) && sToUom.equals(sTargetUom)) {
+                    dFactor = Double.parseDouble(Uomjson.get("uomc_convfactor").toString());
+                    //bFound = true;
+                    if(dFactor > 0)
+                    {
+                         dFactor = 1/dFactor;
+                         bFound = true;
+                    }
+                }
+
+            }
+        }
+        if (bFound)
+        {
+           dFac = 1/dFactor;
+           dActualQty = (sQty * dFactor);
+        }
+        else
+        {
+          dFac = 0;
+          dActualQty = 0;
+          //return 0;
+        }
+        return dActualQty;//objUom.getObjectArray(0).toString().equals("00000");
+
+    }
+
+    public void GET_RELATED_STOCK_UOM(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException, SQLException {
+        
+        HttpSession session = request.getSession();
+        String SiteName = (String) session.getAttribute("SiteName");
+        
+        response.setContentType("text/html");
+        PrintWriter out = response.getWriter();
+
+        String sCompCode = "";
+        String sStkCode = "";
+        String sSuppCode = "";
+
+        //JSON object
+        net.sf.json.JSONObject json = new net.sf.json.JSONObject();
+
+     
+        sStkCode = request.getParameter("STKCODE");
+        
+        DAL_PopulateData CodeDescList = new DAL_PopulateData();
+        BLL_Common.Common_Object obj = CodeDescList.Get_DAL_CODEDESC_Info(SiteName, new String[]{"GET_REL_STKUOM", sStkCode, ""});
+     
+       // DAL_Stock obj_Po = new DAL_Stock();
+
+       // BLL_Common.Common_Object rsPoQty = obj_Po.DAL_PO_AUTOALLOCATION(new String[]{
+       //     "GET_PO_AUTOALLO", sStkCode, "", "", "", "", ""});
+
+        //Execute all queries here
+        try {
+
+            json.put("rows", obj.getJSONArray(0));
+
+            //} catch (SQLException e1) {
+        } catch (NullPointerException e1) {
+            e1.printStackTrace();
+        } finally {
+
+        }
+
+        //return json data to JSP page
+        out.print(json);
+        out.flush();
+        out.close();
+    }
+    
+     public static boolean UPDATE_STOCK_BALANCE(JSONObject JsonStkBal, String SiteName) throws ServletException, IOException, SQLException {
+        boolean b = false;
+        String sMethod = null;
+        DAL_Stock objUpdStkBal = new DAL_Stock();
+        BLL_Common.Common_Object objStkBal = new BLL_Common.Common_Object();
+
+//        int i=0;
+
+                //sMethod = "UPDATE_STOCK_BALANCE";
+                sMethod = JsonStkBal.get("FUNCTION").toString().toUpperCase() ;
+                 
+
+                if (sMethod != null) {
+//                    i=i+1;
+                    String[] aryItm = {
+                        sMethod /*sMethod VARCHAR(30)*/,
+                        
+                        JsonStkBal.get("bal_companycode").toString().toUpperCase()  ,
+                        JsonStkBal.get("bal_location").toString().toUpperCase()  ,
+                        JsonStkBal.get("bal_stockcode").toString().toUpperCase() ,
+                        JsonStkBal.get("bal_uom").toString().toUpperCase() ,
+                        JsonStkBal.get("UpdateQty").toString().toUpperCase() ,                        
+                        JsonStkBal.get("BY").toString().toUpperCase() /* 14 - sBy varchar(10) */,
+                        JsonStkBal.get("recstatus").toString().toUpperCase() /* 15 - srecstatus varchar(4) */
+
+                        };
+                    objStkBal = objUpdStkBal.DAL_ADDEDIT_STOCKT_BALANCE(SiteName, aryItm);
+                    // System.out.println();
+                    if (objStkBal.getObjectArray(0).toString().equals("00000")) {
+                        sMethod = null;
+                        objStkBal.commit();
+                        b = objStkBal.getObjectArray(0).toString().equals("00000");
+                    } else {
+                        sMethod = null;
+                        objStkBal.rollback();
+                    }
+                }
+//            }
+//        }
+
+        return b;//objStkBal.getObjectArray(0).toString().equals("00000");
+    }
+     
+    public void GET_UNFULFILLED_STOCKCODES(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException, SQLException {
+        
+        HttpSession session = request.getSession();
+        String SiteName = (String) session.getAttribute("SiteName");
+        
+        response.setContentType("text/html");
+        PrintWriter out = response.getWriter();
+
+        net.sf.json.JSONObject json = new net.sf.json.JSONObject();
+ 
+        DAL_Stock obj_Po = new DAL_Stock();
+
+        BLL_Common.Common_Object rsPoQty = obj_Po.DAL_PO_AUTOALLOCATION(SiteName, new String[]{
+            "GET_UNFULFILLED_STOCKCODE", "", "", "", "", "", ""});
+
+        //Execute all queries here
+        try {
+
+            json.put("rows", rsPoQty.getJSONArray(0));
+
+            //} catch (SQLException e1) {
+        } catch (NullPointerException e1) {
+            e1.printStackTrace();
+        } finally {
+
+        }
+
+        //return json data to JSP page
+        out.print(json);
+        out.flush();
+        out.close();
+    }
+     
+// author - amira, date 15/2/2016
+    // view related location based on company selected
+    public void GET_RELATED_LOCATION(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException, SQLException {
+        
+        HttpSession session = request.getSession();
+        String SiteName = (String) session.getAttribute("SiteName");
+        
+        response.setContentType("text/html");
+        PrintWriter out = response.getWriter();
+
+        net.sf.json.JSONObject json = new net.sf.json.JSONObject();
+     
+        String sCompCode = request.getParameter("COMPANY");
+        
+        DAL_PopulateData CodeDescList = new DAL_PopulateData();
+        BLL_Common.Common_Object obj = CodeDescList.Get_DAL_CODEDESC_Info(SiteName, new String[]{"GET_LOCATION", sCompCode, ""});
+
+        //Execute all queries here
+        try {
+            json.put("rows", obj.getJSONArray(0));
+            out.print(obj.getJSONArrayAsJSONObject("object"));
+            //} catch (SQLException e1) {
+        } catch (NullPointerException e1) {
+            e1.printStackTrace();
+        }
+    }
+
+// author - amira, date 7/12/2015
+    public void Search_StkCodeList(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException, SQLException {
+
+        HttpSession session = request.getSession();
+        String SiteName = (String) session.getAttribute("SiteName");
+        
+        response.setContentType("text/html");
+        PrintWriter out = response.getWriter();
+
+        net.sf.json.JSONObject json = new net.sf.json.JSONObject();
+
+        //Get page and rows value from JSP page
+        int page = Integer.parseInt(request.getParameter("page"));
+        int rows = Integer.parseInt(request.getParameter("rows"));
+
+        String sType = request.getParameter("TYPE"); 
+        String sCode = request.getParameter("CODE");
+        String sDesc = request.getParameter("DESC");
+
+        String sortName = request.getParameter("sidx");
+        String sortOrder = request.getParameter("sord");
+        String sOrder = "";
+        if (sortName != null) {
+            sOrder = sortName + " " + sortOrder;
+        }
+
+        //Calculate offset value
+        //int offset = (page - 1) * rows;
+
+        DAL_ShowGrid DAL_product = new DAL_ShowGrid();
+
+        int total = 0;
+        double pageval = 0;
+
+        BLL_Common.Common_Object SignUpList = DAL_product.DAL_GET_CODETYPE(SiteName, new String[]{
+            "GET_CODETYPE_LIST", sType, sCode, sDesc, "", sOrder, Integer.toString(page), Integer.toString(rows)});
+
+        BLL_Common.Common_Object SignUpTotalRow = DAL_product.DAL_GET_CODETYPE(SiteName, new String[]{
+            "COUNT_CODETYPE_LIST", sType, sCode, sDesc, "", "", "", ""});
+
+        //Execute all queries here
+        try {
+
+            total = SignUpTotalRow.getJSONArray(0).getJSONObject(0).getInt("Total");
+
+            if (total > 0) {
+                pageval = (double) total / rows;
+            } else {
+                pageval = 0;
+            }
+
+            //put total no records in json object with total key           
+            json.put("total", (int) (Math.ceil(pageval)));
+            json.put("page", page);
+            json.put("records", total);
+
+            json.put("rows", SignUpList.getJSONArray(0));
+
+        //} catch (SQLException e1) {
+        } catch (NullPointerException e1) {
+            e1.printStackTrace();
+        } finally {
+
+        }
+
+        //return json data to JSP page
+        out.print(json);
+        out.flush();
+        out.close();
+    }
+
+// author - amira, date 4/1/2016
+    // update record of chosen item
+    public void UPDATE_CODETYPE(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException, SQLException {
+    
+        HttpSession session = request.getSession();
+        String SiteName = (String) session.getAttribute("SiteName");
+        
+        response.setContentType("text/html");
+        PrintWriter out = response.getWriter();
+        
+        //JSON object
+        net.sf.json.JSONObject json = new net.sf.json.JSONObject();
+       
+        String sType = request.getParameter("TYPE");
+        String sCode = request.getParameter("CODE");
+        String sDesc = request.getParameter("DESC");
+        String sFunc = request.getParameter("FUNCTION");
+        
+        String srecstatus = "";
+        boolean bReturn = false;   
+        String sMethod = "";
+        
+        if ( sFunc.equals("ADD") ){
+            sMethod = "ADD_CODETYPE"; 
+            srecstatus = "1";
+        } else if ( sFunc.equals("EDIT") ) {           
+            sMethod = "EDIT_CODETYPE_DETAIL";                                           
+            srecstatus = request.getParameter("recstatus"); 
+        }
+        DAL_ShowGrid StkDetail = new DAL_ShowGrid();       
+        BLL_Common.Common_Object obj = StkDetail.DAL_UPDATE_CODETYPE(SiteName, new String[]{
+            sMethod, sType, sCode, sDesc,"",srecstatus});
+        
+        try {              
+            if (obj.getObjectArray(0).toString().equals("00000")) {
+
+                obj.commit();   
+                DataTransfer_CodeDesc(sType,sCode, SiteName); //LLT - 20160520
+                bReturn = true;                    
+            } else {
+                obj.rollback();
+            }
+        }catch (Exception e) {
+            try {
+                obj.rollback();
+            } catch (SQLException ex) {
+                out.println("Exception Error.");
+                e.printStackTrace();
+                bReturn = false;
+            }
+        }    
+        json.put("bool", bReturn);
+        out.println(json);
+    } 
+
+// author - amira, date 30/12/2015
+    // view detail page
+    public void VIEW_CODETYPE(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException, SQLException {
+    
+        HttpSession session = request.getSession();
+        String SiteName = (String) session.getAttribute("SiteName");
+        
+        PrintWriter out = response.getWriter();
+        response.setContentType("text/json");
+        
+        //JSON object
+        net.sf.json.JSONObject json = new net.sf.json.JSONObject();
+
+        try {            
+                String sCode = request.getParameter("CODE");
+                String sType = request.getParameter("TYPE");
+                
+                DAL_ShowGrid StkDetail = new DAL_ShowGrid();
+                
+                BLL_Common.Common_Object rsDetail = StkDetail.DAL_GET_CODETYPE(SiteName, new String[]{
+                    "CODETYPE_DETAIL", sType, sCode, "", "", "", "", ""});
+                json.put("row", rsDetail.getJSONArray(0));
+                out.print(rsDetail.getJSONArrayAsJSONObject("object"));
+                
+        } catch (Exception e) {
+            out.println("Exception Error.");
+            e.printStackTrace();
+        } finally {
+           // BLL_Common.closeResultSet(rs,"");
+        } 
+        //json.put("type", sType);
+        //out.println(json);
+    }  
+
+// author - amira, date 8/1/2016
+    // search and view company list based on code & name
+    public void Search_CompList(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException, SQLException {
+
+        HttpSession session = request.getSession();
+        String SiteName = (String) session.getAttribute("SiteName");
+        
+        response.setContentType("text/html");
+        PrintWriter out = response.getWriter();
+
+        net.sf.json.JSONObject json = new net.sf.json.JSONObject();
+
+        //Get page and rows value from JSP page
+        int page = Integer.parseInt(request.getParameter("page"));
+        int rows = Integer.parseInt(request.getParameter("rows"));
+ 
+        String sCode = request.getParameter("CODE");
+        String sName = request.getParameter("NAME");
+
+        String sortName = request.getParameter("sidx");
+        String sortOrder = request.getParameter("sord");
+        String sOrder = "";
+        if (sortName != null) {
+            sOrder = sortName + " " + sortOrder;
+        }
+
+        //Calculate offset value
+        //int offset = (page - 1) * rows;
+
+        DAL_ShowGrid DAL_product = new DAL_ShowGrid();
+
+        int total = 0;
+        double pageval = 0;
+
+        BLL_Common.Common_Object SignUpList = DAL_product.DAL_GET_COMPANY(SiteName, new String[]{
+            "GET_COMP_LIST", sCode, sName,"","","", sOrder, Integer.toString(page), Integer.toString(rows)});
+
+        BLL_Common.Common_Object SignUpTotalRow = DAL_product.DAL_GET_COMPANY(SiteName, new String[]{
+            "COUNT_COMP_LIST", sCode, sName,"","","","","",""});
+
+        //Execute all queries here
+        try {
+
+            total = SignUpTotalRow.getJSONArray(0).getJSONObject(0).getInt("Total");
+
+            if (total > 0) {
+                pageval = (double) total / rows;
+            } else {
+                pageval = 0;
+            }
+
+            //put total no records in json object with total key           
+            json.put("total", (int) (Math.ceil(pageval)));
+            json.put("page", page);
+            json.put("records", total);
+
+            json.put("rows", SignUpList.getJSONArray(0));
+
+        //} catch (SQLException e1) {
+        } catch (NullPointerException e1) {
+            e1.printStackTrace();
+        } finally {
+
+        }
+
+        //return json data to JSP page
+        out.print(json);
+        out.flush();
+        out.close();
+    }
+
+ // author - amira, date 13/1/2016
+    // view detail page (company)
+    public void VIEW_COMPANY(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException, SQLException {
+    
+        HttpSession session = request.getSession();
+        String SiteName = (String) session.getAttribute("SiteName");
+        
+        PrintWriter out = response.getWriter();
+        response.setContentType("text/json");
+        
+        //JSON object
+        net.sf.json.JSONObject json = new net.sf.json.JSONObject();
+        
+        try {   
+            String sCode = request.getParameter("CODE");
+            DAL_ShowGrid StkDetail = new DAL_ShowGrid();
+            BLL_Common.Common_Object rsDetail = StkDetail.DAL_GET_COMPANY(SiteName, new String[]{
+                "COMPANY_DETAIL", sCode, "","","","","","",""});
+            
+            json.put("row", rsDetail.getJSONArray(0));
+            out.print(rsDetail.getJSONArrayAsJSONObject("object"));
+            
+        } catch (Exception e) {
+            out.println("Exception Error.");
+            e.printStackTrace();
+        } finally {
+           // BLL_Common.closeResultSet(rs,"");
+        } 
+        //json.put("type", sType);
+        //out.println(json);
+    }
+
+// author - amira, date 13/1/2016
+    // update information of selected company
+    public void UPDATE_COMPANY(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException, SQLException {
+    
+        HttpSession session = request.getSession();
+        String SiteName = (String) session.getAttribute("SiteName");
+        
+        response.setContentType("text/html");
+        PrintWriter out = response.getWriter();
+        
+        //JSON object
+        net.sf.json.JSONObject json = new net.sf.json.JSONObject();
+       
+        String sCode = request.getParameter("CODE");
+        String sName = request.getParameter("NAME");
+        String sAdd1 = request.getParameter("ADD1");
+        String sAdd2 = request.getParameter("ADD2");
+        String sAdd3 = request.getParameter("ADD3");
+        String sPostcode = request.getParameter("POSTCODE");
+        String sArea = request.getParameter("AREA");
+        String sState = request.getParameter("STATE");
+        String sCountry = request.getParameter("COUNTRY");
+        String sTel = request.getParameter("TEL");  //10
+        String sFax = request.getParameter("FAX");
+        String sRemarks = request.getParameter("REMARKS");
+        String sContactPer = request.getParameter("CONTACTPER");
+        String sIsActive = request.getParameter("ISACTIVE");
+        String sBusRegNo = request.getParameter("BUSREGNO");
+        String sAccGroup = request.getParameter("ACCGROUP");
+        //String sBusType = request.getParameter("BUSTYPE");
+        String sAgent = request.getParameter("AGENT");
+        String sCreditTerm = request.getParameter("CREDITTERM");
+        String sCreditLimit = request.getParameter("CREDITLIMIT");  //10
+        String sAgingOn = request.getParameter("AGINGON");
+        String sCurrCode = request.getParameter("CURRCODE");
+        String sIsGST = request.getParameter("ISGST");
+        String sGstCodePurchase = request.getParameter("GSTCODEPURCHASE");
+        String sGstCodeSupply = request.getParameter("GSTCODESUPPLY");
+        String sGstRegNo = request.getParameter("GSTREGNO");
+        String sGstInclusive = request.getParameter("GSTINCLUSIVE");
+        String srecstatus = request.getParameter("recstatus");  //8
+        String sFunc = request.getParameter("FUNCTION");
+        
+        boolean bReturn = false;   
+        String sMethod = "";
+        
+        if ( sFunc.equals("ADD") ){
+            sMethod = "ADD_COMPANY";                                 
+        } else if ( sFunc.equals("EDIT") ) {           
+            sMethod = "EDIT_COMPANY_DETAIL";   
+        }
+        DAL_ShowGrid StkDetail = new DAL_ShowGrid();       
+
+        BLL_Common.Common_Object obj = StkDetail.DAL_UPDATE_COMPANY(SiteName, new String[]{
+            sMethod, sCode, sName, sAdd1, sAdd2, //5
+            sAdd3, sPostcode, sTel, sFax, sCountry, //5
+            sArea, sState, sRemarks, sContactPer, sIsActive, //5
+            sBusRegNo, sAccGroup, sAgent, sCreditTerm, sCreditLimit, //5
+            sAgingOn, sCurrCode, sIsGST, sGstCodePurchase, sGstCodeSupply, sGstRegNo, //6
+            sGstInclusive,"", srecstatus}); //3  
+        
+        try {              
+            if (obj.getObjectArray(0).toString().equals("00000")) {
+
+                obj.commit();   
+
+                bReturn = true;                    
+            } else {
+                obj.rollback();
+            }
+        }catch (Exception e) {
+            try {
+                obj.rollback();
+            } catch (SQLException ex) {
+                out.println("Exception Error.");
+                e.printStackTrace();
+                bReturn = false;
+            }
+        }    
+        json.put("bool", bReturn);
+        out.println(json);
+    }
+
+// author - amira, date 19/1/2016
+    // search and view location list
+    public void Search_LocList(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException, SQLException {
+
+        HttpSession session = request.getSession();
+        String SiteName = (String) session.getAttribute("SiteName");
+        
+        response.setContentType("text/html");
+        PrintWriter out = response.getWriter();
+
+        //JSON object
+        net.sf.json.JSONObject json = new net.sf.json.JSONObject();
+
+        //Get page and rows value from JSP page
+        int page = Integer.parseInt(request.getParameter("page"));
+        int rows = Integer.parseInt(request.getParameter("rows"));
+ 
+        String sCompCode = request.getParameter("COMP");
+        String sCode = request.getParameter("CODE");
+        String sName = request.getParameter("NAME");
+
+        String sortName = request.getParameter("sidx");
+        String sortOrder = request.getParameter("sord");
+        String sOrder = "";
+        if (sortName != null) {
+            sOrder = sortName + " " + sortOrder;
+        }
+
+        //Calculate offset value
+        //int offset = (page - 1) * rows;
+
+        DAL_ShowGrid DAL_product = new DAL_ShowGrid();
+
+        int total = 0;
+        double pageval = 0;
+
+        BLL_Common.Common_Object SignUpList = DAL_product.DAL_GET_LOCATION(SiteName, new String[]{
+            "GET_LOC_LIST", sCode, sCompCode, sName,
+            sOrder, Integer.toString(page), Integer.toString(rows)});
+
+        BLL_Common.Common_Object SignUpTotalRow = DAL_product.DAL_GET_LOCATION(SiteName, new String[]{
+            "COUNT_LOC_LIST", sCode, sCompCode, sName,"","",""});
+
+        //Execute all queries here
+        try {
+
+            total = SignUpTotalRow.getJSONArray(0).getJSONObject(0).getInt("Total");
+
+            if (total > 0) {
+                pageval = (double) total / rows;
+            } else {
+                pageval = 0;
+            }
+
+            //put total no records in json object with total key           
+            json.put("total", (int) (Math.ceil(pageval)));
+            json.put("page", page);
+            json.put("records", total);
+
+            json.put("rows", SignUpList.getJSONArray(0));
+
+        //} catch (SQLException e1) {
+        } catch (NullPointerException e1) {
+            e1.printStackTrace();
+        } finally {
+
+        }
+
+        //return json data to JSP page
+        out.print(json);
+        out.flush();
+        out.close();
+    }
+
+// author - amira, date 20/1/2016
+    // update information of selected location
+    public void UPDATE_LOCATION(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException, SQLException {
+    
+        HttpSession session = request.getSession();
+        String SiteName = (String) session.getAttribute("SiteName");
+        
+        response.setContentType("text/html");
+        PrintWriter out = response.getWriter();
+        
+        net.sf.json.JSONObject json = new net.sf.json.JSONObject();
+       
+        String sCompCode = request.getParameter("COMPCODE");
+        String sCode = request.getParameter("CODE");
+        String sName = request.getParameter("NAME");
+        String sAdd1 = request.getParameter("ADD1");
+        String sAdd2 = request.getParameter("ADD2");
+        String sAdd3 = request.getParameter("ADD3");
+        String sPostcode = request.getParameter("POSTCODE");
+        String sArea = request.getParameter("AREA");
+        String sState = request.getParameter("STATE");
+        String sCountry = request.getParameter("COUNTRY");  //10
+        String sTel = request.getParameter("TEL");
+        String sFax = request.getParameter("FAX");
+        String sRemarks = request.getParameter("REMARKS");
+        String sContactPer = request.getParameter("CONTACTPER");
+        String sIsActive = request.getParameter("ISACTIVE");      
+        String srecstatus = request.getParameter("recstatus"); //6
+        String sIsmainstore = request.getParameter("ISMAINSTORE");
+        String sFunc = request.getParameter("FUNCTION");
+        
+        boolean bReturn = false;   
+        String sMethod = "";
+        
+        if ( sFunc.equals("ADD") ){
+            sMethod = "ADD_LOCATION";                                 
+        } else if ( sFunc.equals("EDIT") ) {           
+            sMethod = "EDIT_LOCATION_DETAIL";   
+        }
+        DAL_ShowGrid StkDetail = new DAL_ShowGrid();       
+
+        BLL_Common.Common_Object obj = StkDetail.DAL_UPDATE_LOCATION(SiteName, new String[]{
+            sMethod, sCompCode, sCode, sName, sAdd1, //5 
+            sAdd2, sAdd3, sPostcode, sTel, sFax,    //5
+            sCountry, sArea, sState, sRemarks, sContactPer, //5 
+            sIsActive, "", srecstatus, sIsmainstore});    //3
+        
+        try {              
+            if (obj.getObjectArray(0).toString().equals("00000")) {
+
+                obj.commit();   
+
+                bReturn = true;                    
+            } else {
+                obj.rollback();
+            }
+        }catch (Exception e) {
+            try {
+                obj.rollback();
+            } catch (SQLException ex) {
+                out.println("Exception Error.");
+                e.printStackTrace();
+                bReturn = false;
+            }
+        }    
+        json.put("bool", bReturn);
+        out.println(json);
+    }
+
+// author - amira, date 20/1/2016
+    // view detail page (location)
+    public void VIEW_LOCATION(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException, SQLException {
+    
+        HttpSession session = request.getSession();
+        String SiteName = (String) session.getAttribute("SiteName");
+        
+        PrintWriter out = response.getWriter();
+        response.setContentType("text/json");
+        
+        //JSON object
+        net.sf.json.JSONObject json = new net.sf.json.JSONObject();
+        
+        try {   
+            String sCode = request.getParameter("CODE");
+            String sCompCode = request.getParameter("COMPCODE");
+            DAL_ShowGrid StkDetail = new DAL_ShowGrid();
+            BLL_Common.Common_Object rsDetail = StkDetail.DAL_GET_LOCATION(SiteName, new String[]{
+                "LOCATION_DETAIL", sCode, sCompCode,"","","",""});
+            
+            json.put("row", rsDetail.getJSONArray(0));
+            out.print(rsDetail.getJSONArrayAsJSONObject("object"));
+            
+        } catch (Exception e) {
+            out.println("Exception Error.");
+            e.printStackTrace();
+        } finally {
+           // BLL_Common.closeResultSet(rs,"");
+        } 
+        //json.put("type", sType);
+        //out.println(json);
+    }
+    
+// author - amira, date 28/1/2016
+    // save stock supplier info
+    protected void UPDATE_STOCK_SUPPLIER(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException, SQLException {        
+        
+        HttpSession session = request.getSession();
+        String SiteName = (String) session.getAttribute("SiteName");
+        
+        response.setContentType("text/html");
+        PrintWriter out = response.getWriter();
+        net.sf.json.JSONObject json = new net.sf.json.JSONObject();
+        //JSONParser parser = new JSONParser();
+        
+        String sMethod = null;
+        String sMsg = "";
+        boolean bReturn = false;       
+        String JsonString = request.getParameter("STOCKSUPPLIER");
+        
+        DAL_ShowGrid obj = new DAL_ShowGrid();
+        BLL_Common.Common_Object objStockSupplier = new BLL_Common.Common_Object();
+        
+        try {
+            JSONArray StockSupplier_array = (JSONArray) JSONSerializer.toJSON(JsonString);
+            if (StockSupplier_array.size() > 0) {
+                for (Object jsStkSup : StockSupplier_array) {
+                    JSONObject StkSupjson = (JSONObject) jsStkSup;
+
+                    switch (StkSupjson.getString("FUNCTION")) {
+                        case "INSERT":
+                            sMethod = "ADD_STOCK_SUPPLIER";
+                            break;
+                        case "UPDATE":
+                            sMethod = "UPDATE_STOCK_SUPPLIER";
+                            break;
+                        case "DELETE":
+                            sMethod = "DEL_STOCK_SUPPLIER";
+                            break;
+                        case "NO":
+                            sMethod = "NO";
+                            break;
+                    }
+
+                    String[] Stock_Supplier = {
+                        sMethod,
+                        StkSupjson.get("STOCKCODE").toString(),
+                        StkSupjson.get("SUPPLIER").toString(),
+                        StkSupjson.get("UOM").toString(),
+                        StkSupjson.get("UNITCOST").toString(),
+                        StkSupjson.get("COMPANY").toString(),
+                        "","1"}; //8
+
+                    objStockSupplier = obj.DAL_UPDATE_StockSupplier(SiteName, Stock_Supplier);
+
+                    if (objStockSupplier.getObjectArray(0).toString().equals("00000")) {
+                        objStockSupplier.commit();
+                        bReturn = true;
+                    } else {
+                        objStockSupplier.rollback();
+                        sMsg = objStockSupplier.getObjectArray(0).toString();
+                        bReturn = false;
+                        break;
+                    }
+                }
+            }           
+        } catch (Exception e) {
+            try {
+                objStockSupplier.rollback();
+            } catch (SQLException ex) {
+                bReturn = false;
+            }
+        }
+        json.put("bool", bReturn);
+        json.put("msg", sMsg);
+        out.println(json);       
+    }  
+
+// author - amira, date 2/2/2016
+    // view stock supplier & stock reorder listing
+    public void Search_StkSupplierReorder_List(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException, SQLException {
+        
+        HttpSession session = request.getSession();
+        String SiteName = (String) session.getAttribute("SiteName");
+        
+        response.setContentType("text/html");
+        PrintWriter out = response.getWriter();
+
+        //JSON object
+        net.sf.json.JSONObject json = new net.sf.json.JSONObject();
+
+        //Get page and rows value from JSP page
+        int page = Integer.parseInt(request.getParameter("page"));
+        int rows = Integer.parseInt(request.getParameter("rows"));
+        
+        String sStockCode = request.getParameter("STOCKCODE");
+        String sDefaultUOM = request.getParameter("DEFAULTUOM");
+        String sFunc = request.getParameter("FUNCTION");
+
+        String sortName = request.getParameter("sidx");
+        String sortOrder = request.getParameter("sord");
+        String sOrder = "";
+        if (sortName != null) {
+            sOrder = sortName + " " + sortOrder;
+        }
+
+        //Calculate offset value
+        //int offset = (page - 1) * rows;
+        DAL_ShowGrid DAL_Stock = new DAL_ShowGrid();
+        BLL_Common.Common_Object StkSupplierList = new BLL_Common.Common_Object();
+        BLL_Common.Common_Object StkSupplierListRow = new BLL_Common.Common_Object();
+        
+        int total = 0;
+        double pageval = 0;
+        
+        if (sFunc.equals("STOCK_SUPPLIER")) {
+            
+            StkSupplierList = DAL_Stock.DAL_GET_StockSupplier(SiteName, new String[]{
+            "GET_STOCKSUPPLIER_LIST", sStockCode, sDefaultUOM, "", Integer.toString(page), Integer.toString(rows)});
+
+            StkSupplierListRow = DAL_Stock.DAL_GET_StockSupplier(SiteName, new String[]{
+            "COUNT_STOCKSUPPLIER_LIST", sStockCode, sDefaultUOM,"","",""});     
+            
+        } else if (sFunc.equals("STOCK_REORDER")) {
+            
+            StkSupplierList = DAL_Stock.DAL_GET_StockReorder(SiteName, new String[]{
+            "GET_STOCKREORDER_LIST", sStockCode, sDefaultUOM, "", Integer.toString(page), Integer.toString(rows)});
+
+            StkSupplierListRow = DAL_Stock.DAL_GET_StockReorder(SiteName, new String[]{
+            "COUNT_STOCKREORDER_LIST", sStockCode, sDefaultUOM, "", "", ""});            
+        }
+
+        //Execute all queries here
+        try {
+
+            total = StkSupplierListRow.getJSONArray(0).getJSONObject(0).getInt("Total");
+
+            if (total > 0) {
+                pageval = (double) total / rows;
+            } else {
+                pageval = 0;
+            }
+
+            //put total no records in json object with total key           
+            json.put("total", (int) (Math.ceil(pageval)));
+            json.put("page", page);
+            json.put("records", total);
+
+            json.put("rows", StkSupplierList.getJSONArray(0));
+
+            //} catch (SQLException e1) {
+        } catch (NullPointerException e1) {
+            e1.printStackTrace();
+        } finally {
+
+        }
+
+        //return json data to JSP page
+        out.print(json);
+        out.flush();
+        out.close();
+    } 
+
+// author - amira, date 16/2/2016
+    // save stock reorder info
+    protected void UPDATE_STOCK_REORDER(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException, SQLException {        
+        
+        HttpSession session = request.getSession();
+        String SiteName = (String) session.getAttribute("SiteName");
+        
+        response.setContentType("text/html");
+        PrintWriter out = response.getWriter();
+        net.sf.json.JSONObject json = new net.sf.json.JSONObject();
+        //JSONParser parser = new JSONParser();
+        
+        String sMethod = null;
+        String sMsg = "";
+        boolean bReturn = false;       
+        String JsonString = request.getParameter("STOCKREORDER");
+        
+        DAL_ShowGrid obj = new DAL_ShowGrid();
+        BLL_Common.Common_Object objStockReorder = new BLL_Common.Common_Object();
+        
+        DAL_Stock objStk = new DAL_Stock(); //pengkee
+        BLL_Common.Common_Object objUpdBal = new BLL_Common.Common_Object(); //pengkee
+        
+        try {
+            JSONArray StockReorder_array = (JSONArray) JSONSerializer.toJSON(JsonString);
+            if (StockReorder_array.size() > 0) {
+                for (Object jsStkReorder : StockReorder_array) {
+                    JSONObject StkReorderjson = (JSONObject) jsStkReorder;
+
+                    switch (StkReorderjson.getString("FUNCTION")) {
+                        case "INSERT":
+                            sMethod = "ADD_STOCK_REORDER";
+                            break;
+                        case "UPDATE":
+                            sMethod = "UPDATE_STOCK_REORDER";
+                            break;
+                        case "DELETE":
+                            sMethod = "DEL_STOCK_REORDER";
+                            break;
+                        case "NO":
+                            sMethod = "NO";
+                            break;
+                    }
+
+                    String[] Stock_Reorder = {
+                        sMethod,
+                        StkReorderjson.get("STOCKCODE").toString(),
+                        StkReorderjson.get("DEFAULTUOM").toString(),
+                        StkReorderjson.get("COMPANY").toString(),
+                        StkReorderjson.get("LOCATION").toString(),
+                        StkReorderjson.get("REORDERLVL").toString(),
+                        StkReorderjson.get("REORDERQTY").toString(),
+                        "","1"}; 
+
+                    objStockReorder = obj.DAL_UPDATE_StockReorder(SiteName, Stock_Reorder);
+
+                    //pengkee 2016May26 Add routine to auto create a zero qty record in StkBalance
+                    String[] Stock_Bal = {
+                        "UPDATE_STOCK_BALANCE",                        
+                        StkReorderjson.get("COMPANY").toString(),
+                        StkReorderjson.get("LOCATION").toString(),
+                        StkReorderjson.get("STOCKCODE").toString(),
+                        StkReorderjson.get("DEFAULTUOM").toString(),                        
+                        "0",                        
+                        "","1"}; 
+                    objUpdBal = objStk.DAL_ADDEDIT_STOCKT_BALANCE(SiteName, Stock_Bal);
+                    
+                    if (objStockReorder.getObjectArray(0).toString().equals("00000")) {
+                        objStockReorder.commit();
+                        bReturn = true;
+                    } else {
+                        objStockReorder.rollback();
+                        sMsg = objStockReorder.getObjectArray(0).toString();
+                        bReturn = false;                        
+                        break;
+                    }
+                }
+            }        
+        } catch (Exception e) {
+            try {
+                objStockReorder.rollback();
+            } catch (SQLException ex) {
+                bReturn = false;
+            }
+        }
+        json.put("bool", bReturn);
+        json.put("msg", sMsg);
+        out.println(json);       
+    }
+
+// author - amira, date 19/2/2016
+    // search and view stock transfer data
+    public void Search_StkTransferList(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException, SQLException {
+
+        HttpSession session = request.getSession();
+        String SiteName = (String) session.getAttribute("SiteName");
+        
+        response.setContentType("text/html");
+        PrintWriter out = response.getWriter();
+
+        net.sf.json.JSONObject json = new net.sf.json.JSONObject();
+
+        //Get page and rows value from JSP page
+        int page = Integer.parseInt(request.getParameter("page"));
+        int rows = Integer.parseInt(request.getParameter("rows"));
+ 
+        String sCompCode = request.getParameter("COMP");
+        String sIssueLoc = request.getParameter("ISSUELOC");
+        String sReceiveLoc = request.getParameter("RECEIVELOC");
+        String sStkCode = request.getParameter("STKCODE");
+        String sDocDate = request.getParameter("DOCDATE");
+
+        String sortName = request.getParameter("sidx");
+        String sortOrder = request.getParameter("sord");
+        String sOrder = "";
+        if (sortName != null) {
+            sOrder = sortName + " " + sortOrder;
+        }
+
+        //Calculate offset value
+        //int offset = (page - 1) * rows;
+
+        DAL_ShowGrid DAL_product = new DAL_ShowGrid();
+
+        int total = 0;
+        double pageval = 0;
+
+        BLL_Common.Common_Object SignUpList = DAL_product.DAL_GET_StockTransfer(SiteName, new String[]{
+            "GET_STKXFR_LIST", sCompCode, sIssueLoc, sReceiveLoc, sStkCode, sDocDate,"","",
+            sOrder, Integer.toString(page), Integer.toString(rows)});
+
+        BLL_Common.Common_Object SignUpTotalRow = DAL_product.DAL_GET_StockTransfer(SiteName, new String[]{
+            "COUNT_STKXFR_LIST", sCompCode, sIssueLoc, sReceiveLoc, sStkCode, sDocDate,"","",
+            "", "", ""});
+
+        //Execute all queries here
+        try {
+
+            total = SignUpTotalRow.getJSONArray(0).getJSONObject(0).getInt("Total");
+
+            if (total > 0) {
+                pageval = (double) total / rows;
+            } else {
+                pageval = 0;
+            }
+
+            //put total no records in json object with total key           
+            json.put("total", (int) (Math.ceil(pageval)));
+            json.put("page", page);
+            json.put("records", total);
+
+            json.put("rows", SignUpList.getJSONArray(0));
+
+        //} catch (SQLException e1) {
+        } catch (NullPointerException e1) {
+            e1.printStackTrace();
+        }
+        //return json data to JSP page
+        out.print(json);
+        out.flush();
+        out.close();
+    }
+    
+    public void Check_Stock_HIS(HttpServletRequest request, HttpServletResponse response)throws ServletException, IOException, SQLException{
+        
+        HttpSession session = request.getSession();
+        String SiteName = (String) session.getAttribute("SiteName");
+        
+        response.setContentType("text/html");
+        PrintWriter out = response.getWriter();
+        JSONObject json = new JSONObject();
+        
+        String sMessage = "";     
+        String sCompCode = request.getParameter("COMPANY");
+        String sLocCode = request.getParameter("LOCATION");
+        JSONArray jsonStkArray = JSONArray.fromObject(request.getParameter("STOCK"));
+        
+        String[] ary = {
+            "GET_LOCATION_URL", // 1. sMethod varchar(20)
+            sLocCode, // 2. sLocCode varchar(10)
+            sCompCode, // 3. sCompCode varchar(10)
+            "", // 4. sName varchar(100)
+            "", // 5. sOrderBy varchar(30)
+            "", // 6. sPage varchar(10)
+            "" // 7. sPerPage varchar(10)
+        };
+        
+        DAL_ShowGrid DAL_ShowGrid = new DAL_ShowGrid();
+        BLL_Common.Common_Object obj = DAL_ShowGrid.DAL_GET_LOCATION(SiteName, ary);
+        
+        try{ 
+            if(obj.getJSONArray(0).getJSONObject(0).getString("WSC_URL") != null){                                                       
+
+                String sURL = obj.getJSONArray(0).getJSONObject(0).getString("WSC_URL");
+                        
+                if(!sURL.equals("")){
+                    for (int i=0 ; i<jsonStkArray.size() ; i++) {
+
+                        String stkCode = jsonStkArray.get(i).toString();
+                        String sWSURL = "";
+                        if ( BaseDAL.CMSIntegrationType.equals("HIS") )
+                        {
+                            sWSURL = sURL + "HIS_WebServices_Inventory/webresources/HIS_WebServices/IsStockCodeExists/" + stkCode;
+                            //localhost:8080/HIS_WebServices_Inventory/webresources/HIS_WebServices/IsStockCodeExists/00631
+                        }
+                        else if ( BaseDAL.CMSIntegrationType.equals("CMS") )
+                        {
+                            sWSURL = sURL + "CMS_WebServices_Inventory/webresources/HIS_WebServices/IsStockCodeExists/" + stkCode;
+                        }
+                        else
+                        {
+                            sWSURL = sURL + "HIS_WebServices_Inventory/webresources/HIS_WebServices/IsStockCodeExists/" + stkCode;
+                        }
+                        //----------
+                        
+                        StringBuilder strBuf = new StringBuilder();  
+        
+                        HttpURLConnection conn=null;
+                        BufferedReader reader=null;
+                         try{  
+                        //Declare the connection to weather api url
+                        URL url = new URL(sWSURL);  
+                        conn = (HttpURLConnection)url.openConnection();  
+                        conn.setRequestMethod("GET");
+                        conn.setRequestProperty("Accept", "text/html");
+                        conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+                    
+            
+                        if (conn.getResponseCode() != 200) {
+                            throw new RuntimeException("HTTP GET Request Failed with Error code : "
+                                          + conn.getResponseCode());
+                        }
+            
+                        //Read the content from the defined connection
+                        //Using IO Stream with Buffer raise highly the efficiency of IO
+                        reader = new BufferedReader(new InputStreamReader(conn.getInputStream(),"utf-8"));
+                        String output = null;  
+                        while ((output = reader.readLine()) != null)  
+                            strBuf.append(output);  
+                        }catch(MalformedURLException e) {  
+                            e.printStackTrace();   
+                        }catch(IOException e){  
+                            e.printStackTrace();   
+                        }
+                        finally
+                        {
+                            if(reader!=null)
+                            {
+                                try {
+                                    reader.close();
+                                } catch (IOException e) {
+                                    e.printStackTrace();
+                                }
+                            }
+                            if(conn!=null)
+                            {
+                                conn.disconnect();
+                            }
+                        }
+                                              
+                        String result = strBuf.toString();  
+                        //----
+                        if (result.equals("FALSE"))
+                        {
+                        DataTransfer_Stock_Loc(stkCode, sURL, SiteName);
+                    }
+                }                        
+                }                        
+            } else {
+                sMessage = "Null location url.";
+            }
+        } catch (Exception e) {
+            sMessage = e.toString();
+        }       
+        json.put("msg", sMessage);
+        out.println(json);
+    }
+    
+    public static String DataTransfer_Stock_Loc(String stkCode, String sLocURL, String SiteName){
+
+        int AllowableThreadCount = 50;
+        DAL_Stock objStock = new DAL_Stock();
+        JSONObject obj_add = new JSONObject();
+        JSONObject obj_pass = new JSONObject();
+        String sMessage = "";
+        
+        String[] arySM = {
+            "GET_DATAEX_LOC",     /*0. sMethod    varchar(30)  */
+            stkCode,        /*1. sPrdCode    varchar(20)  */
+            "",             /*2. sPrdName         varchar(100) */
+            "",             /*3. sPrdGrpFrom      varchar(20)  */
+            "",             /*4. sPrdGrpTo        varchar(20)  */
+            "",             /*5. sPrdTypeFrom     varchar(20)  */    
+            "",             /*6. sPrdTypeTo       varchar(20)  */ 
+            "",             /*7. sPrdCat          varchar(50)  */ 
+            "",             /*8. sOrderBy         varchar(30)  */ 
+            "",             /*9. sPage            varchar(10)  */ 
+            ""              /*10. sPerPag         varchar(10)  */ 
+        };
+        
+        BLL_Common.Common_Object obj = objStock.DAL_GET_STOCKLIST(SiteName, arySM);
+        
+        try{
+            if(obj.getJSONArray(0).size() > 0){
+                obj_add.put("SM", obj.getJSONArray(0));
+                
+                if(obj.getJSONArray(1).size() > 0){
+                    obj_add.put("SPRC", obj.getJSONArray(1));
+                }
+                
+                if(obj.getJSONArray(2).size() > 0){
+                    obj_add.put("UOMC", obj.getJSONArray(2));
+                }               
+                obj_pass.put("DATA", obj_add);
+                
+//                String sURL = sLocURL + "HIS_WebServices_Inventory/webresources/HIS_WebServices/UpdateStockMaster";
+                String sURL = "";
+                if ( BaseDAL.CMSIntegrationType.equals("HIS") )
+                {
+                    sURL = sLocURL + "HIS_WebServices_Inventory/webresources/HIS_WebServices/UpdateStockMaster";
+                }
+                else if ( BaseDAL.CMSIntegrationType.equals("CMS") )
+                {
+                    sURL = sLocURL + "CMS_WebServices_Inventory/webresources/HIS_WebServices/UpdateStockMaster";
+                }
+                else
+                {
+                    sURL = sLocURL + "HIS_WebServices_Inventory/webresources/HIS_WebServices/UpdateStockMaster";
+                }
+                String sLoc = sLocURL;
+
+                ExecutorService executor = Executors.newFixedThreadPool(AllowableThreadCount);  
+
+                Runnable DEThread = new BLL_StockDataExchange(obj_pass.toString(), sURL, sLoc);
+                
+                executor.execute(DEThread);              
+                executor.shutdown();
+            }else{
+                sMessage = "No data transfer.";
+            }
+        }catch (Exception e) {
+            sMessage = e.toString();
+        }      
+        return sMessage;
+    }
+    public static String DataTransfer_Stock(String stkCode, String SiteName){
+       return DataTransfer_Stock(stkCode, SiteName,"","");
+    }
+    //LLT - 201605 DATA EXCHANGE
+    //public static String DataTransfer_Stock(String stkCode, String SiteName){
+    public static String DataTransfer_Stock(String stkCode, String SiteName, String CompanyCode, String LocationCode){
+        //BLL_Stock sm = new BLL_Stock();
+        int AllowableThreadCount = 50;
+        DAL_Stock objStock = new DAL_Stock();
+        JSONObject obj_add = new JSONObject();
+        JSONObject obj_pass = new JSONObject();
+        String sMessage = "";
+        
+        String[] arySM = {
+            "GET_DATAEX",     /*0. sMethod    varchar(30)  */
+            stkCode,        /*1. sPrdCode    varchar(20)  */
+            "",             /*2. sPrdName         varchar(100) */
+            "",             /*3. sPrdGrpFrom      varchar(20)  */
+            "",             /*4. sPrdGrpTo        varchar(20)  */
+            "",             /*5. sPrdTypeFrom     varchar(20)  */    
+            "",             /*6. sPrdTypeTo       varchar(20)  */ 
+            "",             /*7. sPrdCat          varchar(50)  */ 
+            "",             /*8. sOrderBy         varchar(30)  */ 
+            "",             /*9. sPage            varchar(10)  */ 
+            ""              /*10. sPerPag         varchar(10)  */ 
+        };
+        
+        BLL_Common.Common_Object obj = objStock.DAL_GET_STOCKLIST(SiteName, arySM);
+        
+        try{
+            if(obj.getJSONArray(0).size() > 0){
+                obj_add.put("SM", obj.getJSONArray(0));
+                
+                if(obj.getJSONArray(1).size() > 0){
+                    obj_add.put("SPRC", obj.getJSONArray(1));
+                }
+                
+                if(obj.getJSONArray(2).size() > 0){
+                    obj_add.put("UOMC", obj.getJSONArray(2));
+                }
+                
+                if(obj.getJSONArray(3).size() > 0){
+                    obj_pass.put("DATA", obj_add);
+                    String sURL = "";
+                    String sLoc = "";
+                    String sComp = "";
+                    
+                    //loop location
+//                    for(Object jsonURL : obj.getJSONArray(3)){
+//                        JSONObject jsURL = (JSONObject) jsonURL;
+//                        sURL = jsURL.get("wsc_url").toString() + "HIS_WebServices_Inventory/webresources/HIS_WebServices/UpdateStockMaster";
+//                        sLoc = jsURL.get("wsc_url").toString();
+//                        
+//                        if(!sURL.equals("")){
+//                            sURL = "http://localhost:8080/HIS_WebServices_Inventory/webresources/HIS_WebServices/UpdateStockMaster";
+//                            sm.DataTransfer_Stock(obj_pass.toString(), sURL, sLoc);
+//                        }                        
+//                    }
+                    ExecutorService executor = Executors.newFixedThreadPool(AllowableThreadCount); 
+                    
+                    boolean bSingleSite = false;
+                    if (!CompanyCode.equals("") && !LocationCode.equals(""))
+                    {bSingleSite = true;}
+                    
+                    boolean bSiteFound = false;
+                    
+                    for(Object jsonURL : obj.getJSONArray(3)){
+                        JSONObject jsURL = (JSONObject) jsonURL;
+                           
+                        sLoc = jsURL.get("wsc_locationcode").toString();
+                        sComp = jsURL.get("wsc_companycode").toString();
+                        bSiteFound = false;
+                        
+                        if (bSingleSite)
+                        {
+                            if (sLoc.equals(LocationCode) && sComp.equals(CompanyCode))
+                            {
+                                bSiteFound = true;
+                            }
+                        }
+                        else
+                        {
+                            bSiteFound = true; //TAKE EVERY SITE 
+                        }
+                        
+                        
+                        
+                        if ( BaseDAL.CMSIntegrationType.equals("HIS") )
+                        {
+                            sURL = jsURL.get("wsc_url").toString() + "HIS_WebServices_Inventory/webresources/HIS_WebServices/UpdateStockMaster";
+                        }
+                        else if ( BaseDAL.CMSIntegrationType.equals("CMS") )
+                        {
+                            sURL = jsURL.get("wsc_url").toString() + "CMS_WebServices_Inventory/webresources/CMS_WebServices/UpdateStockMaster";
+                        }
+                        else
+                        {
+                            sURL = jsURL.get("wsc_url").toString() + "HIS_WebServices_Inventory/webresources/HIS_WebServices/UpdateStockMaster";
+                        }    
+                        
+
+//pengkee 2018May             
+                        
+                        if (bSiteFound)
+                        {
+                            boolean bStatus = false;
+                            if (jsURL.get("wsc_url").toString().equals(""))
+                            {
+                                bStatus = false;
+                            }
+                            else
+                            {
+                                bStatus = BLL_Common.AA.isReachable2(jsURL.get("wsc_url").toString());
+                            }
+//                            boolean bStatus = BLL_Common.AA.isReachable2(jsURL.get("wsc_url").toString());
+                            if (!bStatus)
+                            {
+    //                            sLoc = jsURL.get("wsc_locationcode").toString();
+    //                            sComp = jsURL.get("wsc_companycode").toString();
+                                if (!bSingleSite)
+                                {
+                                    String[] aryMasRecSync = new String[]{"ADD","STOCKMASTER", sComp, sLoc, stkCode,"","",""};
+                                    String sStatus = Servlet_MasterRecSync.UPDATE_MASTERREC_SYNC(aryMasRecSync, SiteName);
+                                }
+                            }
+                            else
+                            {
+    //                            if ( BaseDAL.CMSIntegrationType.equals("HIS") )
+    //                             {
+    //                                sURL = jsURL.get("wsc_url").toString() + "HIS_WebServices_Inventory/webresources/HIS_WebServices/UpdateStockMaster";
+    //                             }
+    //                            else if ( BaseDAL.CMSIntegrationType.equals("CMS") )
+    //                             {
+    //                                sURL = jsURL.get("wsc_url").toString() + "CMS_WebServices_Inventory/webresources/CMS_WebServices/UpdateStockMaster";
+    //                             }
+    //                            else
+    //                             {
+    //                            sURL = jsURL.get("wsc_url").toString() + "HIS_WebServices_Inventory/webresources/HIS_WebServices/UpdateStockMaster";
+    //                             }    
+    //                            sLoc = jsURL.get("wsc_locationcode").toString();
+
+                                if(!sURL.equals("")){
+                                    //sURL = "http://localhost:8080/HIS_WebServices_Inventory/webresources/HIS_WebServices/UpdateStockMaster";
+                                    Runnable DEThread = new BLL_StockDataExchange(obj_pass.toString(), sURL, sLoc);
+                                    executor.execute(DEThread);
+
+                                    sMessage = "SITE CONTACTED";
+                                } 
+                            }   
+                        }
+                        
+                    }
+                    executor.shutdown();
+                }
+            }else{
+                sMessage = "No data transfer.";
+            }
+        }catch (Exception e) {
+                sMessage = e.toString();
+        }
+        
+        return sMessage;
+    }
+      
+    public static String DataTransfer_CodeDesc(String sCodeType, String sCodeDesc, String SiteName)
+    {
+        return DataTransfer_CodeDesc(sCodeType, sCodeDesc, SiteName, "", "");
+    }
+    
+    public static String DataTransfer_CodeDesc(String sCodeType, String sCodeDesc, String SiteName, String CompanyCode, String LocationCode){
+//    public static String DataTransfer_CodeDesc(String sCodeType, String sCodeDesc, String SiteName){
+        //BLL_Stock sm = new BLL_Stock();
+        int AllowableThreadCount = 50;
+        DAL_PopulateData objCD = new DAL_PopulateData();
+        JSONObject obj_add = new JSONObject();
+        JSONObject obj_pass = new JSONObject();
+        String sMessage = "";
+        
+        String[] aryCD = {
+            "GET_DATAEX",     /*0. sMethod    varchar(30)  */
+            sCodeType,        /*1. sValue1    varchar(20)  */
+            sCodeDesc         /*2. sValue2    varchar(20) */
+        };
+        
+        BLL_Common.Common_Object obj = objCD.Get_DAL_CODEDESC_Info(SiteName, aryCD);
+        
+        try{
+            if(obj.getJSONArray(0).size() > 0){
+                obj_add.put("CDESC", obj.getJSONArray(0));
+                
+                if(obj.getJSONArray(1).size() > 0){
+                    obj_pass.put("DATA", obj_add);
+                    String sURL = "";
+                    String sLoc = "";
+                    String sComp = "";
+
+                    ExecutorService executor = Executors.newFixedThreadPool(AllowableThreadCount);
+                    
+                    boolean bSingleSite = false;
+                    if (!CompanyCode.equals("") && !LocationCode.equals(""))
+                    {bSingleSite = true;}
+                    
+                    boolean bSiteFound = false;
+                    
+                    
+                    for(Object jsonURL : obj.getJSONArray(1)){
+                        JSONObject jsURL = (JSONObject) jsonURL;
+                        
+                        sLoc = jsURL.get("wsc_locationcode").toString();
+                        sComp = jsURL.get("wsc_companycode").toString();
+                        bSiteFound = false;
+                        
+                        if (bSingleSite)
+                        {
+                            if (sLoc.equals(LocationCode) && sComp.equals(CompanyCode))
+                            {
+                                bSiteFound = true;
+                            }
+                        }
+                        else
+                        {
+                            bSiteFound = true; //TAKE EVERY SITE 
+                        }
+                        
+                        
+                        if ( BaseDAL.CMSIntegrationType.equals("HIS") )
+                        {
+                           sURL = jsURL.get("wsc_url").toString() + "HIS_WebServices_Inventory/webresources/HIS_WebServices/UpdateCodeDesc";
+                        }
+                        else if ( BaseDAL.CMSIntegrationType.equals("CMS") )
+                        {
+                           sURL = jsURL.get("wsc_url").toString() + "CMS_WebServices_Inventory/webresources/CMS_WebServices/UpdateCodeDesc";
+                        }
+                        else
+                        {
+                            sURL = jsURL.get("wsc_url").toString() + "HIS_WebServices_Inventory/webresources/HIS_WebServices/UpdateCodeDesc";
+                        }
+//                        sLoc = jsURL.get("wsc_url").toString();
+                        
+                        if (bSiteFound)
+                        {
+                            
+                            boolean bStatus = false;
+                            if (jsURL.get("wsc_url").toString().equals(""))
+                            {
+                                bStatus = false;
+                            }
+                            else
+                            {
+                                bStatus = BLL_Common.AA.isReachable2(jsURL.get("wsc_url").toString());
+                            }
+                            if (!bStatus)
+                            {
+
+                                if (!bSingleSite)
+                                {
+                                    String[] aryMasRecSync = new String[]{"ADD","CODEDESC", sComp, sLoc, sCodeType,sCodeDesc,"",""};
+                                    String sStatus = Servlet_MasterRecSync.UPDATE_MASTERREC_SYNC(aryMasRecSync, SiteName);
+                                }
+                            }
+                            else
+                            {
+                                if(!sURL.equals("")){
+                                    //sURL = "http://localhost:8080/HIS_WebServices_Inventory/webresources/HIS_WebServices/UpdateCodeDesc";
+                                    Runnable DEThread = new BLL_StockDataExchange(obj_pass.toString(), sURL, sLoc);
+                                    executor.execute(DEThread);   
+                                    sMessage = "SITE CONTACTED";
+                                }
+                            }
+                        }
+                    }
+                    executor.shutdown();
+                }                
+            }else{
+                sMessage = "No data transfer.";
+            }            
+        }catch (Exception e){
+            sMessage = e.toString();
+        }
+        
+        return sMessage;
+    }
+    //END LLT - 201605 DATA EXCHANGE
+    
+// author - amira, date 22/2/2016
+    // view detail page (stock transfer)
+    public void VIEW_STK_TRANSFER(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException, SQLException {
+    
+        HttpSession session = request.getSession();
+        String SiteName = (String) session.getAttribute("SiteName");
+        
+        PrintWriter out = response.getWriter();
+        response.setContentType("text/json");
+        
+        net.sf.json.JSONObject json = new net.sf.json.JSONObject();
+        
+        try {   
+            String sHeaderID = request.getParameter("HEADER");
+            String sDetailID =  ""; //request.getParameter("DETAIL");
+            DAL_ShowGrid StkXfr = new DAL_ShowGrid();
+            BLL_Common.Common_Object rsDetail = StkXfr.DAL_GET_StockTransfer(SiteName, new String[]{
+                "STK_TRANSFER_DETAIL","","","","","",sHeaderID,sDetailID,"","",""});
+            json.put("row", rsDetail.getJSONArray(0));
+            out.print(rsDetail.getJSONArrayAsJSONObject("object"));
+            
+        } catch (Exception e) {
+            out.println("Exception Error.");
+            e.printStackTrace();
+        }
+    }
+    
+    
+    public void CHECK_STOCK(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException, SQLException{
+        
+        HttpSession session = request.getSession(); 
+        String SiteName = (String) session.getAttribute("SiteName");
+         
+        response.setContentType("text/html");
+        PrintWriter out = response.getWriter();
+
+        String sPrdCode = "";
+        String sPrdName = "";
+      
+        net.sf.json.JSONObject json = new net.sf.json.JSONObject();
+
+        //Get page and rows value from JSP page
+        
+        sPrdCode = request.getParameter("PRDCODE");
+       //sPrdName = request.getParameter("PRDNAME");
+        
+
+        //Calculate offset value
+        //int offset = (page - 1) * rows;
+        DAL_Stock DAL_product = new DAL_Stock();
+
+       // int total = 0;
+       // double pageval = 0;
+
+        BLL_Common.Common_Object PrdList = DAL_product.DAL_GET_STOCKLIST(SiteName, new String[]{
+            "CHECK_STOCK", sPrdCode, "", "", "", "", "", "", "", "", ""});
+      
+        //Execute all queries here
+        try {
+            json.put("rows", PrdList.getJSONArray(0));
+            //} catch (SQLException e1) {
+        } catch (NullPointerException e1) {
+            e1.printStackTrace();
+        } finally {
+
+        }
+        System.out.println("json-->" + json);
+        //return json data to JSP page
+        out.print(json);
+        out.flush();
+        out.close();
+    }
+    
+    protected void PO_INSERT_STOCK_BALANCE(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException, SQLException {        
+        
+        HttpSession session = request.getSession();
+        String SiteName = (String) session.getAttribute("SiteName");
+        
+        response.setContentType("text/html");
+        PrintWriter out = response.getWriter();
+        net.sf.json.JSONObject jsonReturn = new net.sf.json.JSONObject();
+        boolean bReturn = false;
+        
+        String sMessage = "";
+        //String sBy = request.getParameter("hdnby");
+        DAL_Stock objUpdStkBal = new DAL_Stock();
+        BLL_Common.Common_Object objStkBal = new BLL_Common.Common_Object();
+      //  DAL_StockReq objReq = new DAL_StockReq();
+        JSONArray jsonVerifiedItem = JSONArray.fromObject(request.getParameter("STKITEM"));
+//        if (jsonVerifiedItem.size() > 0){
+//            System.out.println("jsonReqItem-->" + jsonVerifiedItem);
+//        }else{
+//            System.out.println("jsonReqItem-->" + "no data");
+//        }
+                           
+             for (Object js : jsonVerifiedItem) {
+                  JSONObject json = (JSONObject) js;
+                  if (json.size() > 0){
+             String[] aryItm = {
+                     "PO_CREATE_STOCK_BALANCE" /*0. pMethod    varchar(30)*/,
+                     json.get("CompCode").toString().trim(), /* 1. pReqNo        varchar(10)*/
+                     "", /* 2. sBalLocation     varchar(10),*/
+                     json.get("stkCode").toString().trim(), /* 3. sBalStockCode      varchar(10),*/
+                     json.get("UomCode").toString().trim(), /* 4. sBalUOM      varchar(100),*/
+                     "", /* sQtyToAddDeduct VARCHAR(20)*/
+                     "SYSTEM", /* sBy VARCHAR(20)*/
+                     "1", /* srecstatus VARCHAR(4)*/
+                      /* 18.pBy           varchar(20),*/
+                  };
+             
+          //  BLL_Common.Common_Object obj = objStkBal.DAL_ADDEDIT_STOCKREQ(aryReqDet);
+              objStkBal = objUpdStkBal.DAL_ADDEDIT_STOCKT_BALANCE(SiteName, aryItm);
+
+             try {
+                    if (objStkBal.getObjectArray(0).toString().equals("00000")) {
+                       
+                        objStkBal.commit();
+                        bReturn = true;
+                        sMessage = objStkBal.getObjectArray(1).toString();
+                    } else {
+                        objStkBal.rollback();
+                    }
+                } catch (Exception e) {
+                    try {
+                            objStkBal.rollback();
+                        } catch (SQLException ex) {
+                            bReturn = false;
+                        }
+                }
+             }
+             }
+
+            jsonReturn.put("bool", bReturn);
+            jsonReturn.put("msg", sMessage);
+            out.println(jsonReturn);
+              
+    }
+
+    public void CONVERT_UOM(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException, SQLException {
+        
+        HttpSession session = request.getSession();
+        String SiteName = (String) session.getAttribute("SiteName");
+        
+        response.setContentType("text/html");
+        PrintWriter out = response.getWriter();
+
+        String sQTY = "";
+        String sCURRUOM = "";
+        String sPREVUOM = "";
+        String sPRODCODE = "";
+        String sUNITCOST = "";
+
+        net.sf.json.JSONObject json = new net.sf.json.JSONObject();
+
+     
+        sQTY = request.getParameter("QTY");
+        sCURRUOM = request.getParameter("CURRUOM");
+        sPREVUOM = request.getParameter("PREVUOM");
+        sPRODCODE = request.getParameter("PRODCODE");
+        sUNITCOST = request.getParameter("UNITCOST");
+        
+        
+        DAL_StockUOM Convert = new DAL_StockUOM();
+        BLL_Common.Common_Object obj = Convert.DAL_GET_CONVERTED_UOM(SiteName, new String[]{"CONVERT_UOM", sPRODCODE, sQTY, sCURRUOM, sPREVUOM, sUNITCOST});
+     
+       // DAL_Stock obj_Po = new DAL_Stock();
+
+       // BLL_Common.Common_Object rsPoQty = obj_Po.DAL_PO_AUTOALLOCATION(new String[]{
+       //     "GET_PO_AUTOALLO", sStkCode, "", "", "", "", ""});
+
+        //Execute all queries here
+        try {
+
+            json.put("rows", obj.getJSONArray(0));
+
+            //} catch (SQLException e1) {
+        } catch (NullPointerException e1) {
+            e1.printStackTrace();
+        } finally {
+
+        }
+
+        //return json data to JSP page
+        out.print(json);
+        out.flush();
+        out.close();
+    }   
+    
+    public void GET_MAINSTORE_LOCATION(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException, SQLException {
+        
+        HttpSession session = request.getSession();
+        String SiteName = (String) session.getAttribute("SiteName");
+        
+        response.setContentType("text/html");
+        PrintWriter out = response.getWriter();
+
+        net.sf.json.JSONObject json = new net.sf.json.JSONObject();
+     
+        String sCompCode = request.getParameter("COMPANY");
+        
+        DAL_PopulateData CodeDescList = new DAL_PopulateData();
+        BLL_Common.Common_Object obj = CodeDescList.Get_DAL_CODEDESC_Info(SiteName, new String[]{"GET_LOCATION", sCompCode, ""});
+
+        //Execute all queries here
+        try {
+            json.put("rows", obj.getJSONArray(0));
+            out.print(obj.getJSONArrayAsJSONObject("object"));
+            //} catch (SQLException e1) {
+        } catch (NullPointerException e1) {
+            e1.printStackTrace();
+        }
+    }
+    
+    
+    
+     public void get_StockBalance(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException, SQLException{
+        
+        HttpSession session = request.getSession(); 
+        String SiteName = (String) session.getAttribute("SiteName");
+         
+        response.setContentType("text/html");
+        PrintWriter out = response.getWriter();
+
+        String sStkFrom = "";
+        String sStkTo = "";
+        String sddlComp = "";
+        String sddlLoc = "";
+        String rdPrdCat = "";
+        String rdPrdIsActive = "";
+        String ddlSortBy = "";
+        String ddlGroupBy = "";
+      
+        net.sf.json.JSONObject json = new net.sf.json.JSONObject();
+
+        //Get page and rows value from JSP page
+        
+        sStkFrom = request.getParameter("STKFRM");
+        sStkTo = request.getParameter("STKTO");
+        sddlComp = request.getParameter("COMPANY");
+        sddlLoc= request.getParameter("LOCATION");
+        rdPrdCat= request.getParameter("PRDCAT");
+        rdPrdIsActive = request.getParameter("PRDISACT");
+        ddlSortBy = request.getParameter("SORTBY");
+        ddlGroupBy = request.getParameter("GRPBY");
+        
+        DAL_Stock DAL_Stock = new DAL_Stock();
+
+        BLL_Common.Common_Object stkBalList = DAL_Stock.DAL_GET_STOCKBALANCE(SiteName, new String[]{
+            "GET_STKBALANCE_LIST", sStkFrom, sStkTo, sddlComp, sddlLoc, rdPrdCat, rdPrdIsActive,ddlSortBy, ddlGroupBy});
+      
+        //Execute all queries here
+        try {
+            json.put("ExportList", stkBalList.getJSONArray(0));
+            //} catch (SQLException e1) {
+        } catch (NullPointerException e1) {
+            e1.printStackTrace();
+        } finally {
+
+        }
+        //return json data to JSP page
+        out.print(json);
+        out.flush();
+        out.close();
+    }
+    
+     public void get_StockMovementSummary(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException, SQLException{
+        
+        HttpSession session = request.getSession(); 
+        String SiteName = (String) session.getAttribute("SiteName");
+         
+        response.setContentType("text/html");
+        PrintWriter out = response.getWriter();
+
+        String sPeriodFrom = "";
+        String sPeriodTo = "";
+        String sStkFrom = "";
+        String sStkTo = "";
+        String sddlComp = "";
+        String sddlLoc = "";
+        String rdPrdCat = "";
+        String rdPrdIsActive = "";
+        
+      
+        net.sf.json.JSONObject json = new net.sf.json.JSONObject();
+
+        //Get page and rows value from JSP page
+        sPeriodFrom = request.getParameter("PRDFRM");
+        sPeriodTo = request.getParameter("PRDTO");
+        sStkFrom = request.getParameter("STKFRM");
+        sStkTo = request.getParameter("STKTO");
+        sddlComp = request.getParameter("COMPANY");
+        sddlLoc= request.getParameter("LOCATION");
+        rdPrdCat= request.getParameter("PRDCAT");
+        rdPrdIsActive = request.getParameter("PRDISACT");
+                
+        DAL_Stock DAL_Stock = new DAL_Stock();
+
+        BLL_Common.Common_Object stkBalList = DAL_Stock.DAL_GET_STOCKMOVEMENT(SiteName, new String[]{
+            "GET_MOVEMENT_SUMMARY",sPeriodFrom, sPeriodTo, sStkFrom, sStkTo, sddlComp, sddlLoc, rdPrdCat, rdPrdIsActive,"","","",""});
+      
+        //Execute all queries here
+        try {
+            json.put("ExportList", stkBalList.getJSONArray(0));
+            //} catch (SQLException e1) {
+        } catch (NullPointerException e1) {
+            e1.printStackTrace();
+        } finally {
+
+        }
+        //return json data to JSP page
+        out.print(json);
+        out.flush();
+        out.close();
+    }
+    
+    // <editor-fold defaultstate="collapsed" desc="HttpServlet methods. Click on the + sign on the left to edit the code.">
+    /**
+     * Handles the HTTP <code>GET</code> method.
+     *
+     * @param request servlet request
+     * @param response servlet response
+     * @throws ServletException if a servlet-specific error occurs
+     * @throws IOException if an I/O error occurs
+     */
+    @Override
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        // processRequest(request, response);
+        String p_method = null;
+        p_method = request.getParameter("SFC");
+
+        if (p_method.equals("GET_PRD_DETAIL")) {
+            try {
+                Bind_Product_Detail(request, response);
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        } else if (p_method.equals("PO_AUTO_ALLOCATE")) {
+            try {
+                PO_AUTO_ALLOCATION(request, response);
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        } else if (p_method.equals("STOCK_QTY_CONV_UOM")) {
+            try {
+                STOCK_QTY_CONV_UOM(request, response);
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+
+        } else if (p_method.equals("GET_REL_STKUOM")) {
+            try {
+                GET_RELATED_STOCK_UOM(request, response);
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+
+        } else if (p_method.equals("GET_UNFULFILLED_STOCKCODES")) {
+            try {
+                GET_UNFULFILLED_STOCKCODES(request, response);
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        } else if (p_method.equals("GET_REL_LOCATION")) {
+            try {
+                GET_RELATED_LOCATION(request, response);
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        } else if (p_method.equals("GET_REL_XFER_LOCATION")) {
+            try {
+                GET_RELATED_XFER_LOCATION(request, response);
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+else if (p_method.equals("SEARCH_PRODUCT_LIST")) {
+            try {
+                SEARCH_Product_List(request, response);
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        } 
+         else if (p_method.equals("CHECK_STOCK")) {
+            try {
+                CHECK_STOCK(request, response);
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+         else if (p_method.equals("PO_INSERT_STOCK_BALANCE")) {
+            try {
+                PO_INSERT_STOCK_BALANCE(request, response);
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+         else if (p_method.equals("CONVERT_UOM")) {
+            try {
+                CONVERT_UOM(request, response);
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+
+        }else if (p_method.equals("GET_STOCK_BAL")) {       //KR-PRD01 s
+            try {
+                get_StockBalance(request, response);
+            } catch (SQLException e) {
+               // e.printStackTrace();
+            }
+        }
+        else if (p_method.equals("GET_MOVEMENT")) {       //KR-PRD01 s
+            try {
+                get_StockMovementSummary(request, response);
+            } catch (SQLException e) {
+               // e.printStackTrace();
+            }
+        }
+    }
+
+    /**
+     * Handles the HTTP <code>POST</code> method.
+     *
+     * @param request servlet request
+     * @param response servlet response
+     * @throws ServletException if a servlet-specific error occurs
+     * @throws IOException if an I/O error occurs
+     */
+    @Override
+    protected void doPost(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+
+        // processRequest(request, response);
+
+        String p_method = null;
+        p_method = request.getParameter("SFC");
+
+        if (p_method.equals("GET_PRODUCT_LIST")) {
+            try {
+                Bind_Product_List(request, response);
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        } else if (p_method.equals("INSERT_PRODUCT")) {
+            try {
+                INSERT_PRODUCT(request, response);
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+
+        } else if (p_method.equals("UPDATE_PRODUCT")) {
+            try {
+                UPDATE_PRODUCT(request, response);
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        } else if (p_method.equals("GET_PRODUCTUOMCONV_LIST")) {
+            try {
+                Bind_ProductUOM_List(request, response);
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        } else if (p_method.equals("GET_PRODPRICE_LIST")) {
+            try {
+                Bind_ProductPrice_List(request, response);
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }else if (p_method.equals("GET_STOCKCODE_LIST")) {
+            try {
+                Search_StkCodeList(request, response);
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }else if (p_method.equals("UPDATE_CODETYPE")) {
+            try {
+                UPDATE_CODETYPE(request, response);
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }else if (p_method.equals("VIEW_CODE_DETAIL")) {
+            try {
+                VIEW_CODETYPE(request, response);
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }else if (p_method.equals("GET_COMP_LIST")) {
+            try {
+                Search_CompList(request, response);
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }else if (p_method.equals("VIEW_COMP_DETAIL")) {
+            try {
+                VIEW_COMPANY(request, response);
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }else if (p_method.equals("UPDATE_COMPANY")) {
+            try {
+                UPDATE_COMPANY(request, response);
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }else if (p_method.equals("GET_LOC_LIST")) {
+            try {
+                Search_LocList(request, response);
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }else if (p_method.equals("UPDATE_LOCATION")) {
+            try {
+                UPDATE_LOCATION(request, response);
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        } else if (p_method.equals("VIEW_LOC_DETAIL")) {
+            try {
+                VIEW_LOCATION(request, response);
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        } else if (p_method.equals("UPDATE_STOCK_SUPPLIER")) {
+            try {
+                UPDATE_STOCK_SUPPLIER(request, response);
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        } else if (p_method.equals("GET_STOCKDETAIL_LIST")) {
+            try {
+                Search_StkSupplierReorder_List(request, response);
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        } else if (p_method.equals("UPDATE_STOCK_REORDER")) {
+            try {
+                UPDATE_STOCK_REORDER(request, response);
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        } else if (p_method.equals("GET_STKTRANSFER_LIST")) {
+            try {
+                Search_StkTransferList(request, response);
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        } else if (p_method.equals("VIEW_STKTRANSFER_DETAIL")) {
+            try {
+                VIEW_STK_TRANSFER(request, response);
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        } else if (p_method.equals("CHECK_STOCK_HIS")) {
+            try {
+                Check_Stock_HIS(request, response);
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    /**
+     * Returns a short description of the servlet.
+     *
+     * @return a String containing servlet description
+     */
+    @Override
+    public String getServletInfo() {
+        return "Short description";
+    }// </editor-fold>
+
+}

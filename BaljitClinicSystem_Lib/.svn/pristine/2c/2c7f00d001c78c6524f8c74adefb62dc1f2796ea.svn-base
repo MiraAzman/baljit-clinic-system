@@ -1,0 +1,60 @@
+CREATE DEFINER=`root`@`localhost` PROCEDURE `SP_GET_STOCK_SUPPLIER`(
+IN sMethod         varchar(30),
+IN sStockCode      varchar(16),
+IN sUOMCode        varchar(6),
+IN sOrderBy        varchar(30),
+IN sPage           varchar(10),
+IN sPerPage        varchar(10)
+)
+BEGIN
+
+
+
+
+
+
+DECLARE _statement VARCHAR(8000);
+
+
+IF sMethod = 'GET_STOCKSUPPLIER_LIST' THEN
+
+   SET _statement = ' SELECT stsp_supcode, stsp_companycode, TRUNCATE(stsp_unitcost,2) AS stsp_unitcost
+                      FROM stkm_stocksupplier';
+
+   IF (sStockCode <> '') THEN
+            SET _statement = CONCAT(_statement, ' WHERE stsp_stockcode = ',"'",sStockCode ,"'", ' ');
+   END IF;
+
+
+   IF (sUOMCode <> '') THEN
+            SET _statement = CONCAT(_statement, ' AND stsp_uomcode = ',"'",sUOMCode ,"'", ' ');
+   END IF;
+
+
+
+END IF;
+
+
+IF sMethod = 'COUNT_STOCKSUPPLIER_LIST' THEN
+
+   SET _statement =  'SELECT COUNT(stsp_stockcode) AS Total
+                      FROM stkm_stocksupplier';
+
+   IF (sStockCode <> '') THEN
+            SET _statement = CONCAT(_statement, ' WHERE stsp_stockcode = ',"'",sStockCode ,"'", ' ');
+   END IF;
+
+
+   IF (sUOMCode <> '') THEN
+            SET _statement = CONCAT(_statement, ' AND stsp_uomcode = ',"'",sUOMCode ,"'", ' ');
+   END IF;
+
+END IF;
+
+
+SET @statement = _statement;
+PREPARE dynquery FROM @statement;
+EXECUTE dynquery;
+DEALLOCATE PREPARE dynquery;
+
+END

@@ -1,0 +1,118 @@
+package BusinessData;
+
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.CallableStatement;
+import java.sql.Connection;
+import java.sql.Types;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Iterator;
+import BusinessData.BaseDAL;
+import BusinessLogic.BLL_Common;
+
+
+public class DAL_ShowGrid {
+    BaseDAL DAL = new BaseDAL();
+    
+    //CODE TYPE SETUP
+    public BLL_Common.Common_Object DAL_UPDATE_CODETYPE(String SiteName, String[] sStringIn) {   
+        return BaseDAL.Get_Multiple_QueryReturn_No_Commit("SP_TRX_CODETYPE(?,?,?,?,?,?,?)", sStringIn, new int[]{java.sql.Types.VARCHAR}, SiteName);
+    }
+    
+    public BLL_Common.Common_Object DAL_GET_CODETYPE(String SiteName, String[] sIn) {        
+        return BaseDAL.Get_Multiple_QueryReturn("SP_GET_CODETYPE(?,?,?,?,?,?,?,?)", sIn, new int[]{}, SiteName);
+    }
+    
+    public BLL_Common.Common_Object DAL_GET_ITEMLIST(String SiteName, String[] sIn) {
+        
+        return BaseDAL.Get_Multiple_QueryReturn("SP_GET_CODETYPE(?,?,?,?,?,?,?,?)", sIn, new int[]{}, SiteName); 
+    }
+    
+    //COMPANY SETUP 
+    public BLL_Common.Common_Object DAL_UPDATE_COMPANY(String SiteName, String[] sStringIn) {        
+        return BaseDAL.Get_Multiple_QueryReturn_No_Commit("SP_TRX_COMPANY(?,?,?,?,?,?,?,?,?,?," 
+            + "?,?,?,?,?,?,?,?,?,?," 
+            + "?,?,?,?,?,?,?,?,?,?)", sStringIn, new int[]{java.sql.Types.VARCHAR}, SiteName); 
+    }
+    
+    public BLL_Common.Common_Object DAL_GET_COMPLIST(String SiteName, String[] sIn) {
+        
+        return BaseDAL.Get_Multiple_QueryReturn("SP_GET_COMPANY(?,?,?,?,?,?,?,?,?,?,?,?"
+            + ",?,?,?,?,?,?,?,?,?,?"
+            + ",?,?,?,?,?,?,?,?,?,?)", sIn, new int[]{}, SiteName); 
+    }
+    
+    //public BLL_Common.Common_Object DAL_GET_COMPANY(String[] sIn) {        
+    //    return BaseDAL.Get_Multiple_QueryReturn("SP_GET_COMPANY(?,?,?,?,?,?,?,?,?,?,?,?" 
+    //        + ",?,?,?,?,?,?,?,?,?,?"  
+    //        + ",?,?,?,?,?,?,?,?,?,?)", sIn, new int[]{});  
+    //}
+     public BLL_Common.Common_Object DAL_GET_COMPANY(String SiteName, String[] sIn) {       
+        return BaseDAL.Get_Multiple_QueryReturn("SP_GET_COMPANY(?,?,?,?,?,?,?,?,?"    
+            + ")", sIn, new int[]{}, SiteName);  
+    }
+   
+    //LOCATION SETUP
+    public BLL_Common.Common_Object DAL_GET_LOCLIST(String SiteName, String[] sIn) {        
+        return BaseDAL.Get_Multiple_QueryReturn("SP_GET_LOCATION(?,?,?,?,?,?,?,?,?,?"
+            + ",?,?,?,?,?,?,?,?,?,?)", sIn, new int[]{}, SiteName); 
+    }
+   
+    //public BLL_Common.Common_Object DAL_GET_LOCATION(String[] sIn) {        
+    //    return BaseDAL.Get_Multiple_QueryReturn("SP_GET_LOCATION(?,?,?,?,?,?,?,?,?,?"
+    //        + ",?,?,?,?,?,?,?,?,?,?)", sIn, new int[]{}); 
+    //}
+    public BLL_Common.Common_Object DAL_GET_LOCATION(String SiteName, String[] sIn) {       
+        return BaseDAL.Get_Multiple_QueryReturn("SP_GET_LOCATION(?,?,?,?,?,?,?"
+            + ")", sIn, new int[]{}, SiteName); 
+    }
+
+    public BLL_Common.Common_Object DAL_UPDATE_LOCATION(String SiteName, String[] sStringIn) {
+        return BaseDAL.Get_Multiple_QueryReturn_No_Commit("SP_TRX_LOCATION(?,?,?,?,?,?,?,?,?,?,"
+            + "?,?,?,?,?,?,?,?,?,?)", sStringIn, new int[]{java.sql.Types.VARCHAR}, SiteName);
+    }
+    
+    //STOCK SUPPLIER SETUP
+    public BLL_Common.Common_Object DAL_GET_STKSUPPLIER_LIST(String SiteName, String[] sIn) {
+        return BaseDAL.Get_Multiple_QueryReturn("SP_GET_STOCKSUPPLIER(?,?,?,?,?,?,?,?,?)", sIn, new int[]{}, SiteName);
+    }   
+    public BLL_Common.Common_Object DAL_GET_StockSupplier(String SiteName, String[] sIn) {
+        return BaseDAL.Get_Multiple_QueryReturn("SP_GET_STOCK_SUPPLIER(?,?,?,?,?,?)", sIn, new int[]{}, SiteName);
+    }              
+    //public BLL_Common.Common_Object DAL_UPDATE_STOCKSUPPLIER(String[] sStringIn) {
+    //    return BaseDAL.Get_Multiple_QueryReturn_No_Commit("SP_TRX_STOCKSUPPLIER(?,?,?,?,?," 
+    //            + "?,?,?,?)", sStringIn, new int[]{java.sql.Types.VARCHAR});
+    //}
+
+    public BLL_Common.Common_Object DAL_UPDATE_StockSupplier(String SiteName, String[] sStringIn) {
+        return BaseDAL.Get_Multiple_QueryReturn_No_Commit("SP_TRX_STOCK_SUPPLIER(?,?,?,?,?," 
+                + "?,?,?,?)", sStringIn, new int[]{java.sql.Types.VARCHAR}, SiteName);
+    }
+
+    //STOCK REORDER SETUP
+    public BLL_Common.Common_Object DAL_GET_STKREORDER_LIST(String SiteName, String[] sIn) {
+        return BaseDAL.Get_Multiple_QueryReturn("SP_GET_STOCKREORDER(?,?,?,?,?,?)", sIn, new int[]{}, SiteName);
+    } 
+  
+    public BLL_Common.Common_Object DAL_GET_StockReorder(String SiteName, String[] sIn) {
+        return BaseDAL.Get_Multiple_QueryReturn("SP_GET_STOCK_REORDER(?,?,?,?,?,?)", sIn, new int[]{}, SiteName);
+    }
+    //public BLL_Common.Common_Object DAL_UPDATE_STOCKREORDER(String[] sStringIn) {
+    //    return BaseDAL.Get_Multiple_QueryReturn_No_Commit("SP_TRX_STOCKREORDER(?,?,?,?,?," 
+    //            + "?,?,?,?,?)", sStringIn, new int[]{java.sql.Types.VARCHAR});
+    //}
+    public BLL_Common.Common_Object DAL_UPDATE_StockReorder(String SiteName, String[] sStringIn) {
+        return BaseDAL.Get_Multiple_QueryReturn_No_Commit("SP_TRX_STOCK_REORDER(?,?,?,?,?," 
+                + "?,?,?,?,?)", sStringIn, new int[]{java.sql.Types.VARCHAR}, SiteName);
+    }
+    
+    //STOCK TRANSFER SETUP
+    public BLL_Common.Common_Object DAL_GET_STKTRANSFER_LIST(String SiteName, String[] sIn) {
+        
+        return BaseDAL.Get_Multiple_QueryReturn("SP_GET_STKTRANSFER(?,?,?,?,?,?,?,?,?,?,?)", sIn, new int[]{}, SiteName); 
+    }
+    public BLL_Common.Common_Object DAL_GET_StockTransfer(String SiteName, String[] sIn) {       
+        return BaseDAL.Get_Multiple_QueryReturn("SP_GET_STKTRANSFER(?,?,?,?,?,?,?,?,?,?,?)", sIn, new int[]{}, SiteName); 
+    }
+}

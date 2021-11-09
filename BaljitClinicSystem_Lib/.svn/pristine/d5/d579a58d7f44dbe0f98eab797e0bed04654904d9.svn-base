@@ -1,0 +1,149 @@
+CREATE DEFINER=`root`@`localhost` PROCEDURE `SP_GET_GRN`(
+IN sMethod        varchar(30),
+IN sGRN          varchar(20),
+IN sGRNDateFrom   varchar(20),
+IN sGRNDateTo     varchar(20),
+IN sGRNCompany   varchar(30), 
+IN sOrderBy       varchar(30),
+IN sPage          varchar(10),
+IN sPerPage       varchar(10)
+)
+BEGIN
+
+
+
+DECLARE _statement VARCHAR(8000);
+
+IF sMethod = 'GET_GRN_LIST' THEN
+   SET _statement = 'SELECT sgrh_grnno as GRN_No, sgrh_suppliercode as GRN_SupCode, 
+      CASE WHEN sgrh_intersupplier = "Y" THEN comp_name ELSE sup_name END as GRN_SupDesc,
+         sgrh_company as GRN_Company, STR_TO_DATE(sgrh_grndate, "%Y-%m-%d") as GRN_Date, sgrh_status as GRN_Status,
+                     sgrh_grnhdridx, sgrh_location, sgrh_refno, STR_TO_DATE(sgrh_refdate, "%Y-%m-%d") as sgrh_refdate, sgrh_invno,
+                     STR_TO_DATE(sgrh_invdate, "%Y-%m-%d") as sgrh_invdate, sgrh_dono, STR_TO_DATE(sgrh_dodate, "%Y-%m-%d") as sgrh_dodate, 
+                     sgrh_remark, sgrh_isgstinclusive, sgrh_intersupplier
+      FROM stkt_grnheader LEFT OUTER JOIN stkm_suppliermaster ON
+      sgrh_suppliercode = sup_code LEFT OUTER JOIN stkm_company ON
+                     sgrh_suppliercode = comp_code
+                     WHERE sgrh_grnno IS NOT NULL ';
+
+   IF(sGRN <> '') THEN
+   SET _statement = CONCAT(_statement, ' AND sgrh_grnno = ',"'", sGRN ,"'", ' ');
+   END IF;
+   
+   IF (sGRNDateFrom <> '') THEN
+      SET _statement = CONCAT(_statement, ' AND sgrh_grndate >= ',"'", sGRNDateFrom ,"'", ' ');
+   END IF;
+
+   IF (sGRNDateTo <> '') THEN
+      SET _statement = CONCAT(_statement, ' AND sgrh_grndate <= ', "'", sGRNDateTo, "'", ' ');
+   END IF;
+   
+   
+   IF(sGRNCompany <> '') THEN
+   SET _statement = CONCAT(_statement, ' AND sgrh_company = ',"'", sGRNCompany ,"'", ' ');
+   END IF;
+   
+
+   IF (sOrderBy <> '') THEN
+      SET _statement = CONCAT(_statement, ' ORDER BY ', sOrderBy);
+   ELSE
+      SET _statement = CONCAT(_statement, ' ORDER BY sgrh_grnno ');
+   END IF;
+
+   SET _statement = CONCAT(_statement, ' LIMIT ', (sPage-1)*sPerPage, ",", sPerPage);
+
+END IF;
+
+
+IF sMethod = 'GET_GRN_DETAIL' THEN
+   SET _statement = 'SELECT sgrd_grddtlidx as GRND_IDX, stk_stockcode as PRD_Code, TRUNCATE(sgrd_qty,2) as RCV_QTY,
+                     TRUNCATE(sgrd_bonusqty,2) as RCV_BONUS, TRUNCATE(sgrd_unitcost,2) as COST,
+                     TRUNCATE(sgrd_subtotalamt,2) as NETT_AMT, TRUNCATE(sgrd_gstamt,2) as GST_AMT,
+                     sgrd_grosstotal as GROSS, sgrd_discoption as DISC_TYPE, sgrd_batchno as BATCH, STR_TO_DATE(sgrd_expirydate, "%Y-%m-%d") as EXPIRY, 
+                     sgrd_pono as PO, sgrd_polineno as POLine, sgrd_poqty as ORDER_QTY, sgrd_pobonusqty as ORDER_BONUS, 
+                     sgrd_gstpurcode as gst_code, sgrd_gsttaxrates as GST_PUR_Rate, sgrd_location as OUTLET, 
+                     sgrd_gstsupcode as GST_Code_Sup, sgrd_uomcode as UOM, 
+                     CASE WHEN sgrd_discoption = "P" THEN TRUNCATE(sgrd_discpercent,2) ELSE TRUNCATE(sgrd_discamt,2) END as DISC,
+                     stk_desc as PRD_Desc, sgrh_isgstinclusive as GST_Inc, 
+                     sgrd_convqty AS CONV_QTY, sgrd_convunitcost AS CONV_UNITCOST, sgrd_convuomcode AS CONV_UOM
+                     
+                     FROM stkt_grnheader LEFT OUTER JOIN stkt_grndetail ON
+                     sgrh_grnhdridx = sgrd_grnhdrdtlidx LEFT OUTER JOIN stkm_stockmaster ON
+                     sgrd_stockidx = stk_stockidx
+                     WHERE sgrd_grnhdrdtlidx IS NOT NULL ';
+
+   IF(sGRN <> '') THEN
+   SET _statement = CONCAT(_statement, ' AND sgrd_grnhdrdtlidx = ',"'", sGRN ,"'", ' ');
+   END IF;
+   
+   IF (sOrderBy <> '') THEN
+      SET _statement = CONCAT(_statement, ' ORDER BY ', sOrderBy);
+   ELSE
+      SET _statement = CONCAT(_statement, 'ORDER BY sgrd_grddtlidx ');
+   END IF;
+   
+   SET _statement = CONCAT(_statement, ' LIMIT ', (sPage-1)*sPerPage, ",", sPerPage);
+   
+END IF;
+
+
+IF sMethod = 'COUNT_GRN_LIST' THEN
+
+   SET _statement = ' SELECT Count(sgrh_grnno) as Total
+                      FROM stkt_grnheader
+                      WHERE sgrh_grnno IS NOT NULL ';
+
+   IF(sGRN <> '') THEN
+   SET _statement = CONCAT(_statement, ' AND sgrh_grnno = ',"'", sGRN ,"'", ' ');
+   END IF;
+   
+   IF (sGRNDateFrom <> '') THEN
+      SET _statement = CONCAT(_statement, ' AND sgrh_grndate >= ',"'", sGRNDateFrom ,"'", ' ');
+   END IF;
+
+   IF (sGRNDateTo <> '') THEN
+      SET _statement = CONCAT(_statement, ' AND sgrh_grndate <= ', "'", sGRNDateTo, "'", ' ');
+   END IF;
+   
+   
+   IF(sGRNCompany <> '') THEN
+   SET _statement = CONCAT(_statement, ' AND sgrh_company = ',"'", sGRNCompany ,"'", ' ');
+   END IF;
+   
+
+END IF;
+
+IF sMethod = 'COUNT_GRN_DETAIL' THEN
+   SET _statement = 'SELECT Count(sgrh_grnhdridx) as Total
+                     FROM stkt_grnheader LEFT OUTER JOIN stkt_grndetail ON
+                     sgrh_grnhdridx = sgrd_grnhdrdtlidx LEFT OUTER JOIN stkm_stockmaster ON
+                     sgrd_stockidx = stk_stockidx
+                     WHERE sgrd_grnhdrdtlidx IS NOT NULL ';
+
+   IF(sGRN <> '') THEN
+   SET _statement = CONCAT(_statement, ' AND sgrd_grnhdrdtlidx = ',"'", sGRN ,"'", ' ');
+   END IF;
+   
+END IF;
+
+IF sMethod = 'GET_GRN_PO' THEN
+ SET _statement = 
+  'SELECT sgrd_poidx, sgrd_polineno, sgrd_qty, sgrd_poqty, sgrd_stockidx
+         FROM stkt_grndetail 
+         JOIN stkt_grnheader ON sgrd_grnhdrdtlidx = sgrh_grnhdridx ';
+    
+    IF(sGRN <> '') THEN
+  SET _statement = CONCAT(_statement, ' WHERE sgrh_grnhdridx = ',"'", sGRN, "'");
+ END IF;
+    
+ SET _statement = CONCAT(_statement, 'ORDER BY sgrd_polineno asc');
+   
+END IF;
+
+
+SET @statement = _statement;
+PREPARE dynquery FROM @statement;
+EXECUTE dynquery;
+DEALLOCATE PREPARE dynquery;
+
+END

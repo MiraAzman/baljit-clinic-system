@@ -1,0 +1,91 @@
+CREATE DEFINER=`root`@`localhost` PROCEDURE `SP_GET_STOCK_TRANSFER_RPT`(
+IN sMethod         varchar(30),
+IN sDocDateFrom    varchar(20),
+IN sDocDateTo      varchar(20),
+IN sStkCodeFrom    varchar(16),
+IN sStkCodeTo      varchar(16),
+IN sCompCode       varchar(10),
+IN sIssueLoc       varchar(10),
+IN sReceiveLoc     varchar(10),
+IN sStkCat         varchar(6)
+)
+BEGIN
+
+
+
+
+
+
+
+DECLARE _statement VARCHAR(8000);
+
+
+        IF (sMethod = 'GET_STKXFER_LIST_REPORT') THEN
+
+            SET _statement = 'SELECT DATE(hdr.xfrh_docdate) AS DocDate, hdr.xfrh_docno AS DocNo, dtl.xfrd_stockcode AS StkCode, stk.stk_desc AS StkDesc, dtl.xfrd_issuelocation AS IssueLoc,
+                                     dtl.xfrd_recievelocation AS ReceiveLoc, TRUNCATE(dtl.xfrd_qty,2) AS Qty, dtl.xfrd_uomcode AS UOM, hdr.xfrh_company AS CompCode, ';
+
+            SET _statement = CONCAT(_statement,"'",sDocDateFrom,"'", ' AS selDocDateFrom, ' );
+            SET _statement = CONCAT(_statement,"'",sDocDateTo,"'", ' AS selDocDateTo, ' );
+            SET _statement = CONCAT(_statement,"'",sStkCodeFrom,"'", ' AS selStkCodeFrom, ' );
+            SET _statement = CONCAT(_statement,"'",sStkCodeTo,"'", ' AS selStkCodeTo, ' );
+            SET _statement = CONCAT(_statement,"'",sCompCode,"'", ' AS selCompCode, ' );
+            SET _statement = CONCAT(_statement,"'",sIssueLoc,"'", ' AS selIssueLoc, ' );
+            SET _statement = CONCAT(_statement,"'",sReceiveLoc,"'", ' AS selReceiveLoc, ' );
+            SET _statement = CONCAT(_statement, '
+                             CASE
+                                   WHEN ',"'",sStkCat,"'",' =''0'' THEN ''Drug''
+                                   WHEN ',"'",sStkCat,"'",' =''1'' THEN ''Product''
+                                   WHEN ',"'",sStkCat,"'",' =''2'' THEN ''Consumable''
+                                   WHEN ',"'",sStkCat,"'",' ='''' THEN ''Drug / Product / Consumable''
+                             END AS selStkCat ' );
+
+            SET _statement = CONCAT(_statement,'FROM stkt_stocktransferheader hdr
+                                                LEFT JOIN stkt_stocktransferdetail dtl ON hdr.xfrh_stockxfrhdridx = dtl.xfrd_stockxfrhdridx
+                                                LEFT JOIN stkm_stockmaster stk ON dtl.xfrd_stockcode = stk.stk_stockcode
+                                                WHERE dtl.xfrd_stockxfrhdridx IS NOT NULL' );
+
+            IF (sDocDateFrom <> '') THEN
+                    SET _statement = CONCAT(_statement, ' AND hdr.xfrh_docdate >= ',"'",sDocDateFrom,"'" );
+            END IF;
+
+            IF (sDocDateTo <> '') THEN
+                    SET _statement = CONCAT(_statement, ' AND hdr.xfrh_docdate <= ',"'",sDocDateTo," 23:59:59'" );
+            END IF;
+
+            IF (sStkCodeFrom <> '') THEN
+                    SET _statement = CONCAT(_statement, ' AND dtl.xfrd_stockcode >= ',"'",sStkCodeFrom,"'" );
+                    
+            END IF;
+
+            IF (sStkCodeTo <> '') THEN
+                    SET _statement = CONCAT(_statement, ' AND dtl.xfrd_stockcode <= ',"'",sStkCodeTo,"'" );
+                    
+            END IF;
+
+            IF (sCompCode <> '') THEN
+                    SET _statement = CONCAT(_statement, ' AND hdr.xfrh_company = ',"'", sCompCode,"'");
+            END IF;
+
+            IF (sIssueLoc <> '') THEN
+                    SET _statement = CONCAT(_statement, ' AND dtl.xfrd_issuelocation = ',"'", sIssueLoc,"'");
+            END IF;
+
+            IF  (sReceiveLoc <> '') THEN
+                    SET _statement = CONCAT(_statement, ' AND dtl.xfrd_recievelocation = ',"'", sReceiveLoc,"'");
+            END IF;
+
+            IF  (sStkCat <> '') THEN
+                    SET _statement = CONCAT(_statement, ' AND stk.stk_consumable = ',"'", sStkCat,"'");
+            END IF;
+
+            SET _statement = CONCAT(_statement, ' ORDER BY StkCode, DocDate ' );
+
+      END IF;
+
+SET @statement = _statement;
+PREPARE dynquery FROM @statement;
+EXECUTE dynquery;
+DEALLOCATE PREPARE dynquery;
+
+END

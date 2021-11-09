@@ -1,0 +1,16 @@
+CREATE DEFINER=`root`@`localhost` PROCEDURE `SP_TRX_TEST_IMAGE`(
+IN sMethod varchar(30),
+IN sImgPath varchar(200),
+OUT Result varchar(20)
+)
+BEGIN
+
+ IF sMethod = 'ADD_IMAGE' THEN
+
+         INSERT INTO test_image (IMG_PATH) VALUES (sImgPath);
+
+         SELECT '00000' INTO Result;
+
+ END IF;
+
+END

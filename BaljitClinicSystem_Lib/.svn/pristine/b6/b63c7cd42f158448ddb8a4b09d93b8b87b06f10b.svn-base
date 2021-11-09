@@ -1,0 +1,121 @@
+CREATE DEFINER=`root`@`localhost` PROCEDURE `SP_GET_STOCK_BALANCE`(
+IN sMethod         varchar(30),
+IN sStkCodeFrom    varchar(100),
+IN sStkCodeTo      varchar(100),
+IN sCompCode       varchar(10),
+IN sLocCode        varchar(10),
+IN sStkCategory    varchar(6),
+IN sStkIsActive    varchar(1),
+IN sSortByStkValue varchar(10),
+IN sGroupBy     varchar(10)
+)
+BEGIN
+
+
+
+
+
+
+ DECLARE _statement VARCHAR(8000);
+
+
+   IF sMethod = 'GET_STKBALANCE_LIST' THEN
+
+
+            SET _statement = ' SELECT StkBal.bal_stockcode AS StkCode, STK.stk_desc AS StkDesc, StkBal.bal_companycode AS CompCode, StkBal.bal_location AS LocCode, STK.stk_baseuomcode AS UOM,
+                               TRUNCATE(SUM(F_CONVERT_UOM(StkBal.bal_balanceqty,STK.stk_baseuomcode,StkBal.bal_uom,StkBal.bal_stockcode)),2) AS BookQty,  
+                               TRUNCATE(STK.stk_unitcost * SUM(F_CONVERT_UOM(StkBal.bal_balanceqty,STK.stk_baseuomcode,StkBal.bal_uom,StkBal.bal_stockcode)),2) AS StkValue, 
+          comp_name, loc_name, ';
+
+                               SET _statement = CONCAT(_statement,"'",sStkCodeFrom,"'", ' AS selStkFrom, ' );
+
+                               SET _statement = CONCAT(_statement,"'",sStkCodeTo,"'", ' AS selStkTo, ' );
+
+                               SET _statement = CONCAT(_statement,"'",sCompCode,"'", ' AS selComp, ' );
+
+                               SET _statement = CONCAT(_statement,"'",sLocCode,"'", ' AS selLoc, ' );
+
+                               SET _statement = CONCAT(_statement, '
+
+                               CASE
+                                   WHEN ',"'",sStkCategory,"'",' =''0'' THEN ''Drug''
+                                   WHEN ',"'",sStkCategory,"'",' =''1'' THEN ''Product''
+                                   WHEN ',"'",sStkCategory,"'",' =''2'' THEN ''Consumable''
+                                   WHEN ',"'",sStkCategory,"'",' ='''' THEN ''Drug / Product / Consumable''
+                               END AS selStkCat, ' );
+
+                               SET _statement = CONCAT(_statement, '
+
+                               CASE
+                                   WHEN ',"'",sStkIsActive,"'",' =''N'' THEN ''In-Active''
+                                   WHEN ',"'",sStkIsActive,"'",' =''Y'' THEN ''Active''
+                                   WHEN ',"'",sStkIsActive,"'",' ='''' THEN ''Active / In-Active''
+                               END AS selStkIsActive ' );
+
+            SET _statement = CONCAT(_statement, ' FROM stkm_stockbalance StkBal
+
+                               LEFT JOIN stkm_stockmaster STK ON STK.stk_stockcode = StkBal.bal_stockcode
+                               LEFT JOIN stkm_company ON StkBal.bal_companycode = comp_code
+                               LEFT JOIN stkm_location ON StkBal.bal_location = loc_code
+
+                               WHERE stk_stockcode IS NOT NULL ');
+
+            IF (sStkCodeFrom <> '') THEN
+                    SET _statement = CONCAT(_statement, ' AND StkBal.bal_stockcode >= ',"'",sStkCodeFrom,"'" );
+                    
+            END IF;
+
+            IF (sStkCodeTo <> '') THEN
+                    SET _statement = CONCAT(_statement, ' AND StkBal.bal_stockcode <= ',"'",sStkCodeTo,"'" );
+                    
+            END IF;
+
+            IF (sCompCode <> '') THEN
+                    SET _statement = CONCAT(_statement, ' AND StkBal.bal_companycode = ',"'",sCompCode,"'" );
+            END IF;
+
+            IF (sLocCode <> '') THEN
+                    SET _statement = CONCAT(_statement, ' AND StkBal.bal_location = ',"'",sLocCode,"'" );
+            END IF;
+
+            IF (sStkCategory <> '') THEN
+                    SET _statement = CONCAT(_statement, ' AND STK.stk_consumable = ',"'",sStkCategory,"'" );
+            END IF;
+
+            IF (sStkIsActive <> '') THEN
+                    SET _statement = CONCAT(_statement, ' AND STK.stk_isactive = ',"'",sStkIsActive,"'" );
+            END IF;
+
+    SET _statement = CONCAT(_statement, ' GROUP BY STK.stk_desc, StkBal.bal_companycode, StkBal.bal_location');
+    
+   IF (sGroupBy <> '') THEN
+    SET _statement = CONCAT(_statement, ' ORDER BY StkBal.bal_companycode, ');
+                
+                IF ((sGroupBy = 'Comp') AND (sSortByStkValue <> '')) THEN
+     SET _statement = CONCAT(_statement, ' StkValue ', sSortByStkValue, ', StkBal.bal_location ');
+                END IF;
+                
+    IF ((sGroupBy = 'Loc') AND (sSortByStkValue <> '')) THEN
+     SET _statement = CONCAT(_statement, ' StkBal.bal_location, StkValue ', sSortByStkValue);
+                END IF;
+                
+                IF (sSortByStkValue = '') THEN
+     SET _statement = CONCAT(_statement, ' StkBal.bal_location ');
+                END IF;
+                                
+   ELSE 
+    IF (sSortByStkValue <> '') THEN
+     SET _statement = CONCAT(_statement, ' ORDER BY StkValue ',sSortByStkValue);
+    END IF;
+            END IF;
+   END IF;
+
+
+
+
+SET @statement = _statement;
+PREPARE dynquery FROM @statement;
+EXECUTE dynquery;
+DEALLOCATE PREPARE dynquery;
+
+END

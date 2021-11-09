@@ -1,0 +1,990 @@
+<!--
+Modification ID     By          Date        Comment
+----------------------------------------------------------------------------
+yesno01             Aaron       07Dec2018   include yes-no.jsp in the code
+c01                 Aaron       07Dec2018   add confirmation box and loading status when user try to update the existing record
+c02                 Aaron       17Dec2018   add confirm function for onclick for btnSave and updateDetails function to be called by confirm function when user try to update an existing record
+name01              Aaron       27Dec2018   change name for btnSave
+font01              Aaron       28Dec2018   change font style and color for mandatory fields
+len01               Aaron       28Dec2018   set maxlength for textbox
+valid01             Aaron       31Dec2018   add validation for Credit Term, Invoice Limit and Credit Limit
+format01            Aaron       31Dec2018   format output for Credit Limit and Invoice Limit
+validate01          Aaron       02Jan2019   add validator for the form
+re01                Aaron       02Jan2019   comment out pageSetUp function to enable the showed errors works properly
+gg01                    Aaron   08Jan2019   add condition to remove box shadow
+-->
+<%@taglib prefix="jstl" uri="http://java.sun.com/jsp/jstl/core" %>
+<jsp:useBean id="DDL" scope="page" class="BusinessLogic.Servlet_PopulateData" />
+<%@ page import="java.io.*"%> 
+<style type="text/css">
+    .ui-jqgrid tr.jqgrow td {
+        word-wrap: break-word; /* IE 5.5+ CSS3 see http://www.w3.org/TR/css3-text/#text-wrap */
+        white-space: pre-wrap; /* CSS3 */
+        white-space: -moz-pre-wrap; /* Mozilla, since 1999 */
+        white-space: -pre-wrap; /* Opera 4-6 */
+        white-space: -o-pre-wrap; /* Opera 7 */
+        overflow: hidden;
+        height: auto;
+        vertical-align: middle;
+        padding-top: 3px;
+        padding-bottom: 3px 
+    }
+
+    .centered {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        margin-top: -50px;
+        margin-left: -200px;
+    }
+    div.errorContainer, div.errorContainer2{
+        display:none;
+        width:100%;
+    }
+    div.errorContainer, div.errorContainer2 ol li{
+        list-style-type:disc;
+        margin-left: 20px;
+    }
+    select:disabled{
+        background: #dddddd;
+    }
+    li{
+        list-style:none;
+    }
+    .disabledTab{
+        pointer-events: none;
+    }
+    input[type="text"].error { border: 1px solid #A94444; background-color:#FFF0F0; }
+    select.error { border: 1px solid #A94444; background-color:#FFF0F0; }
+    textarea.error { border: 1px solid #A94444; background-color:#FFF0F0; }
+    /*gg01*/
+    input[type="text"]:read-only {box-shadow: none;}
+    textarea:read-only {box-shadow: none;}
+</style>
+<link rel="stylesheet" type="text/css" href="css/your_style.css" />
+<link rel="stylesheet" type="text/css" href="js/plugin/jqgrid/ui.multiselect.css" />
+<section id="widget-grid" class="">
+    <!--<span>{{params}}</span>-->
+    <input type="hidden" value={{params}} id="hidSupCode">
+
+    <div class="col-xs-12 col-sm-7 col-md-7 col-lg-12">
+        <h1 class="page-title txt-color-blueDark">
+            <!-- PAGE HEADER -->
+            <i class="fa-fw fa fa-file fa-2x"></i> 
+            Supplier Detail                                         
+        </h1>
+    </div>
+    <div class="widget-body row">
+        <article class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+            <div class="row" style="padding-bottom:10px;padding-left:10px;padding-right:10px;">
+                <div class="errorContainer alert alert-danger alert-block">
+                    <h4 class="alert-heading">There were some field left out or invalid inputs. Please brief through the form and reenter necessarily.</h4>
+                    <ol>
+                    </ol>
+                </div>
+            </div>
+            <div class="row">
+                <form id="form_AddSupplier" name="form_AddSupplier">
+                    <article class="col-sm-12 col-md-12 col-lg-12">
+                        <div class="jarviswidget jarviswidget-color-blueDark" id="wid-id-1"  data-widget-editbutton="false" data-widget-custombutton="false"
+                             data-widget-deletebutton="false" data-widget-colorbutton="false" data-widget-fullscreenbutton="false" data-widget-togglebutton="false">
+                            <header>
+                                <span class="widget-icon"> <i class="fa fa-file"></i></span>
+                                <span><h2>&nbsp;General Info</h2></span>
+                            </header>
+                            <div class="row">
+                                <div class="widget-body">
+
+                                    <table id="tbSupplierInfo" class="table table-bordered table-striped" style="clear:both;">
+                                        <tbody>
+                                            <tr>
+                                                <td width="12%"><font color="red">*</font> <b>Supplier Code</b></td> <!--font01-->
+                                                <td width="1%">:</td>
+                                                <td width="35%"> 
+                                                    <input type="text" id="lblSupCode" name="lblSupCode" readonly  class="tboxreadonly" rel="popover-hover" data-original-title="Supplier Code" data-content="A Supplier Code is a unique mixture of alphanumerical code with a maximum length of 10 characters." />  
+                                                    <input type="hidden" id="txtSupCode" name="txtSupCode" class="tboxreadonly" readonly/>
+                                                </td>
+                                                <td width="12%"><font color="red">*</font> <b>Registration No</b></td> <!--font01-->
+                                                <td width="1%">:</td>
+                                                <td width="35%">       
+                                                    <input type="text" id="lblRegNo" name="lblRegNo" readonly  class="tboxreadonly" rel="popover-hover" data-original-title="Registration No" data-content="A Registation Number is the alphanumerical with a maximum length of 20 characters." />    
+                                                    <input type="hidden" id="txtRegNo" name="txtRegNo" class="tboxreadonly" readonly/>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td width="12%"><font color="red">*</font> <b>Supplier Name</b></td> <!--font01-->
+                                                <td width="1%">:</td>
+                                                <td width="35%">     
+                                                    <input type="text" id="lblSupName" name="lblSupName" readonly  class="tboxreadonly" />    
+                                                    <input type="text" id="txtSupName" name="txtSupName" class="form-control" style="width:220px;display:none" maxlength="100"/> <!--len01-->  
+                                                </td>
+                                                <td width="12%"><font color="red">*</font> <b>Status</b></td> <!--font01-->
+                                                <td width="1%">:</td>
+                                                <td width="35%">   
+                                                    <input type="text" id="lblStatus" name="lblStatus" class="tboxreadonly" readonly/>
+                                                    <input type="hidden" id="hdnStatus" name="hdnStatus" class="tboxreadonly" readonly/>
+                                                    <label id="selectStatus" class="searchbox" style="width: 220px;display: none;">
+                                                        <select class="form-control" id="ddlStatus" name="ddlStatus" rel="popover-hover" data-original-title="Status" data-content="Select Status." style="width:250px;">
+                                                            <option value="">- Select Status -</option>       
+                                                            <option value="Y">Active</option>
+                                                            <option value="N">Inactive</option>
+                                                        </select>
+                                                    </label>   
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td width="12%">Business</td>
+                                                <td width="1%">:</td>
+                                                <td width="35%"> 
+                                                    <input type="text" id="lblBusiness" name="lblBusiness" readonly  class="tboxreadonly" /> 
+                                                    <input type="text" id="txtBusiness" name="txtBusiness" class="form-control" style="width:220px;display:none" maxlength="20"/>  <!--len01-->
+                                                </td>
+                                                <td width="12%">Account Group</td>
+                                                <td width="1%">:</td>
+                                                <td width="35%">
+                                                    <input type="text" id="lblAccGrp" name="lblAccGrp" class="tboxreadonly" readonly/>
+                                                    <input type="hidden" id="hdnAccGrp" name="hdnAccGrp" class="tboxreadonly" readonly/>
+                                                    <label id="selectAccGrp" class="searchbox" style="width:220px;display: none;">
+                                                        <select class="form-control" id="ddlAccGrp" name="ddlAccGrp" rel="popover-hover" data-original-title="Account Group" data-content="Select Account Group." style="width:250px;">
+                                                            <option value="">- Select Account Group -</option>
+                                                        </select>    
+                                                    </label>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>Category</td>
+                                                <td>:</td>
+                                                <td>
+                                                    <input type="text" id="lblCategory" name="lblCategory" class="tboxreadonly" readonly/>
+                                                    <input type="hidden" id="hdnCategory" name="hdnCategory" class="tboxreadonly" readonly/>
+                                                    <label id="selectCategory" class="searchbox" style="width:220px;display: none;">
+                                                        <select class="form-control" id="ddlCategory" name="ddlCategory" rel="popover-hover" data-original-title="Category" data-content="Select Category." style="width:250px;">
+                                                            <option value="">- Select Category -</option>                                           
+                                                        </select>    
+                                                    </label>
+                                                </td>
+                                                <td>Is Brand Owner</td>
+                                                <td>:</td>
+                                                <td>
+                                                    <input type="checkbox" id="chkIsBrandOwner" name="chkIsBrandOwner" disabled="disabled"/> 
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </article>
+
+                    <article class="col-sm-12 col-md-12 col-lg-12">
+                        <div class="jarviswidget jarviswidget-color-blueDark" id="wid-id-2"  data-widget-editbutton="false" data-widget-custombutton="false"
+                             data-widget-deletebutton="false" data-widget-colorbutton="false" data-widget-fullscreenbutton="false" data-widget-togglebutton="false">
+                            <header>
+                                <span class="widget-icon"> <i class="fa fa-file"></i></span>
+                                <span><h2>&nbsp;Contact Info</h2></span>
+                            </header>
+
+
+                            <div class="row">
+                                <div class="widget-body">
+
+                                    <table id="tbContactInfo" class="table table-bordered table-striped" style="clear:both;">
+                                        <tbody>
+                                            <tr>
+                                                <td width="12%" rowspan="3">Address</td>
+                                                <td width="1%" rowspan="3">:</td>
+                                                <td width="35%"> 
+                                                    <input type="text" id="lblAdd1" name="lblAdd1" readonly  class="tboxreadonly" />
+                                                    <input type="text" id="txtAdd1" name="txtAdd1" class="form-control" style="width:220px;display:none" maxlength="50"/> <!--len01--> 
+                                                </td>
+                                                <td width="12%">Phone No</td>
+                                                <td width="1%">:</td>
+                                                <td width="35%">       
+                                                    <input type="text" id="lblPhone" name="lblPhone" readonly  class="tboxreadonly" />
+                                                    <input type="text" id="txtPhone" name="txtPhone" class="form-control" style="width:220px;display:none" maxlength="20"/> <!--len01--> 
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td width="35%">     
+                                                    <input type="text" id="lblAdd2" name="lblAdd2" readonly  class="tboxreadonly" />
+                                                    <input type="text" id="txtAdd2" name="txtAdd2" class="form-control" style="width:220px;display:none" maxlength="50" /> <!--len01-->
+                                                </td>
+                                                <td width="12%">Fax No</td>
+                                                <td width="1%">:</td>
+                                                <td width="35%">   
+                                                    <input type="text" id="lblFax" name="lblFax" readonly  class="tboxreadonly" />
+                                                    <input type="text" id="txtFax" name="txtFax" class="form-control" style="width:220px;display:none" maxlength="20"/> <!--len01--> 
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td width="35%"> 
+                                                    <input type="text" id="lblAdd3" name="lblAdd3" readonly  class="tboxreadonly" />
+                                                    <input type="text" id="txtAdd3" name="txtAdd3" class="form-control" style="width:220px;display:none" maxlength="50"/> <!--len01--> 
+                                                </td>
+                                                <td width="12%">Email Address</td>
+                                                <td width="1%">:</td>
+                                                <td width="35%">
+                                                    <input type="text" id="lblEmail" name="lblEmail" readonly  class="tboxreadonly" />
+                                                    <input type="text" id="txtEmail" name="txtEmail" class="form-control" style="width:220px;display:none" maxlength="50" /> <!--len01--> 
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td width="12%">Post Code</td>
+                                                <td width="1%">:</td>
+                                                <td width="35%">
+                                                    <input type="text" id="lblPostCode" name="lblPostCode" readonly  class="tboxreadonly" />
+                                                    <input type="text" id="txtPostCode" name="txtPostCode" class="form-control" style="width:220px;display:none" maxlength="10"/> <!--len01-->
+                                                </td>
+                                                <td width="12%">Website</td>
+                                                <td width="1%">:</td>
+                                                <td width="35%">
+                                                    <input type="text" id="lblWebsite" name="lblWebsite" readonly  class="tboxreadonly" />
+                                                    <input type="text" id="txtWebsite" name="txtWebsite" class="form-control" style="width:220px;display:none" maxlength="50" /> <!--len01--> 
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td width="12%">Area</td>
+                                                <td width="1%">:</td>
+                                                <td width="35%">
+                                                    <input type="text" id="lblArea" name="lblArea" class="tboxreadonly" readonly/>
+                                                    <input type="hidden" id="hdnArea" name="hdnArea" class="tboxreadonly" readonly/>
+                                                    <label id="selectArea" class="searchbox" style="width: 220px;display: none;">
+                                                        <select class="form-control" id="ddlArea" name="ddlArea" rel="popover-hover" data-original-title="Area" data-content="Select Area" style="width:250px;">
+                                                            <option value="">- Select Area -</option>
+                                                         </select>
+                                                    </label>
+                                                </td>
+                                                <td width="12%">Attention</td>
+                                                <td width="1%">:</td>
+                                                <td width="35%">
+                                                    <input type="text" id="lblAttention" name="lblAttention" readonly  class="tboxreadonly" />
+                                                    <input type="text" id="txtAttention" name="txtAttention" class="form-control" style="width:220px;display:none" maxlength="100" />  <!--len01-->
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td width="12%">State</td>
+                                                <td width="1%">:</td>
+                                                <td width="35%">
+                                                    <input type="text" id="lblState" name="lblState" class="tboxreadonly" readonly/>
+                                                    <input type="hidden" id="hdnState" name="hdnState" class="tboxreadonly" readonly/>
+                                                    <label id="selectState" class="searchbox" style="width:220px;display: none;">
+                                                        <select class="form-control" id="ddlState" name="ddlState" rel="popover-hover" data-original-title="State" data-content="Select State" style="width:250px;">
+                                                            <option value="">- Select State -</option>
+                                                         </select>
+                                                    </label>
+                                                </td>
+                                                <td width="12%">Agent</td>
+                                                <td width="1%">:</td>
+                                                <td width="35%">
+                                                    <input type="text" id="lblAgent" name="lblAgent" readonly  class="tboxreadonly" />
+                                                    <input type="text" id="txtAgent" name="txtAgent" class="form-control" style="width:220px;display:none" maxlength="20"/> <!--len01--> 
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td width="12%">Country</td>
+                                                <td width="1%">:</td>
+                                                <td width="35%">
+                                                    <input type="text" id="lblCountry" name="lblCountry" class="tboxreadonly" readonly/>
+                                                    <input type="hidden" id="hdnCountry" name="hdnCountry" class="tboxreadonly" readonly/>
+                                                    <label id="selectCountry" class="searchbox" style="width:220px;display: none;">
+                                                        <select class="form-control" id="ddlCountry" name="ddlCountry" rel="popover-hover" data-original-title="Country" data-content="Select Country" style="width:250px;">
+                                                            <option value="">- Select Country -</option>
+                                                        </select>                                                
+                                                    </label>
+                                                </td>
+                                                <td colspan="3"></td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </article>
+
+                    <article class="col-sm-12 col-md-12 col-lg-12">
+                        <div class="jarviswidget jarviswidget-color-blueDark" id="wid-id-3"  data-widget-editbutton="false" data-widget-custombutton="false"
+                             data-widget-deletebutton="false" data-widget-colorbutton="false" data-widget-fullscreenbutton="false" data-widget-togglebutton="false">
+                            <header>
+                                <span class="widget-icon"> <i class="fa fa-file"></i></span>
+                                <span><h2>&nbsp;Terms & Other</h2></span>
+                            </header>
+                            <div class="padding-10">
+                                <table  id="tbOther" class="table table-bordered table-striped " style="clear:both;"  >                                    
+                                    <tr>
+                                        <td width="12%">Credit Term</td>
+                                        <td width="1%">:</td>
+                                        <td width="35%">
+                                            <input type="text" id="lblCreditTerm" name="lblCreditTerm" readonly  class="tboxreadonly" />
+                                            <input type="text" id="txtCreditTerm" name="txtCreditTerm" class="form-control" style="width:220px;display:none" maxlength="3" /> <!--len01-->
+                                        </td>
+                                        <td rowspan="4">
+                                            <div>
+                                                <input type="checkbox" id="chkGSTSup" name="chkGSTSup" value="N" onchange="selectGSTSup()" disabled="disabled"/>
+                                                <label for="chkGSTSup" class="label-option">Non GST Supplier</label>
+                                            </div>
+                                            <div style="margin-left:5px" id="dvGST">
+                                                <table id="tbGST" class="table table-bordered table-striped">
+                                                    <tr>
+                                                        <td width="25%">GST Reg. No</td>
+                                                        <td width="1%">:</td>
+                                                        <td width="50%">
+                                                            <input type="text" id="lblGstReg" name="lblGstReg" readonly  class="tboxreadonly" />
+                                                            <input type="text" id="txtGstReg" name="txtGstReg" class="form-control" style="width:220px;display:none" maxlength="20" /> <!--len01--> 
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>Default GST Code</td>
+                                                        <td>:</td>
+                                                        <td>
+                                                            <input type="text" id="lblGSTCode" name="lblGSTCode" class="tboxreadonly" readonly/>
+                                                            <input type="hidden" id="hdnGSTCode" name="hdnGSTCode" class="tboxreadonly"readonly/>
+                                                            <label id="selectGSTCode" class="searchbox" style="width:220px;display: none;">
+                                                                <select class="form-control" id="ddlGSTCode" name="ddlGSTCode" rel="popover-hover" data-original-title="GST Code" data-content="Select GST Code" style="width:250px;">
+                                                                    <option value="">- Select GST Code -</option>
+                                                                </select>                                                
+                                                            </label>
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td colspan="3">
+                                                            <input type="checkbox" id="chkGSTInc" name="chkGSTInc" value="Y" disabled="disabled"/>
+                                                            <label for="chkGSTInc" class="label-option">GST Inclusive (Default)</label>
+                                                        </td>
+                                                    </tr>
+                                                </table>
+                                            </div>
+                                        </td>                                                                         
+                                    </tr>
+                                    <tr>
+                                        <td>Invoice Limit</td>
+                                        <td>:</td>
+                                        <td>
+                                            <input type="text" id="lblInvLimit" name="lblInvLimit" readonly  class="tboxreadonly" />
+                                            <input type="text" id="txtInvLimit" name="txtInvLimit" class="form-control" style="width:220px;display:none" maxlength="19" /> <!--len01-->
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>Credit Limit</td>
+                                        <td>:</td>
+                                        <td>
+                                            <input type="text" id="lblCreditLimit" name="lblCreditLimit" readonly  class="tboxreadonly" />
+                                            <input type="text" id="txtCreditLimit" name="txtCreditLimit" class="form-control" style="width:220px;display:none" maxlength="19" /> <!--len01--> 
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>Aging On</td>
+                                        <td>:</td>
+                                        <td>
+                                            <input type="text" id="lblAging" name="lblAging" class="tboxreadonly" readonly/>
+                                            <input type="hidden" id="hdnAging" name="hdnAging" class="tboxreadonly" readonly/>
+                                            <div id="dvAging" style="display: none;">
+                                                <input type="radio" id="rdAging2" name="rdAging" value="0" /><label for="rdAging2" class="label-option btn">Invoice Date</label>
+                                                <input type="radio" id="rdAging3" name="rdAging" value="1" /><label for="rdAging3" class="label-option btn">Due Date</label>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>Currency</td>
+                                        <td>:</td>
+                                        <td colspan="2">
+                                            <input type="text" id="lblCurrency" name="lblCurrency" class="tboxreadonly" readonly/>
+                                            <input type="hidden" id="hdnCurrency" name="hdnCurrency" class="tboxreadonly" readonly/>
+                                             <label id="selectCurrency" class="searchbox" style="width:220px;display: none;">
+                                                <select class="form-control" id="ddlCurrency" name="ddlCurrency" rel="popover-hover" data-original-title="Currency" data-content="Select Currency" style="width:250px;">
+                                                    <option value="">- Select Currency -</option>
+                                                </select>                                                
+                                            </label>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td >Remarks</td>
+                                        <td >:</td>
+                                        <td colspan="2" >
+                                            <input type="text" id="lblRemarks" name="lblRemarks" readonly  class="tboxreadonly" />
+                                            <textarea rows="3" maxlength="100" id="txtRemarks" name="txtRemarks" class="form-control" style="width: 800px;display:none" maxlength="100"></textarea> <!--len01-->
+                                            <!--<input type="test" id="txtRemarks" name="txtRemarks" class="form-control" style="width: 800px;display:none"  />-->
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td >Record Status</td>
+                                        <td >:</td>
+                                        <td colspan="2" >  
+                                                    <input type="checkbox" id="chkrecstatus" name="chkrecstatus" value="0"/>  
+                                                    
+                                                </td>
+                                            </tr> 
+                                </table>
+                            </div>
+                        </div>
+                    </article>
+                </form>
+                <form id="formUploadImg" name="formUploadImg" action="${pageContext.request.contextPath}/Servlet_Media" method="post" enctype="multipart/form-data">
+                    <article class="col-sm-12 col-md-12 col-lg-12">
+                        <div class="jarviswidget jarviswidget-color-blueDark" id="wid-id-6"  data-widget-editbutton="false" data-widget-custombutton="false"
+                             data-widget-deletebutton="false" data-widget-colorbutton="false" data-widget-fullscreenbutton="false" data-widget-togglebutton="false">
+                            <header>
+                                <span class="widget-icon"> <i class="fa fa-file"></i></span>
+                                <span><h2>&nbsp;Logo</h2></span>
+                            </header>
+                            <div class="row">
+                                <div class="widget-body">
+                                    <table class="table table-bordered table-striped" style="clear:both;">
+                                        <tbody>
+                                            <tr>
+                                                <td width="15%"> 
+                                                    <img id="imgLogo" style="width:150px;height:150px;"/>                                                   
+                                                </td>
+                                                <td width="85%">
+                                                    <input type="file" id="file" name="file" accept="image/gif,image/jpeg,image/png" onchange="previewImg(this);" style="display:none;"/>
+                                                    <input type="hidden" id="hidSupplierCode" name="hidSupplierCode"/>
+                                                    <input type="hidden" id="hidType" name="hidType" value="SUPPLIER"/><br>
+                                                    <input type="button" id="btnLoad" value="Load" class="btn btn-default bg-color-blueDark txt-color-white" onclick="loadLogoFile();" style="display:none;"/>
+                                                </td>
+                                            </tr>                                        
+                                        </tbody>
+                                    </table>
+                                    <input type="submit" id="upload" class="btn btn-default bg-color-blueDark txt-color-white" style="display:none;"/>
+                                </div>
+                            </div>
+                        </div>
+                    </article>
+                </form> 
+            </div>
+
+        </article>
+        <div>
+            <div class="row">
+                <div class="col-sm-12">
+                    <div align="center" class="padding-5" >
+                        <input type="button" class="btn btn-default bg-color-blueDark txt-color-white form-btn" id="btnEdit" name="btnEdit" value="Edit Detail" onclick="enableEdit()" style="margin-right:20px;"/>
+                        <input type="button" Id="btnSave"  class="btn btn-default bg-color-blueDark txt-color-white" value="Update" style="display: none" onclick ="confirm();" />  <!--name01-->
+                        <input type="button" Id="btnCancel"  class="btn btn-default bg-color-blueDark txt-color-white"  value="Cancel" onclick="location.href = '#/SupplierMasterList'" />
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<jsp:include page="../../../includes/loading-no-status.jsp"/>
+<!--yesno01--><!--Aaron include yes-no.jsp in the code-->
+<jsp:include page="../../../includes/yes-no.jsp"/>
+<!--<script src="js/buttonset.js"></script>-->
+<script type="text/javascript">
+    //re01
+    //pageSetUp();
+       
+    getDLL("ddlAccGrp", "GET_CODEDESC", "ACCGRP", "");
+    getDLL("ddlCategory", "GET_CODEDESC", "STKGRP", "");
+    getDLL("ddlArea", "GET_CODEDESC", "AREA", "");
+    getDLL("ddlState", "GET_CODEDESC", "STATE", "");
+    getDLL("ddlCountry", "GET_CODEDESC", "COU", "");
+    getDLL("ddlGSTCode", "GET_ACTIVEGSTCODE", "SUPPLY", "");
+    getDLL("ddlCurrency", "GET_CODEDESC", "CUR", "");
+
+    function getDLL (ddl, method, param1, param2) {
+        $.get('${pageContext.request.contextPath}/Servlet_PopulateData', {SFC: 'GET_DLL', METHOD: method, P1: param1, P2: param2}, function (data) {
+            for(var i=0; i < data.length; i++){                                                          
+                $("#"+ddl).append($("<option>").val(data[i].VALUE).html(data[i].TEXT));
+            }     
+        });     
+    }   
+   
+    //valid01
+    function doubleNum(num){
+        var reg = /^[0-9]+(\.[0-9][0-9]?)?$/;
+        if (num === ""){
+            return true;
+        }
+        else{
+            return reg.test(num);
+        }
+    }
+    //valid01
+    function intNum(num){
+        var reg = /^[0-9]+$/;
+        if (num === ""){
+            return true;
+        }
+        else{
+            return reg.test(num);
+        }
+    }
+    
+    function bindData(sParam) {
+         //alert("sparam-->" + JSON.stringify(sParam.SUPCODE));
+        var pagefunction = function () {             
+          //  run_jqgrid_function();
+           // function run_jqgrid_function() {
+                $.get('${pageContext.request.contextPath}/Servlet_Supplier', {SUPCODE: sParam.SUPCODE, SFC: 'GET_SUP_DETAIL'}, function (data) {
+                    var arrData = data.object1[0];
+                    //validate01
+                    var container = $('div.errorContainer');
+                    var validator = $("#form_AddSupplier").validate({
+                        rules: {
+                            txtSupName: "required",
+                            ddlStatus: "required"
+                          //  rdPrdCat: "required"
+                        },
+                        messages: {
+                            txtSupName: "Supplier Name cannot be blank.",
+                            ddlStatus: "Supplier status must be selected."
+                         //   rdPrdCate: "Product category must be selected."
+                        },
+                        errorContainer: container,
+                        errorLabelContainer: $("ol", container),
+                        wrapper: 'li'
+                    });
+                    $('#lblSupCode, #hidSupplierCode').val(arrData.sup_code);
+                    $('#lblRegNo').val(arrData.sup_businessregno);
+                    $('#lblSupName').val(arrData.sup_name);
+                    $('#hdnStatus').val(arrData.sup_isactive);
+                    $('#lblStatus').val(arrData.STATUSDESC);
+                    $('#lblBusiness').val(arrData.sup_businesstype);
+                    $('#hdnAccGrp').val(arrData.sup_accountgroup);
+                    $('#lblAccGrp').val(arrData.ACCGRPDESC);
+                    $('#lblAdd1').val(arrData.sup_add1);
+                    $('#lblAdd2').val(arrData.sup_add2);
+                    $('#lblAdd3').val(arrData.sup_add3);
+                    $('#lblPhone').val(arrData.sup_telephone);
+                    $('#lblFax').val(arrData.sup_fax);
+                    $('#lblEmail').val(arrData.sup_email);
+                    $('#lblPostCode').val(arrData.sup_postcode);
+                    $('#lblWebsite').val(arrData.sup_website);
+                    $('#hdnArea').val(arrData.sup_areacode);
+                    $('#lblArea').val(arrData.AREADESC);
+                    $('#lblAttention').val(arrData.sup_contactperson);
+                    $('#hdnState').val(arrData.sup_statecode);
+                    $('#lblState').val(arrData.STATEDESC);
+                    $('#lblAgent').val(arrData.sup_agent);
+                    $('#hdnCountry').val(arrData.sup_countrycode);
+                    $('#lblCountry').val(arrData.COUNTRYDESC);
+                    $('#lblCreditTerm').val(arrData.sup_creditterm);                    
+                    $('#lblGstReg').val(arrData.sup_gstregno);
+                    $('#hdnGSTCode').val(arrData.sup_gstcode);
+                    $('#lblGSTCode').val(arrData.GSTCODEDESC);
+                    if(arrData.sup_gstinclusive === "Y")
+                    {
+                        $('#chkGSTInc').prop('checked', true);
+                    }
+                    else
+                    {
+                        $('#chkGSTInc').prop('checked', false);
+                    }
+                    
+                    if(arrData.sup_isgst === "N")
+                    {
+                        $('#chkGSTSup').prop('checked', true);
+                    }
+                    else
+                    {
+                        $('#chkGSTSup').prop('checked', false);
+                    }
+                   
+                    $('#lblInvLimit').val(parseFloat(arrData.sup_invoicelimit).toFixed(2)); //format01
+                    $('#lblCreditLimit').val(parseFloat(arrData.sup_creditlimit).toFixed(2)); //format01
+                    $('#hdnAging').val(arrData.sup_agingon);
+                    $('#lblAging').val(arrData.AGINGDESC);
+                    $('#hdnCurrency').val(arrData.sup_currencycode);
+                    $('#lblCurrency').val(arrData.CURRENCYDESC);
+                    $('#lblRemarks').val(arrData.sup_remarks);
+                    $('#hdnCategory').val(arrData.sup_productgroupcode);
+                    $('#lblCategory').val(arrData.CATEGORYDESC);
+
+                    if (arrData.sup_isbrandowner === 'Y') { 
+                        $('#chkIsBrandOwner').prop('checked', true);   
+                        $('#chkIsBrandOwner').val('Y');
+                    } else {
+                        $('#chkIsBrandOwner').prop('checked', false);  
+                        $('#chkIsBrandOwner').val('N');
+                    }
+                    if(arrData.recstatus === '1'){ 
+                        $('#chkrecstatus').prop('checked', true); 
+                        $('#chkrecstatus').val('1');
+                    } else 
+                        $('#chkrecstatus').val('0');
+                    $("#imgLogo").attr("src", "http://13.251.247.226:8088/media/supplier/" + arrData.sup_logofile);
+                });
+           // };
+        };
+         //loadScript("js/plugin/jqgrid/grid.locale-en.min.js", pagefunction);
+         pagefunction();
+    } 
+   
+    $("#chkIsBrandOwner").click(function(){
+        if ( $('#chkIsBrandOwner').is(":checked") ) {  
+            $('#chkIsBrandOwner').val('Y');
+        } 
+    });
+   
+    function selectGSTSup(){
+        if (document.getElementById('chkGSTSup').checked) 
+        {
+            $('#dvGST *').prop('disabled',true);
+            $('#txtGstReg').val('');
+            $('#ddl_GSTCode').val('');
+            $('#chkGSTInc').prop('checked', false);
+        } else {
+            $('#tbGST').find('*').prop('disabled',false);  
+        }
+    }    
+    
+    function previewImg(input) {
+        if (input.files && input.files[0]) {
+            var reader = new FileReader();
+            
+            reader.onload = function (e) { 
+                $('#imgLogo').attr('src', e.target.result);
+            };          
+            reader.readAsDataURL(input.files[0]);
+        }
+        $('#btnLoad').show();
+    }
+    
+    function loadLogoFile(){
+        $("#upload").trigger( "click" );
+    }
+     $("#chkrecstatus").click(function(){
+                if ( $('#chkrecstatus').is(":checked") )
+                    $('#chkrecstatus').val('1'); 
+                else
+                    $('#chkrecstatus').val('0');            
+            });
+    
+    function enableEdit() {
+        $.showLoadingNoStatus();
+        $('#chkIsBrandOwner').prop('disabled', false);   
+        document.getElementById('btnSave').style.display = '';
+        document.getElementById('btnEdit').style.display = 'none';
+
+        document.getElementById('txtSupCode').value = document.getElementById('lblSupCode').value;        
+        document.getElementById('txtRegNo').value = document.getElementById('lblRegNo').value;
+        
+        document.getElementById('lblSupName').style.display = 'none';
+        document.getElementById('txtSupName').value = document.getElementById('lblSupName').value;
+        document.getElementById('txtSupName').style.display = '';
+
+        document.getElementById('lblStatus').style.display = 'none';
+        document.getElementById('ddlStatus').value = document.getElementById('hdnStatus').value;
+        document.getElementById('selectStatus').style.display = '';
+
+        document.getElementById('lblBusiness').style.display = 'none';
+        document.getElementById('txtBusiness').value = document.getElementById('lblBusiness').value;
+        document.getElementById('txtBusiness').style.display = '';
+
+        document.getElementById('lblAccGrp').style.display = 'none';
+        document.getElementById('ddlAccGrp').value = document.getElementById('hdnAccGrp').value;
+        document.getElementById('selectAccGrp').style.display = '';
+
+        document.getElementById('lblAging').style.display = 'none';
+        // document.getElementById('rdPrdCat').value = document.getElementById('hdnPrdCat').value;
+        $(":radio[name='rdAging'][value=" + document.getElementById('hdnAging').value + "]").attr('checked', 'checked');
+        document.getElementById('dvAging').style.display = '';
+
+        document.getElementById('lblAdd1').style.display = 'none';
+        document.getElementById('txtAdd1').value = document.getElementById('lblAdd1').value;
+        document.getElementById('txtAdd1').style.display = '';
+
+        document.getElementById('lblAdd2').style.display = 'none';
+        document.getElementById('txtAdd2').value = document.getElementById('lblAdd2').value;
+        document.getElementById('txtAdd2').style.display = '';
+
+        document.getElementById('lblAdd3').style.display = 'none';
+        document.getElementById('txtAdd3').value = document.getElementById('lblAdd3').value;
+        document.getElementById('txtAdd3').style.display = '';
+
+        document.getElementById('lblPhone').style.display = 'none';
+        document.getElementById('txtPhone').value = document.getElementById('lblPhone').value;
+        document.getElementById('txtPhone').style.display = '';
+
+        document.getElementById('lblFax').style.display = 'none';
+        document.getElementById('txtFax').value = document.getElementById('lblFax').value;
+        document.getElementById('txtFax').style.display = '';
+
+        document.getElementById('lblPostCode').style.display = 'none';
+        document.getElementById('txtPostCode').value = document.getElementById('lblPostCode').value;
+        document.getElementById('txtPostCode').style.display = '';
+        
+        document.getElementById('lblArea').style.display = 'none';
+        document.getElementById('ddlArea').value = document.getElementById('hdnArea').value;
+        document.getElementById('selectArea').style.display = '';
+        
+        document.getElementById('lblAttention').style.display = 'none';
+        document.getElementById('txtAttention').value = document.getElementById('lblAttention').value;
+        document.getElementById('txtAttention').style.display = '';
+        
+        document.getElementById('lblState').style.display = 'none';
+        document.getElementById('ddlState').value = document.getElementById('hdnState').value;
+        document.getElementById('selectState').style.display = '';
+        
+        document.getElementById('lblAgent').style.display = 'none';
+        document.getElementById('txtAgent').value = document.getElementById('lblAgent').value;
+        document.getElementById('txtAgent').style.display = '';
+        
+        document.getElementById('lblCountry').style.display = 'none';
+        document.getElementById('ddlCountry').value = document.getElementById('hdnCountry').value;
+        document.getElementById('selectCountry').style.display = '';
+        
+        document.getElementById('lblCreditTerm').style.display = 'none';
+        document.getElementById('txtCreditTerm').value = document.getElementById('lblCreditTerm').value;
+        document.getElementById('txtCreditTerm').style.display = '';
+        
+        document.getElementById('lblGstReg').style.display = 'none';
+        document.getElementById('txtGstReg').value = document.getElementById('lblGstReg').value;
+        document.getElementById('txtGstReg').style.display = '';
+        
+        document.getElementById('lblGSTCode').style.display = 'none';
+        document.getElementById('ddlGSTCode').value = document.getElementById('hdnGSTCode').value;
+        document.getElementById('selectGSTCode').style.display = '';
+        
+        document.getElementById('lblCreditLimit').style.display = 'none';
+        document.getElementById('txtCreditLimit').value = document.getElementById('lblCreditLimit').value;
+        document.getElementById('txtCreditLimit').style.display = '';
+        
+        document.getElementById('lblCurrency').style.display = 'none';
+        document.getElementById('ddlCurrency').value = document.getElementById('hdnCurrency').value;
+        document.getElementById('selectCurrency').style.display = '';
+        
+        document.getElementById('lblWebsite').style.display = 'none';
+        document.getElementById('txtWebsite').value = document.getElementById('lblWebsite').value;
+        document.getElementById('txtWebsite').style.display = '';
+        
+        document.getElementById('lblEmail').style.display = 'none';
+        document.getElementById('txtEmail').value = document.getElementById('lblEmail').value;
+        document.getElementById('txtEmail').style.display = '';
+        
+        document.getElementById('lblInvLimit').style.display = 'none';
+        document.getElementById('txtInvLimit').value = document.getElementById('lblInvLimit').value;
+        document.getElementById('txtInvLimit').style.display = '';
+        
+        document.getElementById('lblRemarks').style.display = 'none';
+        document.getElementById('txtRemarks').value = document.getElementById('lblRemarks').value;
+        document.getElementById('txtRemarks').style.display = '';
+        
+        document.getElementById('lblCategory').style.display = 'none';
+        document.getElementById('ddlCategory').value = document.getElementById('hdnCategory').value;
+        document.getElementById('selectCategory').style.display = '';
+        
+        $('#chkGSTSup').prop('disabled', false);
+        $('#chkGSTInc').prop('disabled', false);
+        selectGSTSup();
+
+        $('#file').show();
+
+        $.hideLoadingNoStatus();
+    }
+    
+//    $("#btnSave").click(function () {        
+//
+//        var $validSupplier = $("#form_AddSupplier").valid();
+//
+//        if ($validSupplier === true) {
+//            //c01
+//            //Aaron
+//            //add confirmation box and loading status when user try to update existing record
+//            showYesNo({
+//               title: "Confirmation needed",
+//               width: 420,
+//               noClose: true,
+//               isModal: true,
+//               body: [
+//                   "<br><h4>Please check the details entered.<h4><br>"
+//               ],
+//               show: function(){},
+//               Yes:{
+//                   text:"Yes",
+//                   opt:function(){
+//                       hideYesNo();
+//                       var request = $.ajax({
+//                        type: "POST",
+//                        url: "${pageContext.request.contextPath}/Servlet_Supplier?SFC=UPDATE_SUPPLIER",
+//                        data: {
+//                            ADDSUP: JSON.stringify($('#form_AddSupplier').serializeArray()),
+//                            MODE: "UPDATE_SUPPLIERMASTER"
+//                        },
+//                        dataType: 'json',
+//                        beforeSend: function () {
+//                           $.showLoadingNoStatus();
+//                        },
+//                        success: function(data){
+//                            var response = data;
+//                            $.hideLoadingNoStatus(function(){
+//                                if (response.bool === true){
+//                                    $.bigBoxSuccess({
+//                                        title: "Supplier Success Updated.",
+//                                        content: "Supplier Success Updated.",
+//                                        timeout: 6000
+//                                    });
+//                                    location.reload();
+//                                }
+//                                else{
+//                                    $.bigBoxFail({
+//                                        title: "Update Supplier FAIL.",
+//                                        content: "There is some error during supplier update.<br> Please try again...",
+//                                        timeout: 6000
+//                                    });
+//                                }
+//                            },500);
+//                        }
+//                    });
+//                       
+//                   }
+//               },
+//               No:{
+//                   text:"No",
+//                   opt: function(){
+//                       hideYesNo();
+//                   }
+//               }
+//               
+//            });
+//        }
+//   });  
+   //c01
+   ////Aaron
+   
+   
+   //c02
+   //Aaron
+    function confirm(){
+        var $this = $(this);
+
+        var $validSupplier = $("#form_AddSupplier").valid();
+        //valid01
+        var $validCreditTerm = intNum($('#txtCreditTerm').val());
+        var $validInvLimit = doubleNum($('#txtInvLimit').val());
+        var $validCreditLimit = doubleNum($('#txtCreditLimit').val());
+
+        if ($validSupplier === true && $validCreditTerm === true && $validInvLimit === true && $validCreditLimit === true) {
+            document.getElementById("btnSave").disabled = true;            
+            
+            showYesNo({
+                title: "Confirmation needed",
+                width: 420,
+                noClose: true,
+                isModal: true,
+                body: [
+                   "<br><h4>Please check the details entered.<h4><br>"
+                ],
+                show: function(){},
+                Yes: {
+                    text: "Yes",
+                    opt: function(){
+                       updateDetail();
+                       hideYesNo();
+                   }
+               },
+               No:{
+                   text:"No",
+                   opt: function(){
+                       document.getElementById("btnSave").disabled = false;
+                       hideYesNo();
+                   }
+               }
+               
+            });
+        }
+        else if($validInvLimit === false || $validCreditLimit === false || $validCreditTerm === false){
+            $.bigBoxFail({
+                title: "Invalid Input.",
+                content: "PLease check input for: <br>1.Credit Term <br>2.Invoice Limit <br>3.Credit Limit <br>Please enter valid input and try again...",
+                timeout: 6000
+            });
+        }
+   }
+   
+   //c02
+   //Aaron
+    function updateDetail(){
+        var $this = $(this);
+        $.ajax({
+            type: "POST",
+            url: "${pageContext.request.contextPath}/Servlet_Supplier?SFC=UPDATE_SUPPLIER",
+            data: {
+                ADDSUP: JSON.stringify($('#form_AddSupplier').serializeArray()),
+                MODE: "UPDATE_SUPPLIERMASTER"
+            },
+            dataType: 'json',
+            beforeSend: function (xhr) {
+                $.showLoadingNoStatus();
+            },
+            success: function(response,xhr,status){
+                if (response.bool === true) {
+                    $.bigBoxSuccess({
+                        title: "Supplier Success Updated.",
+                        content: "Supplier Success Updated.",
+                        timeout: 6000
+                    });
+                }
+                else{
+                    $.bigBoxFail({
+                        title: "Update Supplier FAIL.",
+                        content: "There is some error during supplier update.<br> Please try again...",
+                        timeout: 6000
+                    });
+                }
+            },
+            error: function (xhr, status, error) {
+                $.bigBoxFail({
+                    title: "Transaction ERROR",
+                    content: "There is some error occur during data transfer. Please try again later",
+                    timeout: 6000
+                });
+            },
+            complete: function (xhr, status) {
+                if (xhr.status === 200) {
+                    $.hideLoadingNoStatus(function () {
+                       location.reload();
+                    }, 500);
+                } else {
+                    $.hideLoadingNoStatus(function () {
+                    }, 0);
+                }
+            }
+        });
+    }
+   //c02
+   //Aaron
+   
+   
+//            var request = $.ajax({
+//                type: "POST",
+//                url: "${pageContext.request.contextPath}/Servlet_Supplier?SFC=UPDATE_SUPPLIER",
+//                data: {
+//                    ADDSUP: JSON.stringify($('#form_AddSupplier').serializeArray()),
+//                    MODE: "UPDATE_SUPPLIERMASTER"
+//                },
+//                dataType: 'json',
+//                beforeSend: function () {
+//                    //  $.showLoadingNoStatus();
+//                }
+//            });
+
+//            request.done(function (response) {
+//             $.hideLoadingNoStatus(function () {
+//                 
+//                }, 500);
+                //alert('aaa');
+                // alert(response.bool);
+            
+//                if (response.bool === true) {
+//                    $.bigBoxSuccess({
+//                        title: "Supplier Success Updated.",
+//                        content: "Supplier Success Updated.",
+//                        timeout: 6000
+//                    });
+////                    updateMediaFile();
+//                    location.reload();
+//                } 
+//                else {
+//                    $.bigBoxFail({
+//                        title: "Update Supplier FAIL.",
+//                        content: "There is some error during supplier update.<br> Please try again...",
+//                        timeout: 6000
+//                    });
+//                }
+//            });
+//        }
+//    });
+    
+</script>

@@ -1,0 +1,26 @@
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package BusinessData;
+
+import BusinessLogic.BLL_Common;
+
+/**
+ *
+ * @author N0535
+ */
+public class DAL_Cash {
+    BaseDAL DAL = new BaseDAL();
+    
+    public BLL_Common.Common_Object DAL_ADDEDIT_CASH(String SiteName, String[] sStringIn) {
+        return BaseDAL.Get_Multiple_QueryReturn_No_Commit("SP_TRX_CASH(?,?,?,?,?,?,?,?,?,?,"
+                + "?,?,?,?,?,?,?,?,?,?,"
+                + "?,?,?,?,?,?,?,?,?,?,"
+                + "?,?,?,?,?,?,?,?,?,?,"
+                + "?,?,?,?,?,?,?,?,?,?,"
+                + "?,?,?"                
+                + ")", sStringIn, new int[]{java.sql.Types.VARCHAR, java.sql.Types.VARCHAR}, SiteName);
+    }    
+}

@@ -1,0 +1,33 @@
+CREATE DEFINER=`root`@`localhost` PROCEDURE `SP_RESET_AUTOINCREMENT`(IN schemaName varchar(255))
+BEGIN
+    DECLARE done INT DEFAULT FALSE;
+    DECLARE o_name VARCHAR(255);
+    DECLARE o_table VARCHAR(255);
+    DECLARE cur1 CURSOR FOR SELECT COLUMN_NAME, TABLE_NAME FROM information_schema.`COLUMNS` WHERE extra LIKE '%auto_increment%' and table_schema=schemaName;
+    DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = TRUE;
+    OPEN cur1;
+    read_loop: LOOP
+	    FETCH cur1 INTO o_name, o_table;
+
+	    IF done THEN
+	      LEAVE read_loop;
+	    END IF;
+
+		set @qry1 = concat('SELECT MAX(`',o_name,'`) + 1 as autoincrement FROM `',o_table,'` INTO @ai'); 
+		PREPARE stmt1 FROM @qry1;
+		EXECUTE stmt1;
+
+		IF @ai IS NOT NULL THEN
+	     SELECT  o_name, o_table;
+		 SELECT @qry1;
+		 SELECT @ai;
+			set @qry2 = concat('ALTER TABLE `',o_table,'` AUTO_INCREMENT = ', @ai);
+		 SELECT @qry2;
+			PREPARE stmt2 FROM @qry2;
+			EXECUTE stmt2;
+		END IF;
+
+    END LOOP;
+
+    CLOSE cur1;
+ END

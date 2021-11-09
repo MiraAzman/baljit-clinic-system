@@ -1,0 +1,59 @@
+CREATE DEFINER=`root`@`localhost` PROCEDURE `SP_GET_PO_RPT`(
+IN sMethod      varchar(30),
+IN sPODateFrom  varchar(20),
+IN sPODateTo    varchar(20),
+IN sLocCode     varchar(10),
+IN sSupCode     varchar(10),
+IN sPONo        varchar(10)
+)
+BEGIN
+
+DECLARE _statement VARCHAR(8000);
+      
+	IF (sMethod = 'GET_PO_REPORT') THEN
+      
+		SET _statement = 'SELECT *, DATE(pohdr_podate) AS podate, IFNULL(sup_add1,'''') AS add1,
+        					IFNULL(sup_add2,'''') AS add2, IFNULL(sup_add3,'''') AS add3, IFNULL(sup_telephone,'''') AS telephone, 
+                            IFNULL(sup_fax,'''') AS fax, 
+                            CASE 
+								WHEN podtl_gstinclusive = ''Y'' THEN ''Yes''
+								WHEN podtl_gstinclusive = ''N'' THEN ''No''
+							END AS GstInclusive
+    
+							FROM stkt_poheader 
+                            LEFT JOIN stkt_podetail ON podtl_poidx = pohdr_poidx 
+                            LEFT JOIN stkm_stockmaster ON podtl_stockcode = stk_stockcode 
+                            LEFT JOIN stkm_suppliermaster ON pohdr_suppliercode = sup_code
+                            LEFT JOIN stkm_location ON pohdr_companycode = loc_code
+                            WHERE pohdr_poidx IS NOT NULL ';
+                            
+		IF (sPODateFrom <> '') THEN
+			SET _statement = CONCAT(_statement, ' AND DATE(pohdr_podate) >= ',"'",sPODateFrom,"'");
+		END IF;
+
+		IF (sPODateTo <> '') THEN
+			SET _statement = CONCAT(_statement, ' AND DATE(pohdr_podate) <= ',"'",sPODateTo,"'");
+		END IF;
+        
+		IF (sSupCode <> '') THEN
+			SET _statement = CONCAT(_statement, ' AND pohdr_suppliercode = ',"'",sSupCode,"'");
+		END IF;        
+        
+		IF (sLocCode <> '') THEN
+			SET _statement = CONCAT(_statement, ' AND pohdr_companycode = ',"'",sLocCode,"'");
+		END IF;       
+        
+		IF (sPONo <> '') THEN
+			SET _statement = CONCAT(_statement, ' AND pohdr_pono = ',"'",sPONo,"'");
+		END IF;        
+        
+        SET _statement = CONCAT(_statement, ' ORDER BY pohdr_poidx DESC, podtl_lineno ASC ');
+      
+	END IF;      
+
+SET @statement = _statement;
+PREPARE dynquery FROM @statement;
+EXECUTE dynquery;
+DEALLOCATE PREPARE dynquery;
+
+END

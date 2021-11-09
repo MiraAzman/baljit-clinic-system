@@ -1,0 +1,48 @@
+CREATE DEFINER=`root`@`localhost` PROCEDURE `SP_GET_MASTERREC_SYNC`(
+IN sMethod     varchar(20),
+IN sXfrType        varchar(100),
+IN sComp          varchar(100),
+IN sLoc          varchar(200),
+IN sKey1           varchar(200),
+IN sKey2           varchar(200),
+IN sStatus         varchar(10)
+)
+BEGIN
+
+
+
+
+
+
+        DECLARE _statement VARCHAR(8000);
+        DECLARE isString VARCHAR(1);
+        
+        SET isString = 'Y';
+
+        IF sMethod = 'GET_MASTERREC_LIST' THEN
+
+                SET _statement = ' SELECT distinct msync_datatransfer_type,
+        msync_company, msync_location,
+        msync_key1, msync_key2, msync_status
+        FROM stkt_masterrec_sync
+                                where recstatus = 1';
+                                
+
+                
+                        SET _statement = CONCAT(_statement, ' AND msync_status = ',"'", sStatus ,"'", ' ');
+               
+    SET _statement = CONCAT(_statement, ' ORDER BY createddt');
+                 
+
+        END IF;
+
+        
+
+IF isString = 'Y' THEN
+        SET @statement = _statement;
+        PREPARE dynquery FROM @statement;
+        EXECUTE dynquery;
+        DEALLOCATE PREPARE dynquery;
+END IF;
+
+END

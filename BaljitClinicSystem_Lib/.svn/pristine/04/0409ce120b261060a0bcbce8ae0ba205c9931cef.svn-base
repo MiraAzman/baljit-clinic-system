@@ -1,0 +1,38 @@
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package BusinessData;
+
+import BusinessLogic.BLL_Common;
+
+/**
+ *
+ * @author N3355
+ */
+public class DAL_PurchaseOrder {
+    BaseDAL DAL = new BaseDAL();
+    
+    //LLT - add Get
+    public BLL_Common.Common_Object DAL_GET_POLIST(String SiteName, String[] sIn)
+    {
+        return BaseDAL.Get_Multiple_QueryReturn("SP_GET_PO(?,?,?,?,?,?,?,?,?,?,"
+                + "?,?,?,?,?)", sIn, new int[]{}, SiteName); //LLT 2016-06-06 add parameter
+    }
+    //LLT - end add Get
+    
+    //Kenji Low - Insert PO
+    public BLL_Common.Common_Object DAL_ADDEDIT_PO(String SiteName, String[] sStringIn) {
+        return BaseDAL.Get_Multiple_QueryReturn_No_Commit("SP_TRX_PO(?,?,?,?,?,?,?,?,?,?,"
+                + "?,?,?,?,?,?,?,?,?,?,"
+                + "?,?,?,?,?,?,?,?,?,?,"
+                + "?,?,?,?,?,?,?,?,?,?,"
+                + "?,?,?,?,?,?,?,?,?,?,"
+                + "?,?,?,?,?,?,?,?,?,?,"
+                + "?,?,?"
+                + ")", sStringIn, new int[]{java.sql.Types.VARCHAR, java.sql.Types.VARCHAR, java.sql.Types.VARCHAR}, SiteName);
+    }
+    //Kenji Low - End Insert PO
+    
+}

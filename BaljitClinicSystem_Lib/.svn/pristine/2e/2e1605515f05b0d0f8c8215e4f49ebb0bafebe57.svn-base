@@ -1,0 +1,211 @@
+CREATE DEFINER=`root`@`localhost` PROCEDURE `SP_TRX_STOCK_DESPATCH`(
+IN sMethod            varchar(30),
+IN sDESH_DespatchHdrIdx INTEGER,
+IN sDESD_DespatchDtlIdx INTEGER ,
+IN sDESH_Company         VARCHAR(10),
+IN sDESH_DocNo                 VARCHAR(10),
+IN sDESH_DocDate         VARCHAR(20),
+IN sDESH_Remark         VARCHAR(100),
+IN sDESH_Status        VARCHAR(4),
+IN sDESH_PersonName        VARCHAR(200),
+IN sDESH_PersonID        VARCHAR(20),
+IN sDESH_IssueLocation          VARCHAR(10),
+IN sDESH_RecieveLocation        VARCHAR(10),
+IN sDESD_LineNo        INTEGER,
+IN sDESD_StockCode        VARCHAR(16),
+IN sDESD_UOMCode        VARCHAR(6),
+IN sDESD_UOMIdx        INTEGER,
+IN sDESD_Qty        NUMERIC(15,3),
+IN sDESD_IssueLocation        VARCHAR(10),
+IN sDESD_RecieveLocation        VARCHAR(10),
+IN sDESD_Status        VARCHAR(4),
+IN sDESD_Remarks        VARCHAR(200),
+IN sDESD_StockXfrDtlIdx        INTEGER,
+IN sDESD_ACCEPTED_QTY varchar(20),
+IN sBy                varchar(10),
+IN sRecStatus         varchar(4),
+IN sControlDateTime           varchar(20),
+OUT Result varchar(30),
+OUT Message varchar(30),
+OUT retDespatchHdrIdx INTEGER,
+OUT retDespatchDtlIdx INTEGER
+
+)
+BEGIN
+
+        DECLARE _statement VARCHAR(8000);
+
+        DECLARE dt VARCHAR(20);
+
+        IF sControlDateTime = '' THEN
+                SELECT now() INTO dt;
+        ELSE
+               SELECT sControlDateTime INTO dt;
+        END IF;
+
+        IF sMethod = 'UPD_DESPATCH_HEADER' THEN
+           Update stkt_stockdespatchheader
+
+                set
+                
+                
+                
+                desh_remark = sDESH_Remark,
+                desh_status = sDESH_Status,
+                desh_personname = sDESH_PersonName,
+                desh_personid = sDESH_PersonID,
+                
+                
+                modifiedby = sBy,
+                modifieddt = NOW(),
+                recstatus = sRecStatus
+           WHERE desh_despatchhdridx =  sDESH_DespatchHdrIdx;
+
+           SELECT '00000' INTO Result;
+           SELECT  'Successfully Updated' INTO Message;
+           SET retDespatchHdrIdx = sDESH_DespatchHdrIdx;
+           SELECT 0 INTO retDespatchDtlIdx;
+
+        END IF;
+
+
+
+
+        IF sMethod = 'ADD_DESPATCH_HEADER' THEN
+           INSERT INTO stkt_stockdespatchheader (
+
+
+                desh_company,
+                desh_docno,
+                desh_docdate,
+                desh_remark,
+                desh_status,
+                desh_personname,
+                desh_personid,
+                desh_issuelocation,
+                desh_recievelocation,
+
+
+
+                createdby,
+                createddt,
+                recstatus)
+           VALUES
+           (
+                sDESH_Company,
+                sDESH_DocNo,
+                NOW(),
+                sDESH_Remark,
+                sDESH_Status,
+                sDESH_PersonName,
+                sDESH_PersonID,
+                sDESH_IssueLocation,
+                sDESH_RecieveLocation,
+
+                sBy,
+                dt,
+                sRecStatus);
+
+
+                  SELECT '00000' INTO Result;
+                  SELECT  'Success Inserted' INTO Message;
+
+                  SELECT LAST_INSERT_ID() INTO retDespatchHdrIdx;
+                  SELECT 0 INTO retDespatchDtlIdx;
+
+                  
+
+        END IF;
+
+        IF sMethod = 'UPD_DESPATCH_DETAIL' THEN
+
+          UPDATE stkt_stockdespatchdetail
+                set
+          
+                
+                desd_lineno = sDESD_LineNo,
+                desd_stockcode = sDESD_StockCode,
+                desd_uomcode = sDESD_UOMCode,
+                desd_uomidx = sDESD_UOMIdx,
+                desd_qty = sDESD_Qty,
+                desd_issuelocation = sDESD_IssueLocation,
+                desd_recievelocation = sDESD_RecieveLocation,
+                desd_status = sDESD_Status,
+                desd_remarks = sDESD_Remarks,
+                desd_stockxfrdtlidx = sDESD_StockXfrDtlIdx,
+                desd_accepted_qty = sDESD_ACCEPTED_QTY,
+                modifiedby = sBy,
+                modifieddt = NOW(),
+                recstatus = sRecStatus
+           WHERE desd_despatchdtlidx = sDESD_DespatchDtlIdx;
+
+
+           SELECT '00000' INTO Result;
+           SELECT  'Successfully Updated' INTO Message;
+           SET retDespatchHdrIdx = sDESH_DespatchHdrIdx;
+           set retDespatchDtlIdx = sDESD_DespatchDtlIdx;
+
+
+
+     END IF;
+
+
+
+        IF sMethod = 'ADD_DESPATCH_DETAIL' THEN
+
+           INSERT INTO stkt_stockdespatchdetail (
+
+
+
+                desd_despatchhdridx,
+
+                desd_lineno,
+                desd_stockcode,
+                desd_uomcode,
+                desd_uomidx,
+                desd_qty,
+                desd_issuelocation,
+                desd_recievelocation,
+                desd_status,
+                desd_remarks,
+                desd_stockxfrdtlidx,
+                desd_accepted_qty,
+
+                createdby,
+                createddt,
+                recstatus)
+           VALUES
+           (
+
+                sDESH_DespatchHdrIdx,
+
+                sDESD_LineNo,
+                sDESD_StockCode,
+                sDESD_UOMCode,
+                sDESD_UOMIdx,
+                sDESD_Qty,
+                sDESD_IssueLocation,
+                sDESD_RecieveLocation,
+                sDESD_Status,
+                sDESD_Remarks,
+                sDESD_StockXfrDtlIdx,
+                sDESD_ACCEPTED_QTY,
+
+                sBy,
+                dt,
+                sRecStatus);
+
+
+                  SELECT '00000' INTO Result;
+                  SELECT  'Success Inserted' INTO Message;
+
+                  SELECT LAST_INSERT_ID() INTO retDespatchDtlIdx;
+                  SET retDespatchHdrIdx = sDESH_DespatchHdrIdx;
+
+
+
+     END IF;
+
+
+
+END

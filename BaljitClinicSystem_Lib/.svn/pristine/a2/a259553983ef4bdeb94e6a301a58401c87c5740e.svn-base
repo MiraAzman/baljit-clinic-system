@@ -1,0 +1,60 @@
+CREATE DEFINER=`root`@`localhost` PROCEDURE `SP_TRX_MASTERREC_SYNC`(
+IN sMethod         varchar(30),
+IN sXfrType        varchar(100),
+IN sComp          varchar(100),
+IN sLoc          varchar(200),
+IN sKey1           varchar(200),
+IN sKey2           varchar(200),
+IN sStatus         varchar(10),
+IN sBy             varchar(10),
+IN sRecStatus      varchar(4),
+OUT Result         varchar(30)
+)
+BEGIN
+
+ IF sMethod = 'ADD_MASTERREC' THEN
+
+  DELETE FROM stkt_masterrec_sync
+  where msync_datatransfer_type = sXfrType AND msync_company = sComp
+        AND msync_location = sLoc
+        AND msync_key1 = sKey1 AND msync_key2 = sKey2
+        and msync_status <> 'P';
+
+
+  INSERT INTO stkt_masterrec_sync (msync_datatransfer_type, msync_company, msync_location,
+  msync_key1,
+  msync_key2,
+  createdby, createddt, recstatus)
+  VALUES (sXfrType, sComp, sLoc, sKey1, sKey2, sBy, NOW(), sRecStatus);
+
+
+  SELECT '00000' INTO Result;
+ 
+
+ END IF;
+
+ IF sMethod = 'EDIT_MASTERREC' THEN
+
+            UPDATE stkt_masterrec_sync
+
+            SET  msync_key1 = sKey1, 
+     msync_key2 = sKey2,
+                    msync_status = sStatus,
+                    modifiedby = sBy,
+                    modifieddt = NOW()
+
+            where msync_datatransfer_type = sXfrType AND msync_company = sComp AND msync_location = sLoc AND msync_key1 = sKey1 AND msync_key2 = sKey2;
+
+            SELECT '00000' INTO Result;
+
+ END IF;
+IF sMethod = 'DELETE_MASTERREC' THEN
+  DELETE FROM stkt_masterrec_sync
+  where msync_datatransfer_type = sXfrType AND msync_key1 = sKey1 AND msync_key2 = sKey2
+        AND msync_company = sComp
+        AND msync_location = sLoc
+        and msync_status = sStatus;
+        SELECT '00000' INTO Result;
+END IF;
+
+END

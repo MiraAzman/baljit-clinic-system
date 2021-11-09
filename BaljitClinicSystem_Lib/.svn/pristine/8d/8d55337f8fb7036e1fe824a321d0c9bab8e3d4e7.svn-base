@@ -1,0 +1,38 @@
+CREATE DEFINER=`root`@`localhost` PROCEDURE `SP_TRX_STKUOM`(
+IN sMethod            varchar(30),
+IN sUOMCode           varchar(10),
+IN sUOMDesc           varchar(100),
+ 
+IN sBy                varchar(10),
+IN sRecStatus         varchar(4),
+OUT Result varchar(30),
+OUT Message varchar(30)
+
+)
+BEGIN
+IF sMethod = 'ADD_STKUOM' THEN
+   IF NOT EXISTS(SELECT SM.uom_uomcode FROM stkm_stockuom SM WHERE SM.uom_uomcode = sUOMCode) THEN
+    INSERT INTO stkm_stockuom
+    (uom_uomcode, uom_uomdesc,
+     createdby, createddt, recstatus)
+    VALUES
+    (sUOMCode, sUOMDesc, 
+     sBy, NOW(), sRecStatus);
+
+    SELECT '00000' INTO Result;
+    SELECT  'Success Inserted' INTO Message;
+   END IF;
+END IF;
+
+IF sMethod = 'UPDATE_STKUOM' THEN
+   UPDATE stkm_stockuom
+   SET uom_uomdesc = sUOMDesc,
+   recstatus = sRecStatus,
+     modifiedby = sBy, modifieddt = NOW()
+   WHERE uom_uomcode = sUOMCode;
+
+   SELECT '00000' INTO Result;
+   SELECT 'Success Updated' INTO Message;
+END IF;
+
+END

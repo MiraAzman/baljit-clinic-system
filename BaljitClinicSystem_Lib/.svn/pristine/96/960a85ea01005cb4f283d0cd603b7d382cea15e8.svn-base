@@ -1,0 +1,328 @@
+CREATE DEFINER=`root`@`localhost` PROCEDURE `SP_TRX_STOCKREQ`(
+IN pMethod          varchar(30),
+IN pReqNo           varchar(10), 
+IN pCompCode        varchar(10),
+IN pLocCode         varchar(10),
+IN pRemarks         varchar(100),
+IN pReqType         varchar(1),
+IN pStatusCode      varchar(2),
+IN pRecStatus       varchar(10),
+IN pIDX             varchar(10),
+IN pStkCode         varchar(16),
+IN pUomCode         varchar(6),
+IN pReqQty          varchar(10),
+IN pVerifiedQty     varchar(10),
+IN pApprovedQty     varchar(10),
+IN pFillQty         varchar(10),
+IN pCurrentBal      varchar(10),
+IN pReasonCode      varchar(6),
+IN pReasonRemark    varchar(100),
+IN pBy              varchar(20),
+OUT Result varchar(30),
+OUT Message varchar(30),
+OUT IDXKEY varchar(10)
+
+)
+BEGIN
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   DECLARE done INT DEFAULT FALSE;
+
+
+
+
+        DECLARE _statement VARCHAR(8000);
+        DECLARE cursor_ID INT;
+          DECLARE cursor_VAL VARCHAR(200);
+
+        DECLARE vRQDTL_RequestIdx  int;
+        DECLARE vRQDTL_StockCode varchar(20);
+        DECLARE vREQUEST_QTY  double;
+        DECLARE vVERIFIED_QTY double;
+        DECLARE vAPPROVED_QTY double;
+        DECLARE vFULLFIED_QTY double;
+        DECLARE vUNFULLFIED_QTY double default 0;
+        DECLARE vORI_UOM varchar(20);
+        
+        DECLARE dTaken double;
+
+        DECLARE dFullfiledQty double;
+
+        
+        DECLARE vRQDTL_RequestDetailIdx int;
+        
+        DECLARE cursor_i CURSOR FOR SELECT rqdtl_requestdetailidx, rqdtl_requestidx, rqdtl_stockcode, F_CONVERT_UOM(rqdtl_requestqty,pUomCode,rqdtl_uomcode,rqdtl_stockcode) AS REQUEST_QTY,
+                F_CONVERT_UOM(rqdtl_verifiedqty,pUomCode,rqdtl_uomcode,rqdtl_stockcode) AS VERIFIED_QTY,
+                F_CONVERT_UOM(rqdtl_approvedqty,pUomCode,rqdtl_uomcode,rqdtl_stockcode) AS APPROVED_QTY,
+                F_CONVERT_UOM(rqdtl_fulfilledqty,pUomCode,rqdtl_uomcode,rqdtl_stockcode) AS FULLFIED_QTY,
+                F_CONVERT_UOM(rqdtl_approvedqty,pUomCode,rqdtl_uomcode,rqdtl_stockcode) - F_CONVERT_UOM(rqdtl_fulfilledqty,pUomCode,rqdtl_uomcode,rqdtl_stockcode)
+                AS UNFULLFIED_QTY, rqdtl_uomcode AS ORI_UOM
+                FROM stkt_stockrequestdetail left join stkt_stockrequestheader
+                on stkt_stockrequestdetail.rqdtl_requestidx = stkt_stockrequestheader.rqhdr_requestidx
+                where rqdtl_stockcode = pStkCode
+                AND stkt_stockrequestheader.rqhdr_statuscode in ("A","P","O")
+                 AND stkt_stockrequestheader.rqhdr_companycode = pCompCode
+                 AND stkt_stockrequestheader.rqhdr_locationcode = pLocCode
+                 order by stkt_stockrequestdetail.rqdtl_requestdetailidx;
+        DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = TRUE;
+
+        
+
+
+
+         IF pMethod = 'UPD_FULFILLED_QTY' THEN
+                SET dFullfiledQty = cast(pFillQty AS decimal(12,3));
+                OPEN cursor_i;
+                read_loop: LOOP
+                FETCH cursor_i INTO vRQDTL_RequestDetailIdx, vRQDTL_RequestIdx, vRQDTL_StockCode,vREQUEST_QTY,vVERIFIED_QTY,vAPPROVED_QTY,vFULLFIED_QTY,vUNFULLFIED_QTY,vORI_UOM;
+                        IF done THEN
+                                LEAVE read_loop;
+                        END IF;
+                        IF dFullfiledQty <= 0 THEN
+                                LEAVE read_loop;
+                        END IF;
+
+                        
+                         
+
+                        
+
+                        IF vUNFULLFIED_QTY > 0 THEN
+
+
+                                IF vUNFULLFIED_QTY >= dFullfiledQty THEN
+
+
+                                        UPDATE stkt_stockrequestdetail SET rqdtl_fulfilledqty = rqdtl_fulfilledqty +  F_CONVERT_UOM(dFullfiledQty,vORI_UOM,pUomCode,rqdtl_stockcode)
+                                         WHERE rqdtl_requestdetailidx = vRQDTL_RequestDetailIdx;
+                                        SET dFullfiledQty = 0;
+                                ELSE
+                                        SET dFullfiledQty = dFullfiledQty -  vUNFULLFIED_QTY;
+                                        UPDATE stkt_stockrequestdetail SET rqdtl_fulfilledqty = rqdtl_fulfilledqty +   F_CONVERT_UOM(vUNFULLFIED_QTY,vORI_UOM,pUomCode,rqdtl_stockcode)
+                                        WHERE rqdtl_requestdetailidx = vRQDTL_RequestDetailIdx;
+
+                                END IF;
+
+
+                                UPDATE stkt_stockrequestdetail SET rqdtl_requeststatuscode = 'C'
+                                WHERE rqdtl_requestdetailidx = vRQDTL_RequestDetailIdx
+                                        and rqdtl_fulfilledqty >= rqdtl_approvedqty
+                                        and rqdtl_requeststatuscode IN ('A','O', 'P');
+
+                                set @RecCount = 0;
+                                select count(rqdtl_requestdetailidx) from stkt_stockrequestdetail WHERE rqdtl_requestidx = vRQDTL_RequestIdx
+                                into @RecCount ;
+
+                                set @ClosedCount = 0;
+                                select count(rqdtl_requestdetailidx) from stkt_stockrequestdetail WHERE rqdtl_requestidx = vRQDTL_RequestIdx
+                                and rqdtl_requeststatuscode = 'C'
+                                into @ClosedCount;
+                           
+                                IF @ClosedCount = @RecCount THEN
+                                        UPDATE stkt_stockrequestheader SET rqhdr_statuscode = 'C'
+                                        WHERE rqhdr_requestidx = vRQDTL_RequestIdx
+                                        and rqhdr_statuscode IN ('A','O', 'P');
+                                END IF;
+
+
+
+                        END IF;
+
+                END LOOP;
+
+                CLOSE cursor_i;
+
+                SELECT '00000' INTO Result;
+                SELECT  'Success Inserted' INTO Message;
+        END IF;
+
+
+IF pMethod = 'ADD_STOCKREQHEAD' THEN
+
+         INSERT INTO stkt_stockrequestheader (rqhdr_requestnumber, rqhdr_requestdate, rqhdr_companycode, rqhdr_locationcode, rqhdr_remarks,
+                                              rqhdr_manualrequest, rqhdr_statuscode, createdby, createddt, recstatus
+                                              )
+                                        VALUES
+                                             (pReqNo, NOW(), pCompCode, pLocCode, pRemarks,
+                                              pReqType, pStatusCode, pBy, NOW(), '1');
+
+
+
+         SELECT '00000' INTO Result;
+         SELECT  'Success Inserted' INTO Message;
+         SELECT LAST_INSERT_ID() INTO IDXKEY;
+
+END IF;
+
+IF pMethod = 'ADD_STOCKREQDETAIL' THEN
+
+              INSERT INTO stkt_stockrequestdetail (rqdtl_requestidx, rqdtl_stockcode, rqdtl_uomcode, rqdtl_requestqty, rqdtl_requeststatuscode,
+                                                   createdby, createddt, recstatus, rqdtl_requestidx_new
+                                                   )
+                                        VALUES
+                                             (pIDX, pStkCode, pUomCode, pReqQty, pStatusCode,
+                                              pBy, NOW(), '1', pIDX);
+
+              SELECT '00000' INTO Result;
+              SELECT  'Success Inserted' INTO Message;
+
+END IF;
+
+
+IF pMethod = 'VERIFIED_REQ' THEN
+
+
+            Update stkt_stockrequestdetail
+            Set  rqdtl_verifiedqty = pVerifiedQty,
+                 rqdtl_verifiedby =  pBy,
+                 modifiedby = pBy,
+                 modifieddt = NOW(),
+                 rqdtl_requeststatuscode = 'V'
+            Where rqdtl_requestdetailidx = pReqNo;
+
+           
+           
+           
+           
+           
+           
+
+            set @RecCount = 0;
+ select count(rqdtl_requestdetailidx) from stkt_stockrequestdetail WHERE rqdtl_requestidx = pIDX
+ into @RecCount ;
+
+set @ClosedCount = 0;
+select count(rqdtl_requestdetailidx) from stkt_stockrequestdetail WHERE rqdtl_requestidx = pIDX
+and rqdtl_requeststatuscode = pStatusCode
+into @ClosedCount;
+                           
+IF @ClosedCount = @RecCount THEN
+   UPDATE stkt_stockrequestheader SET rqhdr_statuscode = pStatusCode
+   WHERE rqhdr_requestidx = pIDX;
+   
+ELSE 
+   UPDATE stkt_stockrequestheader SET rqhdr_statuscode = 'P'
+   WHERE rqhdr_requestidx = pIDX;
+END IF;
+
+
+
+
+           SELECT '00000' INTO Result;
+           SELECT  'Success Verified' INTO Message;
+
+
+ END IF;
+
+
+ IF pMethod = 'APPROVE_REQ' THEN
+
+
+            Update stkt_stockrequestdetail
+            Set  rqdtl_approvedqty = pApprovedQty,
+                 modifiedby = pBy,
+                 modifieddt = NOW(),
+                 rqdtl_requeststatuscode = pStatusCode
+            Where rqdtl_requestdetailidx = pReqNo;
+
+          
+          
+          
+          
+          
+          
+
+                    set @RecCount = 0;
+ select count(rqdtl_requestdetailidx) from stkt_stockrequestdetail WHERE rqdtl_requestidx = pIDX
+ into @RecCount ;
+
+set @ClosedCount = 0;
+select count(rqdtl_requestdetailidx) from stkt_stockrequestdetail WHERE rqdtl_requestidx = pIDX
+and rqdtl_requeststatuscode = pStatusCode
+into @ClosedCount;
+                           
+IF @ClosedCount = @RecCount THEN
+   UPDATE stkt_stockrequestheader SET rqhdr_statuscode = pStatusCode
+   WHERE rqhdr_requestidx = pIDX;
+   
+ELSE 
+   UPDATE stkt_stockrequestheader SET rqhdr_statuscode = 'P'
+   WHERE rqhdr_requestidx = pIDX;
+END IF;
+
+
+
+
+           SELECT '00000' INTO Result;
+           SELECT  'Success Approved' INTO Message;
+
+
+ END IF;
+
+  IF pMethod = 'REJECT_REQ' THEN
+
+
+            Update stkt_stockrequestdetail
+            Set
+                 rqdtl_reasoncode = pReasonCode,
+                 rqdtl_reasonremarks = pReasonRemark,
+                 rqdtl_requeststatuscode = pStatusCode,
+                 modifiedby = pBy,
+                 modifieddt = NOW()
+            Where rqdtl_requestdetailidx = pReqNo;
+
+
+
+
+
+
+ set @RecCount = 0;
+ select count(rqdtl_requestdetailidx) from stkt_stockrequestdetail WHERE rqdtl_requestidx = pIDX
+ into @RecCount ;
+
+set @ClosedCount = 0;
+select count(rqdtl_requestdetailidx) from stkt_stockrequestdetail WHERE rqdtl_requestidx = pIDX
+and rqdtl_requeststatuscode = pStatusCode
+into @ClosedCount;
+                           
+IF @ClosedCount = @RecCount THEN
+   UPDATE stkt_stockrequestheader SET rqhdr_statuscode = pStatusCode
+   WHERE rqhdr_requestidx = pIDX;
+   
+ELSE 
+   UPDATE stkt_stockrequestheader SET rqhdr_statuscode = 'P'
+   WHERE rqhdr_requestidx = pIDX;
+END IF;
+
+
+            
+            
+            
+            
+            
+            
+
+
+
+
+           SELECT '00000' INTO Result;
+           SELECT  'Request Reject' INTO Message;
+
+
+ END IF;
+
+
+
+END

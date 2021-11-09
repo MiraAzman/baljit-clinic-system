@@ -1,0 +1,1263 @@
+<!--
+Modification ID     By      Date        Comment
+------------------------------------------------------------------------------
+yesno01             Aaron   06Dec2018   include yes-no jsp
+st01               Aaron   06Dec2018   add confirmation box when user try to perform a stock transfer 
+-->
+<%@taglib prefix="jstl" uri="http://java.sun.com/jsp/jstl/core" %>
+
+<jsp:useBean id="DDL" scope="page" class="BusinessLogic.Servlet_PopulateData" />
+<jsp:useBean id="DDLXfer" scope="page" class="BusinessLogic.Servlet_Transfer" />
+<!--<style type="text/css">
+    .ui-jqgrid tr.jqgrow td {
+        word-wrap: break-word; /* IE 5.5+ CSS3 see http://www.w3.org/TR/css3-text/#text-wrap */
+        white-space: pre-wrap; /* CSS3 */
+        white-space: -moz-pre-wrap; /* Mozilla, since 1999 */
+        white-space: -pre-wrap; /* Opera 4-6 */
+        white-space: -o-pre-wrap; /* Opera 7 */
+        overflow: hidden;
+        height: auto;
+        vertical-align: middle;
+        padding-top: 3px;
+        padding-bottom: 3px
+    }    
+</style>-->
+ 
+<style type="text/css">
+    table.multiselect-function tbody tr td { 
+        vertical-align: top;
+    }
+
+    table.multiselect-function thead th{ 
+        margin: 20px;
+        width: 50%;
+    }
+
+    table.multiselect-function tbody tr{
+        height: auto;
+        min-height: 300px;
+        max-height: 500px;
+    }
+
+    table.multiselect-function tbody tr td ul li{
+        vertical-align: central;
+        cursor: pointer;
+        /*white-space: nowrap;*/
+        text-overflow: clip ellipsis;
+    }
+
+    .litext{
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        display: inline-block;
+    }
+
+    table.multiselect-function tbody tr td ul li span:not(.litext){
+        width: 16px;
+        padding-top:5px;
+        display: inline-block;
+    }
+
+    table.multiselect-function tbody tr td ul li a{
+        float: right;
+    }
+
+    table.multiselect-function tbody tr td ul li a:hover{
+        background-color: #c0c0c0;
+    }
+
+    table.multiselect-function tbody tr td ul li:hover { 
+        background-color: #f0f0f0;
+    }
+
+    table.multiselect-function tbody ul{
+        margin: 10px;
+        padding: 0;
+        list-style-type: none;
+    }
+
+    .noselect {
+        -webkit-touch-callout: none;
+        -webkit-user-select: none;
+        -khtml-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
+    }
+
+    a.action{
+        /*position: relative;*/
+        display: inline;
+        right: 0px;
+        z-index: 10;
+    }
+
+    .noselect tr td ul{
+        height: 300px;
+        overflow-y: auto;
+        /*overflow-x: hidden;*/
+    }
+    
+    .ui-jqgrid tr.jqgrow td {
+        word-wrap: break-word; /* IE 5.5+ CSS3 see http://www.w3.org/TR/css3-text/#text-wrap */
+        white-space: pre-wrap; /* CSS3 */
+        white-space: -moz-pre-wrap; /* Mozilla, since 1999 */
+        white-space: -pre-wrap; /* Opera 4-6 */
+        white-space: -o-pre-wrap; /* Opera 7 */
+        overflow: hidden;
+        height: auto;
+        vertical-align: middle;
+        padding-top: 3px;
+        padding-bottom: 3px
+    }    
+    
+     div.errorContainer, div.errorContainer2, div.errorContainer3 ol li{
+        list-style-type:disc;
+        margin-left: 20px;
+    }
+    
+    div.errorContainer, div.errorContainer2, div.errorContainer3{
+        display:none;
+        width:100%;
+    }
+
+    select:disabled{
+        background: #dddddd;
+    }
+
+    input[type="text"].invalid { border: 1px solid #A94444; background-color:#FFF0F0; }
+    select.invalid { border: 1px solid #A94444; background-color:#FFF0F0; }
+    textarea.invalid { border: 1px solid #A94444; background-color:#FFF0F0; }
+    input[type=text]:read-only {box-shadow: none;}
+    textarea:read-only{box-shadow:none;}
+
+
+</style>
+
+<link rel="stylesheet" type="text/css" href="css/your_style.css" />
+<link rel="stylesheet" type="text/css" href="js/plugin/jqgrid/ui.multiselect.css" />
+
+<section id="widget-grid" class="">
+    <!--<input type="text" id="lblUserCode" value="<%= session.getAttribute("loginid")%>"  class="tboxreadonlyShort"/>-->
+    <input type="hidden" id="lblAllowInterbranch" value="<%= session.getAttribute("APP_ALLOW_INTER_BRANCH_XFR")%>"  class="tboxreadonlyShort"/>
+    <div class="col-xs-12 col-sm-7 col-md-7 col-lg-4">
+        <h1 class="page-title txt-color-blueDark">
+            <!-- PAGE HEADER -->
+            <i class="fa-fw fa fa-file fa-2x"></i> 
+            New Stock Transfers
+            <input type="hidden" id="ControlDateTime" value="DT" />
+        </h1>
+    </div>
+    <div class="row">
+        <form id='form_XferAdd'>
+        <article class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+<!--            <div class="row" style="padding-left:20px;padding-bottom:20px;">
+                <input type="button" class="btn btn-default bg-color-blueDark txt-color-white" id="btnAddProduct" name="btnAddProduct" onclick="location.href = '#/AddNewProduct'" value="Add New" style="margin-right:20px;"/>
+            </div>-->
+            <div class="jarviswidget jarviswidget-color-blueDark" id="wid-id-2"  data-widget-editbutton="false" data-widget-colorbutton="false" data-widget-fullscreenbutton="false" data-widget-custombutton="false" data-widget-deletebutton="false">
+                <header>
+                    <span class="widget-icon"> <i class="fa fa-search"></i></span>
+                    <span><h2>&nbsp;Locate Product</h2></span>
+                </header>
+                <div class="no-padding">
+                    <div class="widget-body">
+                        <div id="selectCriTab" class="tab-content">
+                            <div class="tab-pane fade active in padding-5 no-padding-bottom" id="selectCriTab_s1">
+                                <!--<table id="tblSearch" border="0" cellpadding="0" cellspacing="0" width="80%">-->
+                                <table id="tblSearch" class="selection-criteria">
+                                    <tr>
+                                        <td width="15%">Product Code:</td>
+                                        <td width="20%">   
+                                           </div>
+                                            <div style="float:left;padding-left:10px">
+                                            <input type="text" id="txtPrdCode" name="txtPrdCode"  placeholder="--Enter Product Code--" class="searchbox-text" />
+                                            </div>
+                                            <div style="float:left;padding-left:10px">
+                                            <button class='btn btn-default bg-color-blueDark txt-color-white' type="button" onclick="ProductLookup();" ><i class="fa fa-search fa-lg"></i></button>
+                                            </div>
+                                        </td>
+                                        <td width="15%">Product Group:</td>
+                                        <td width="20%">                                            
+                                            <label id="selectPrdGrpFrom" class="searchbox">
+                                            <select class="form-control" id="ddlPrdGrpFrom" name="ddlPrdGrpFrom" rel="popover-hover" data-original-title="Product Group" data-content="Select Product Group." style="width:250px;">
+                                                <option value="">- Select Product Group -</option>    
+                                                      <jstl:forEach var="ddl_PrdGrpFrom" items="${DDL.ddlGet('GET_CODEDESC', 'STKGRP', '', sessionScope.SiteName)}">
+                                                            <option value="${ddl_PrdGrpFrom.VALUE}">${ddl_PrdGrpFrom.TEXT}</option>
+                                                       </jstl:forEach>                                             
+                                            </select>    
+                                        </label>
+                                        </td>
+                                         <td width="5%">To</td>
+                                        <td width="20%">                                            
+                                            <label id="selectPrdGrpTo" class="searchbox">
+                                            <select class="form-control" id="ddlPrdGrpTo" name="ddlPrdGrpTo" rel="popover-hover" data-original-title="Product Group" data-content="Select Product Group." style="width:250px;">
+                                                <option value="">- Select Product Group -</option>
+                                                <jstl:forEach var="ddl_PrdGrpTo" items="${DDL.ddlGet('GET_CODEDESC', 'STKGRP', '', sessionScope.SiteName)}">
+                                                            <option value="${ddl_PrdGrpTo.VALUE}">${ddl_PrdGrpTo.TEXT}</option>
+                                                </jstl:forEach>     
+                                            </select>    
+                                        </label>
+                                        </td>
+                                        
+                                    </tr> 
+                                    <tr>
+                                        <td width="15%">Product Description</td>
+                                        <td width="20%">                                            
+                                            <input type="text" id="txtPrdDesc" name="txtPrdDesc"  placeholder="--Enter Product Description--" class="searchbox-text" />
+                                        </td>
+                                        <td width="15%">Product Type:</td>
+                                        <td width="20%">                                            
+                                            <label id="selectPrdTypeFrom" class="searchbox">
+                                            <select class="form-control" id="ddlPrdTypeFrom" name="ddlPrdTypeFrom" rel="popover-hover" data-original-title="Product Type" data-content="Select Product Type." style="width:250px;">
+                                                <option value="">- Select Product Type -</option>
+                                                 <jstl:forEach var="ddl_PrdTypeFrom" items="${DDL.ddlGet('GET_CODEDESC', 'STKTYP', '', sessionScope.SiteName)}">
+                                                            <option value="${ddl_PrdTypeFrom.VALUE}">${ddl_PrdTypeFrom.TEXT}</option>
+                                                </jstl:forEach>            
+                                            </select>    
+                                        </label>
+                                        </td>
+                                         <td width="5%">To</td>
+                                        <td width="20%">                                            
+                                            <label id="selectPrdTypeTo" class="searchbox">
+                                            <select class="form-control" id="ddlPrdTypeTo" name="ddlPrdTypeTo" rel="popover-hover" data-original-title="Product Type" data-content="Select Type Group." style="width:250px;">
+                                                <option value="">- Select Product Type -</option>
+                                                <jstl:forEach var="ddl_PrdTypeTo" items="${DDL.ddlGet('GET_CODEDESC', 'STKTYP', '', sessionScope.SiteName)}">
+                                                            <option value="${ddl_PrdTypeTo.VALUE}">${ddl_PrdTypeTo.TEXT}</option>
+                                                </jstl:forEach>  
+                                            </select>    
+                                        </label>
+                                        </td>
+                                        
+                                    </tr> 
+                                    <tr>
+                                        <td colspan="6">
+                                            <div id="rdPrdCat" class="ui-buttonset">       
+                                                <input type="radio" id="rdPrdCat1" name="rdPrdCat"  value="" checked="checked" /><label for="rdPrdCat1" class="label-option btn">All</label>
+                                                <input type="radio" id="rdPrdCat2" name="rdPrdCat" value="0"/><label for="rdPrdCat2" class="label-option btn">Medication</label>
+                                                <input type="radio" id="rdPrdCat3" name="rdPrdCat" value="1"/><label for="rdPrdCat3" class="label-option btn">Product</label>
+                                                <input type="radio" id="rdPrdCat4" name="rdPrdCat" value="2"/><label for="rdPrdCat4" class="label-option btn">Consumable</label>
+                                            </div>
+                                            <script>
+                                                loadScript("js/buttonset.js", function () {
+                                                    $('#rdPrdCat').buttonset();
+                                                });
+                                            </script>
+                                        </td>
+                                        
+                                    </tr>
+                                    
+                                     <tr>
+                                         <td colspan="6">
+                                              <div style="align:left; float:left;padding-right: 10px" >
+                                                <input type="submit" Id="btnSearch"  class="btn btn-default bg-color-blueDark txt-color-white"  value="Search" onclick="Search();" />
+                                            </div>
+                                             
+                                             <div style="align:left; float:left; padding-right: 10px" >
+                                                <input type="submit" Id="btnClear"  class="btn btn-default bg-color-blueDark txt-color-white"  value="Clear" onclick="ResetSearchFields();" />
+                                            </div>
+                                             
+                                             <div style="align:left; float:left;" >
+                                                 <input type="submit" Id="btnGetPendingXfr"  class="btn btn-default bg-color-blueDark txt-color-white"  value="Retrieve Pending Transfer Only..." onclick="RetrievePendingXfr();" />
+                                            </div>
+                                         </td>                                        
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+                                                           
+            <div class="jarviswidget jarviswidget-color-blueDark" id="wid-id-1"  data-widget-editbutton="false" data-widget-custombutton="false" data-widget-deletebutton="false">
+               
+                <header>
+                    <span class="widget-icon"> <i class="fa fa-file"></i></span>
+                    <h2>Transfer Item(s)..</h2>
+                </header>  
+                <div>
+
+                    <!-- widget edit box -->
+                    <div class="jarviswidget-editbox">
+                        <!-- This area used as dropdown edit box -->
+                         
+                    </div>
+                    <!-- end widget edit box -->
+
+                    <!-- widget content -->
+                    <div class="widget-body">
+<!--                        <input type="button" href="#myModal" data-toggle="modal" value="Print Reports" class="btn btn-default bg-color-blueDark txt-color-white" />&nbsp;
+                        <input type="button" id="btnMemExport" name="btnCorpExport" onclick='ExportData()' value="Export"  class="btn btn-default bg-color-blueDark txt-color-white"  style="margin-right:20px;"/>-->
+                                 
+                        <div class="table-responsive">
+                            <div id="cjqgridPrdList"></div>
+                            <table id="jqgridPrdList" class="table table-striped table-bordered"  ></table>
+                            <div id="pjqgridPrdList"></div>
+                        </div>
+                        <div style=" display: none;">
+                                <table id="ExportPrdMaster" class="table table-striped table-bordered"   ></table>
+                            </div>
+                    </div>
+                    <!-- end widget content -->
+                </div>
+            </div>
+        </article>
+                                                
+        <div hidden>
+            
+            <input type="hidden" id="hidXferItems" name="hidXferItems"/>
+        </div>
+          </form>                             
+    </div>
+</section>
+ 
+    <div class="modal fade" id="myModal1" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog" style="width: 91%;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">
+                    &times;
+                </button>
+                <h4 class="modal-title" id="myModalLabel">Manage Transfers...!!</h4>
+            </div>
+
+            <div class="modal-body">
+                <div class="widget-body">
+                    <div class="jarviswidget jarviswidget-color-blueDark" id="wid-id-1" data-widget-editbutton="false" data-widget-deletebutton="false" data-widget-colorbutton="false" data-widget-fullscreenbutton="false" data-widget-togglebutton="false">
+                        <header>
+                            <h2>Transfer Details</h2>
+                            
+                        </header>
+                        <div class="container">
+
+                            <div class="row">
+                                <div id="cjqgridSubmitDetail" class="jqgrid-table-nopadding">
+                                    <table id="jqgridSubmitDetail" class="table table-striped" ></table>
+                                    <div id="sourceDetail">
+                                        
+                                        
+                                        <!--<input type="button" Id="btnTest" onclick="DoRefershLocationList();"  class="btn btn-default bg-color-blueDark txt-color-white" value="Refresh...test" />-->
+                                        
+                                        <table id="tblSource" class="selection-criteria">
+                                             
+                                    <tr>
+                                        <td width="15%">Transfer From:</td>
+                                        <td width="20%">   
+                                           </div>
+                                            <!--<select class="form-control" id="ddlSource"  onclick="OnLocationClick(this);" name="ddlSource" rel="popover-hover" data-original-title="Select Stock Source Location" data-content="Select Stock Source Location." style="width:250px;">-->
+                                                
+                                            <select class="form-control" id="ddlSource"  onchange="OnLocationClick(this);" onfocus="this.selectedIndex = -1;" name="ddlSource" rel="popover-hover" data-original-title="Select Stock Source Location" data-content="Select Stock Source Location." style="width:250px;">
+<!--                                                <option value="">- Select Stock Source Location -</option>
+                                                <jstl:forEach var="ddlSource" items="${DDLXfer.ddlGetCompanyBal('','',sessionScope.SiteName)}">
+                                                            <option value="${ddlSource.comp_code}">${ddlSource.comp_name}</option>
+                                                </jstl:forEach>     -->
+                                                 </select>   
+                                        </td>
+                                        <td width="15%">Available Qty:</td>
+                                        <td width="20%">                                            
+                                             <div style="float:left;padding-left:10px">
+                                                  <label id="txtAvailQty" class="searchbox">
+                                            <!--<input type="text" id="txtAvailQty" name="txtAvailQty" />-->
+                                            </div>
+                                        </td>
+                                        <td width="20%">                                            
+                                             <div style="float:left;padding-left:10px">
+                                                  <label id="txtAvailQtyUOM" class="searchbox">
+                                             
+                                            </div>
+                                        </td>
+                                        
+                                    </tr> 
+                                     
+                                </table>
+                                        
+                                       
+                                        
+                                        
+                                    </div>
+                                     <div class="table-responsive">
+                                         
+                                         <div id="gridPoItemSummary" class="">
+                                
+
+                                <table  class="table table-striped" id="tbPoItem" >
+                                    <thead>
+                                                                            
+                                    <th id="Location">Location</th>
+                                    <th id="CurrBalance">Curr. Balance</th>
+                                    <th id="UOM">UOM</th>
+                                    <th id="QTY">Transfer Qty.</th>
+                                    
+                                    </thead>
+                                    <tbody id="PoItemGrid" >
+
+                                    </tbody>
+                                </table>
+
+                            </div>
+                            <div>
+                                <div class="row">
+                                    <div class="col-sm-12">
+                                        
+                                        <div align="Right" class="padding-5" >
+                                            <input type="button" Id="btnAutoAllocate"  class="btn btn-default bg-color-blueDark txt-color-white" value="Auto Allocate" style=" width: 180px; padding-right: 30px;" />
+                                            <input type="button" Id="btnSave"  class="btn btn-default bg-color-blueDark txt-color-white" value="Confirm" style=" width: 80px;" onclick="confirm();" />
+                                            <input type="button" Id="btnClose"  class="btn btn-default bg-color-blueDark txt-color-white" value="Close" style=" width: 80px;" data-dismiss="modal" />
+
+                                        </div>
+                                        
+                                    </div>
+                                </div>
+                            </div>    
+<!--                            <div id="cjqgridLocationList"></div>
+                            <table id="jqgridLocationList" class="table table-striped table-bordered"  ></table>
+                            <div id="pjqgridLocationList"></div>-->
+                        </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+
+
+
+            </div>
+        </div>
+
+
+    </div>
+</div>
+    
+    
+    
+  <jsp:include page="../../../includes/loading-no-status.jsp"/>  
+  <jsp:include page="../../../includes/PopUpInitPage.jsp"/>
+  <!-- include yes-no jsp --><!--Aaron--><!--yesno01-->
+  <jsp:include page="../../../includes/yes-no.jsp"/>
+  <script src="js/buttonset.js"></script>
+<script type="text/javascript">
+    
+var today = new Date(); 
+var date = today.getFullYear()+'-'+(today.getMonth()+1)+'-'+today.getDate();
+var time = today.getHours() + ":" + today.getMinutes() + ":" + today.getSeconds();
+var ControlDT = date+' '+time;
+// $("#ControlDateTime").val(ControlDT);
+   var CurrentStkCode = "";
+   var CurrentCompCode = "";
+   var CurrentConvUOM = "";
+   var CurrLocationLst = {};
+   var CurrentAllocation = {};
+   var LocationFirstTimeRefreshed = false;
+   var CurrLocationGrid = {};
+   var TotalAllocation = 0;
+   
+    pageSetUp();
+$('#rdPrdCat').buttonset();
+//getCurrDateTime();
+
+
+    var pagefunction = function () {
+        
+
+  
+        //alert("0000111");
+        
+       loadScript("js/plugin/jqgrid/ui.multiselect.js", function () {
+            loadScript("js/plugin/jqgrid/grid.locale-en.min.js", function () {
+                loadScript("js/plugin/jqgrid/jquery.jqGrid.min.js", function () {
+                    loadScript("js/column-chooser.js", function () {
+                        run_jqgrid_function();
+                         getCurrDateTime();
+                    });
+                });
+            });
+        });
+   //$.showLoadingNoStatus();      
+  function getCurrDateTime()
+  {
+    //
+    
+    $.get('${pageContext.request.contextPath}/Servlet_SystemEnvironmentSettings', {SFC: 'GET_CURRENTDATETIME'}, function (data) {
+            var arrData = String(data);
+//            alert(data);
+           $("#ControlDateTime").val(arrData);
+            
+        });
+    
+    //
+  };
+        function run_jqgrid_function() {
+            
+            var grid = $("#jqgridPrdList"),
+                gridPager = "#p" + grid.selector.toString().substring(1),
+                conDiv = $("#c" + grid.selector.toString().substring(1)),
+                defaultColName =  [  'Product Code','Product Desc','Category','Group', 'Type', 'UOM' ],
+                defaultColMol = [
+                    //  {name:'MEM_NRIC',index:'MEM_NRIC', sortable:true, searchoptions: { sopt: ['cn']}, formatter:'showlink',formatoptions:{baseLinkUrl:'../ProviderPortal/Prov_Patient_Detail.jsp',addParam: '',showAction:'',idName:'PMemNRIC'}},                     
+                    //{name: 'details', index: 'details',  search: false, sortable: false, width: 120, align:'center',must: true, hidedlg: true},
+                    {name: 'stk_stockcode', index: 'stk_stockcode', sortable: true, must: true, hidedlg: true, width: 120},
+                    {name: 'stk_desc', index: 'stk_desc', sortable: true, must: true, hidedlg: true, width: 220},
+                    {name: 'stk_consumable', index: 'stk_consumable', sortable: true, width: 120},
+                    {name: 'stk_groupcode', index: 'stk_groupcode', sortable: true, width: 120},
+                    {name: 'stk_typecode', index: 'stk_typecode', sortable: true, width: 120},
+                    {name: 'stk_baseuomcode', index: 'stk_baseuomcode', sortable: true, width: 120}
+//                    ,{name: 'test', sortable: true, 
+//                    editable:true, edittype:'select',editoptions:{
+//					value:"COMPLETE:COMPLETE;Partial Complete:Partial Complete;In Process-at OE:In Process-at OE;In Process-at Site:In Process-at Site;No Data:No Data;Scheduled:Scheduled;Sched in progress:Sched in progress;Not Applicable:Not Applicable"}}
+//			 
+                ],
+              
+                mainGridName = grid.selector.toString().substring(1),
+                //temp = readSettings({settingArray:${sessionScope.settings}, defaultColName: defaultColName, defaultColMol: defaultColMol, settingName: mainGridName});//,
+                temp = readSettings({settingArray:"admin", defaultColName: defaultColName, defaultColMol: defaultColMol, settingName: mainGridName}),
+              currentColName = temp[0],
+              currentColMol = temp[1];
+       // alert(JSON.stringify(temp));
+        grid.jqGrid({
+            url: '${pageContext.request.contextPath}/Servlet_Stock',
+                postData: {
+                        SFC: 'GET_PRODUCT_LIST',               
+//                        PRDCODE: $('#txtPrdCode').val(),
+//                        PRDNAME: $('#txtPrdDesc').val(),
+//                        PrdGrpFrom: $('#ddlPrdGrpFrom').val(),
+//                        PrdGrpTo: $('#ddlPrdGrpTo').val(),
+//                        PRDTYPFROM: $('#ddlPrdTypeFrom').val(),
+//                        PRDTYPTO: $('#ddlPrdTypeTo').val(),
+//                        PRDCAT: $('input[name=rdPrdCat]:checked').val()
+                        PRDCODE: '@@'
+                        
+                },
+            datatype: "json",
+            mtype: 'POST',
+            colNames: currentColName,
+            colModel: currentColMol,
+           // rownumbers: true,
+            gridview: true,
+            rownumWidth: 40,
+            rowNum: 20,
+            rowList: [10, 20, 25, 30, 50, 100],
+            pager: gridPager,
+            sortname: 'stk_stockcode',
+            viewrecords: true,
+            sortorder: 'desc',
+            toolbarfilter: true,
+            autowidth: true,
+            shrinkToFit: true,
+            loadonce: false,
+            height: 'auto',
+           scrollerbar: false,  
+           subGrid: true,
+           rownumbers: true,
+           celledit: true,
+           //async: true,
+           //----------Row expand
+   subGridRowExpanded: function (subgrid_id, row_id) {
+                    //alert(subgrid_id, row_id);
+                    
+                    CurrentConvUOM = $(this).jqGrid('getCell', row_id, 'stk_baseuomcode');
+                    CurrentStkCode = $(this).jqGrid('getCell', row_id, 'stk_stockcode');
+                    
+                    var defaultSubColName = ['Action','Company Code','Company Name', 'With Request'],
+                            defaultSubColMol = [
+                                {name: 'Allocate', index: 'allocate', formatter: viewSubmitDetail, search: false, sortable: false, width: 20, align: 'center', must: true, hidedlg: true},                                
+                                {name: 'comp_code', index: 'comp_code', must: true, hidedlg: true, sortable: true, search: false, width: 60},
+                                {name: 'comp_name', index: 'comp_name', must: true, hidedlg: true, sortable: true, search: false, width: 120},
+                                {name: 'request', index: 'request', must: true, hidedlg: true, sortable: true, search: false, width: 60}
+
+                            ],
+                            //subTemp = readSettings({settingArray:${sessionScope.settings}, defaultColName: defaultSubColName, defaultColMol: defaultSubColMol, settingName: "ProvClmDisbSubGrid"}),
+                            subTemp = readSettings({settingArray: "admin", defaultColName: defaultSubColName, defaultColMol: defaultSubColMol, settingName: "CompanyAllocation"}),
+                            currentSubColName = subTemp[0], currentSubColMol = subTemp[1],
+                            subGridWidth = $("#jqgridPrdList").width(),
+                            subGridName = "CompanyAllocation";
+
+//                    alert("currentSubColName-->" + currentSubColName);
+//                    alert("currentSubColMol-->" + currentSubColMol);
+                    scrollToRow(this, row_id);
+                    var subgridTableId = "table_" + subgrid_id,
+                            pagerID = "p" + subgrid_id,
+                            PrdCode = $(this).jqGrid('getCell', row_id, 'stk_stockcode');
+
+                    //alert("PrdCode-->" + PrdCode);
+                    $("#" + subgrid_id).html("<table id='" + subgridTableId + "'></table>" +
+                            "<div id='" + pagerID + "'></div>");
+                    //                    $("#" + subgrid_id).html("<table id='" + subgridTableId + "'></table>");
+                    $("#" + subgridTableId).jqGrid({
+                        url: '${pageContext.request.contextPath}/Servlet_Transfer',
+                        postData: {
+                            SFC: 'COMPANY_STOCK_BAL',
+                            PRDCODE: PrdCode,
+                            CONVUOM: CurrentConvUOM
+                        },
+                        datatype: "json",
+                        mtype: 'POST',
+                        colNames: currentSubColName,
+                        colModel: currentSubColMol,
+                        rownumbers: true,
+                        rownumWidth: 40,
+                        pager: "#" + pagerID,
+                        height: 'auto',
+                        shrinkToFit: true,
+                        autowidth: true,
+                        loadonce: false,
+                        rowNum: 20,
+                        rowList: [10, 20, 25, 30, 50, 100],
+                        sortname: "stk_stockcode",
+                        sortorder: 'desc',
+                        idPrefix: subgridTableId + "_Row_",
+                        //async: true,
+                        sortable: {
+                            update: function (relativeColumnOrder) {
+                                //sortColumn({settingArray:${sessionScope.settings}, order: relativeColumnOrder, grid: $("#" + subgridTableId), defaultColMol: defaultSubColMol, settingName: subGridName,
+                                sortColumn({settingArray: "admin", order: relativeColumnOrder, grid: $("#" + subgridTableId), defaultColMol: defaultSubColMol, settingName: subGridName,
+                                    done: function () {
+
+                                    }
+                                });
+                            }
+                        },
+                        loadComplete: function () {
+                        }
+                    });
+                     
+                     
+                    function viewSubmitDetail(cellvalue, options, rowObject) {                     
+                        return "<a class='btn btn-default bg-color-blueDark txt-color-white' onclick='DetailGrid(\"" + subgridTableId + "\",\"" + rowObject["stk_stockcode"] + "\",\"" + rowObject["comp_code"] + "\")';>Allocation...</a>";
+
+//                        return"<a style='cursor: pointer;' title='View Details' href='#/AddNewStockTransferAllocation/" +  rowObject.XFRH_StockXfrHdrIdx +  "'><i class='fa fa-fw fa-lg fa-list-alt' /></a>";  
+//                         window.open('#/AddNewStockTransferAllocation/" +  rowObject.XFRH_StockXfrHdrIdx +  "');
+                    }
+
+
+
+                    $(".ui-jqgrid-htable").addClass("table table-bordered table-hover");
+                    $(".ui-jqgrid-btable").addClass("table table-bordered table-striped");
+                    $(this).removeClass(".ui-jqgrid .ui-jqgrid-bdiv").addClass(".ui-jqgrid .ui-jqgrid-bdiv-nested");
+                    // remove classes
+                    $(".ui-jqgrid").removeClass("ui-widget ui-widget-content");
+                    $(".ui-jqgrid-view").children().removeClass("ui-widget-header ui-state-default");
+                    $(".ui-jqgrid-labels, .ui-search-toolbar").children().removeClass("ui-state-default ui-th-column ui-th-ltr");
+                    $(".ui-jqgrid-pager").removeClass("ui-state-default");
+                    $(".ui-jqgrid").removeClass("ui-widget-content");
+                    // add classes
+                    $(".ui-jqgrid-htable").addClass("table table-bordered table-hover");
+                    $(".ui-jqgrid-btable").addClass("table table-bordered table-striped");
+                    $(".ui-pg-div").removeClass().addClass("btn btn-sm btn-primary");
+                    $(".ui-icon.ui-icon-plus").removeClass().addClass("fa fa-plus");
+                    $(".ui-icon.ui-icon-pencil").removeClass().addClass("fa fa-pencil");
+                    $(".ui-icon.ui-icon-trash").removeClass().addClass("fa fa-trash-o");
+                    $(".ui-icon.ui-icon-search").removeClass().addClass("fa fa-search");
+                    $(".ui-icon.ui-icon-refresh").removeClass().addClass("fa fa-refresh");
+                    $(".ui-icon.ui-icon-disk").removeClass().addClass("fa fa-save").parent(".btn-primary").removeClass("btn-primary").addClass("btn-success");
+                    $(".ui-icon.ui-icon-cancel").removeClass().addClass("fa fa-times").parent(".btn-primary").removeClass("btn-primary").addClass("btn-danger");
+                    $(".ui-icon.ui-icon-seek-prev").wrap("<div class='btn btn-sm btn-default'></div>");
+                    $(".ui-icon.ui-icon-seek-prev").removeClass().addClass("fa fa-backward");
+                    $(".ui-icon.ui-icon-seek-first").wrap("<div class='btn btn-sm btn-default'></div>");
+                    $(".ui-icon.ui-icon-seek-first").removeClass().addClass("fa fa-fast-backward");
+                    $(".ui-icon.ui-icon-seek-next").wrap("<div class='btn btn-sm btn-default'></div>");
+                    $(".ui-icon.ui-icon-seek-next").removeClass().addClass("fa fa-forward");
+                    $(".ui-icon.ui-icon-seek-end").wrap("<div class='btn btn-sm btn-default'></div>");
+                    $(".ui-icon.ui-icon-seek-end").removeClass().addClass("fa fa-fast-forward");
+                    $(".ui-pg-input").addClass("pg-input");
+                    resizeWidth({grid: $("#" + subgridTableId), gridDiv: $("#" + subgrid_id)});
+                    $("#" + subgridTableId).closest('div.ui-jqgrid-bdiv').css("max-height", "300px").css("max-width", subGridWidth + "px");
+                    //                        $("#" + subgridTableId).closest('div.ui-jqgrid-hdiv.ui-corner-top').addClass('hello');
+                    $("#" + subgridTableId).closest('div.ui-jqgrid-hdiv.ui-corner-top').css("max-width", subGridWidth + "px");
+                    $("#" + subgridTableId).closest('div.ui-jqgrid-pager.ui-corner-bottom').css("max-width", subGridWidth + "px");
+                    quickSetupChooser({grid: $("#" + subgridTableId), defaultColMol: defaultSubColMol, settingName: subGridName,
+                        settingArray: "admin",
+                        //settingArray:${sessionScope.settings},
+                        done: function () {
+                            grid.jqGrid('collapseSubGridRow', row_id);
+                            setTimeout(function () {
+                                grid.jqGrid('expandSubGridRow', row_id);
+                            }, 50);
+                        }
+                    });
+                    $(window).on('resize', function () {
+                        grid.jqGrid('setGridWidth', conDiv.width());
+                    });
+                    grid.on('myRefresh', function () {
+                        resizeWidth({grid: grid, gridDiv: conDiv});
+                    });
+                    //         quickSetupChooser({grid: grid, defaultColMol: defaultColMol, settingName: mainGridName,
+//            settingArray:${sessionScope.settings},
+                    quickSetupChooser({grid: $("#" + subgridTableId), defaultColMol: defaultSubColMol, settingName: subGridName,
+                        settingArray: "admin",
+                        done: function () {
+                            resizeWidth({grid: grid, gridDiv: conDiv});
+                        }
+                    });
+                    grid.jqGrid('setGridWidth', conDiv.width());
+
+                    //                $(window).on('resize', function () {
+                    //                    $("#" + subgridTableId).jqGrid('setGridWidth', subGridWidth);
+//                });
+
+                },
+   //----
+           sortable: {
+                update: function (relativeColumnOrder) {
+                    //sortColumn({settingArray:${sessionScope.settings}, order: relativeColumnOrder, grid: grid, defaultColMol: defaultColMol, settingName: mainGridName});
+                    sortColumn({settingArray:"admin", order: relativeColumnOrder, grid: grid, defaultColMol: defaultColMol, settingName: mainGridName});
+                }
+            },
+                loadComplete: function () {
+                var iLastPage = parseInt($(this).getGridParam('lastpage'));
+                $(".ui-jqgrid .ui-pg-input").keydown(function (e) {
+                    this.value = this.value.replace(/\D/g, '');
+                    var code = e.keyCode || e.which;
+                    if (code === 13) {
+                        if (this.value > iLastPage) {
+                            this.value = iLastPage;
+                        } else if (this.value <= 0) {
+                            this.value = 1;
+                        }
+                    }
+                });
+            }
+        });
+        
+//          function viewDetail(cellvalue, options, rowObject) {
+//              //return "<a  target='_self' class='btn btn-default bg-color-blueDark txt-color-white' title='Member Detail' href='#/MemberDetail/" + rowObject.MEM_ID + "/" + rowObject.MEM_CorpCode + "'>View Details</a>";
+//              return"<a style='cursor: pointer;' title='View Details' href='#/ProductDetail/" + rowObject.stk_stockcode +  "'><i class='fa fa-fw fa-lg fa-list-alt' /></a>";
+//               
+//            }
+        // remove classes
+        $(".ui-jqgrid").removeClass("ui-widget ui-widget-content");
+        $(".ui-jqgrid-view").children().removeClass("ui-widget-header ui-state-default");
+        $(".ui-jqgrid-labels, .ui-search-toolbar").children().removeClass("ui-state-default ui-th-column ui-th-ltr");
+        $(".ui-jqgrid-pager").removeClass("ui-state-default");
+        $(".ui-jqgrid").removeClass("ui-widget-content");
+        // add classes
+        $(".ui-jqgrid-htable").addClass("table table-bordered table-hover");
+        $(".ui-jqgrid-btable").addClass("table table-bordered table-striped");
+        $(".ui-pg-div").removeClass().addClass("btn btn-sm btn-primary");
+        $(".ui-icon.ui-icon-plus").removeClass().addClass("fa fa-plus");
+        $(".ui-icon.ui-icon-pencil").removeClass().addClass("fa fa-pencil");
+        $(".ui-icon.ui-icon-trash").removeClass().addClass("fa fa-trash-o");
+        $(".ui-icon.ui-icon-search").removeClass().addClass("fa fa-search");
+        $(".ui-icon.ui-icon-refresh").removeClass().addClass("fa fa-refresh");
+        $(".ui-icon.ui-icon-disk").removeClass().addClass("fa fa-save").parent(".btn-primary").removeClass("btn-primary").addClass("btn-success");
+        $(".ui-icon.ui-icon-cancel").removeClass().addClass("fa fa-times").parent(".btn-primary").removeClass("btn-primary").addClass("btn-danger");
+        $(".ui-icon.ui-icon-seek-prev").wrap("<div class='btn btn-sm btn-default'></div>");
+        $(".ui-icon.ui-icon-seek-prev").removeClass().addClass("fa fa-backward");
+        $(".ui-icon.ui-icon-seek-first").wrap("<div class='btn btn-sm btn-default'></div>");
+        $(".ui-icon.ui-icon-seek-first").removeClass().addClass("fa fa-fast-backward");
+        $(".ui-icon.ui-icon-seek-next").wrap("<div class='btn btn-sm btn-default'></div>");
+        $(".ui-icon.ui-icon-seek-next").removeClass().addClass("fa fa-forward");
+        $(".ui-icon.ui-icon-seek-end").wrap("<div class='btn btn-sm btn-default'></div>");
+        $(".ui-icon.ui-icon-seek-end").removeClass().addClass("fa fa-fast-forward");
+        $(".ui-pg-input").addClass("pg-input");
+        
+        // resize
+        $(window).on('resize', function () {
+            grid.jqGrid('setGridWidth', conDiv.width());
+        });
+        grid.on('myRefresh', function () {
+            resizeWidth({grid: grid, gridDiv: conDiv});
+        });
+//         quickSetupChooser({grid: grid, defaultColMol: defaultColMol, settingName: mainGridName,
+//            settingArray:${sessionScope.settings},
+        quickSetupChooser({grid: grid, defaultColMol: defaultColMol, settingName: mainGridName,
+            settingArray:"admin",
+            done: function () {
+                resizeWidth({grid: grid, gridDiv: conDiv});
+            }
+        });
+        grid.jqGrid('setGridWidth', conDiv.width());
+        
+        CreateLocationGrid();
+};
+};
+
+ function ResetSearchFields() {
+ 
+               
+                $('#txtPrdCode').val("");
+                $('#txtPrdDesc').val("");
+                $('#ddlPrdGrpFrom').val("");
+                $('#ddlPrdGrpTo').val("");
+                $('#ddlPrdTypeFrom').val("");
+                $('#ddlPrdTypeTo').val("");
+               
+ }
+ 
+  
+function DetailGrid(rowObject, cellvalue1, cellvalue2) {
+     $("#txtAvailQty").text('');
+        $("#txtAvailQtyUOM").text('');
+    $('#tbPoItem tbody > tr').remove();
+    
+        CurrentStkCode = cellvalue1;
+        CurrentCompCode = cellvalue2;
+       // alert(cellvalue1 + cellvalue2);
+      // alert(CurrentStkCode + CurrentCompCode);
+        
+//        DoRefershLocationList();
+        $("#myModal1").modal("show");
+        
+        $("#ddlSource").empty();
+          //  LocationFirstTimeRefreshed = true; 
+            BindLocation("SUMMARY",CurrentStkCode, CurrentCompCode, CurrentConvUOM);
+        
+//     $("#myModal1").on('show.bs.modal', function () {
+//            DoRefershLocationList();
+//            LocationFirstTimeRefreshed = true;
+////             CreateLocationGrid();
+////            alert("show");
+//    });
+    }
+    
+//     $("#myModal1").on('shown.bs.modal', function () {
+//           // DoRefershLocationList();
+//            
+//    });
+           
+ 
+    function DoRefershLocationList()
+    {
+       
+//       CreateLocationGrid(CurrentStkCode,CurrentCompCode);
+       //alert(CurrentStkCode);
+       //alert(CurrentCompCode);
+        //BindLocation(cellvalue1, cellvalue2);
+        
+       //alert(CurrLocationLst.rows.length.toString());
+        //$("#ddlSource option[value='KAJANG']").remove();
+       
+        BindLocation("SUMMARY",CurrentStkCode, CurrentCompCode, CurrentConvUOM);
+ 
+//        for (var i = 0; i < CurrLocationLst.rows.length; i++) 
+//        {             
+//            $("#ddlSource").append('<option value=' + CurrLocationLst.rows[i].bal_location + '>' + CurrLocationLst.rows[i].bal_location + '</option>');
+//        }
+//        $("#ddlSource").prop("selectedIndex",0);
+    }
+     
+function BindLocation(sMethod, stkCode, CompCode, sConvUOM) {
+//alert(sMethod);
+//        alert(stkCode);
+//        alert(CompCode);
+//        $.get('${pageContext.request.contextPath}/Servlet_Transfer', {SFC: 'GET_LOCATION_STK_BAL', METHOD: sMethod, STKCODE: stkCode, COMPCODE: CompCode, CONVUOM: sConvUOM, LOCATION: ''}, function (data) {
+//            CurrLocationLst = JSON.parse(data);
+//             
+//            
+//        });
+ 
+
+var    AllowInterbranch = $('#lblAllowInterbranch').val();
+
+//        alert(AllowInterbranch);
+ $.ajax({
+            type: "get",
+            async: false,
+            url: "${pageContext.request.contextPath}/Servlet_Transfer?SFC=GET_LOCATION_STK_BAL",
+            data: {METHOD: sMethod, STKCODE: stkCode, COMPCODE: CompCode, CONVUOM: sConvUOM, LOCATION: ''},
+            contentType: "application/json; charset=utf-8",
+            dataType: "json",
+            success: function (msg) {
+                  //  CurrLocationLst = JSON.parse(msg);
+                  var arrItemData = msg;  
+              // alert(arrItemData);
+              for (var i = 0; i < arrItemData.rows.length; i++) 
+        {    
+                if (AllowInterbranch === "N") 
+                {
+                    if (arrItemData.rows[i].IS_MAINSTORE === "Y")
+                    {
+                        $("#ddlSource").append('<option value=' + arrItemData.rows[i].bal_location + '>' + arrItemData.rows[i].bal_location + '</option>');
+                    }
+                }
+                else
+                {
+                    $("#ddlSource").append('<option value=' + arrItemData.rows[i].bal_location + '>' + arrItemData.rows[i].bal_location + '</option>');
+                }         
+//            $("#ddlSource").append('<option value=' + arrItemData.rows[i].bal_location + '>' + arrItemData.rows[i].bal_location + '</option>');
+        }       
+        $("#ddlSource").prop("selectedIndex",-1);
+       
+           CurrLocationLst = msg;
+         //  OnLocationClick($("#ddlSource").val());
+            },
+            error: function (jqXHR, textStatus, errorThrown) {
+                alert("get session failed " + errorThrown);
+            }
+        });
+
+
+    }
+    
+function RetrievePendingXfr() {
+     
+    
+       $.get('${pageContext.request.contextPath}/Servlet_Stock', {SFC: 'GET_UNFULFILLED_STOCKCODES'}, function (data) {
+            UnfulfilledLst = JSON.parse(data);  
+        
+
+        
+        var sStkCodes = "";
+        if (UnfulfilledLst.rows.length ===0)
+        {
+            sStkCodes = "";
+            
+            
+        }
+        else if (UnfulfilledLst.rows.length > 1)
+        {
+            for (var i = 0; i < UnfulfilledLst.rows.length; i++) 
+            {
+                if (sStkCodes !== "")
+                {
+                    sStkCodes = sStkCodes + ",";
+                }
+                sStkCodes= sStkCodes + "'" + UnfulfilledLst.rows[i].rqdtl_stockcode.toString() + "'";
+
+            }
+        }
+        else
+        {
+            sStkCodes = UnfulfilledLst.rows[0].rqdtl_stockcode.toString();
+        }
+         
+        if (sStkCodes === '')
+        {
+            $.bigBoxWarning({
+                        title: "Stock Transfer.",
+                        content: "There is no Pending Transfer Item.",
+                        timeout: 6000
+                    });
+            return;
+        }
+        $("#jqgridPrdList").jqGrid('setGridParam', {
+            postData: {
+                SFC: 'GET_PRODUCT_LIST',               
+                PRDCODE: sStkCodes
+//                PRDNAME: '',
+//                PRDGRPFROM: '',
+//                PRDGRPTO: '',
+//                PRDTYPFROM: '',
+//                PRDTYPTO: '',
+//                PRDCAT: ''
+            }
+        }).trigger("reloadGrid", [{page: 1}]);
+        });
+ }
+ 
+function getGridRowHeight(targetGrid) {
+        var height = null; // Default
+        try {
+            height = $(targetGrid).find('tbody').find('tr:eq(2)').outerHeight();
+        }
+        catch (e) {
+            height = 23;
+        }
+        return height;
+    }
+
+function scrollToRow(targetGrid, id) {
+        var rowHeight = getGridRowHeight(targetGrid); // Default height
+        var index = $(targetGrid).getInd(id - 1);
+        $(targetGrid).closest(".ui-jqgrid-bdiv").animate({scrollTop: rowHeight * index}, '250', 'swing', function () {
+
+        });
+    }
+    
+function Search() {
+
+        //alert($('#ddlCorp').val());
+        $("#jqgridPrdList").jqGrid('setGridParam', {
+            postData: {
+                SFC: 'GET_PRODUCT_LIST',               
+                PRDCODE: $('#txtPrdCode').val(),
+                PRDNAME: $('#txtPrdDesc').val(),
+                PRDGRPFROM: $('#ddlPrdGrpFrom').val(),
+                PRDGRPTO: $('#ddlPrdGrpTo').val(),
+                PRDTYPFROM: $('#ddlPrdTypeFrom').val(),
+                PRDTYPTO: $('#ddlPrdTypeTo').val(),
+                PRDCAT: $('input[name=rdPrdCat]:checked').val()
+            }
+        }).trigger("reloadGrid", [{page: 1}]);
+    }
+
+    
+     loadScript("js/plugin/jqgrid/grid.locale-en.min.js", function () {
+        loadScript("js/buttonset.js", function () {
+            loadScript("js/excel-export.js", function () {
+             
+               // $('#rdCCStatus').buttonset();
+                //$('#chkpayStatus').buttonset();
+               // $('#rdEmpDep').buttonset();
+                pagefunction();
+            });
+        });
+    });
+    pageSetUp();
+    
+    function ProductLookup() {
+        
+        showProduct({width: 800, height: 600}).done(function (rowIn) {
+            //alert(JSON.stringify(rowIn));
+           // $("#txtPrdDesc").val(rowIn.stk_desc);
+            $("#txtPrdCode").val(rowIn.stk_stockcode);
+        });
+    }
+    
+    function OnLocationClick(e)
+    {
+        //alert(e);
+        $("#txtAvailQty").text('');
+        $("#txtAvailQtyUOM").text('');
+        for (var i = 0; i < CurrLocationLst.rows.length; i++) 
+        {
+            //alert(e.value + " " + CurrLocationLst.rows[i].bal_location);
+            if (e.value === CurrLocationLst.rows[i].bal_location)
+            {                
+//                 $("#txtAvailQty").text(CurrLocationLst.rows[i].bal_balanceqty);
+//                 $("#txtAvailQtyUOM").text(CurrLocationLst.rows[i].bal_uom);
+                 //$("#txtAvailQty").text(CurrLocationLst.rows[i].CONVERTED_QTY);
+                 var BalQty = parseFloat(CurrLocationLst.rows[i].CONVERTED_QTY);
+                 var TempBalQty = parseFloat(CurrLocationLst.rows[i].CONVERTED_TEMPQTY);
+                 var TotBalQty = BalQty + TempBalQty;
+//                 alert('TotBalQty: ' + TotBalQty);
+                 
+                 $("#txtAvailQty").text(TotBalQty);
+                 $("#txtAvailQtyUOM").text(CurrentConvUOM);
+                 //break;
+//                 alert(CurrLocationLst.rows[i].bal_balanceqty);
+//                 alert($("#txtAvailQty").val());
+            }
+            
+        }
+        $('#tbPoItem tbody > tr').remove();
+        var j=0;
+        
+        for (var x = 0; x < CurrLocationLst.rows.length; x++) 
+        {
+            if (e.value !== CurrLocationLst.rows[x].bal_location)
+            {
+               j= j+1;
+//            $("#tbPoItem tbody").append("<tr>" +
+            $("#tbPoItem tbody").append("<tr id=tr" + j + ">" +    
+                "<td><input type='text' readonly class='form-control' ID='txtLocation" + j + "' name='txtLocation" + j + "' style='width:200px'   /></td>" +
+                "<td><input type='text' readonly class='form-control' ID='txtCurrBal" + j + "' name='txtCurrBal" + j + "' style='width:200px' value='0'  /></td>" +
+                "<td><input type='text' readonly class='form-control' ID='txtUOM" + j + "' name='txtUOM" + j + "' style='width:100px'   /></td>" +
+                "<td><input type='text' class='form-control' ID='txtXferQty" + j + "' name='txtXferQty" + j + "' style='width:200px' value='0'  /></td>" +
+                "</tr>"
+      
+                );
+               
+                $("#txtLocation"+ j).val(CurrLocationLst.rows[x].bal_location);
+//                $("#txtCurrBal"+ j).val(CurrLocationLst.rows[x].bal_balanceqty);
+//                $("#txtUOM"+ j).val(CurrLocationLst.rows[x].bal_uom);
+//                $("#txtCurrBal"+ j).val(CurrLocationLst.rows[x].CONVERTED_QTY);
+                 var BalQty = parseFloat(CurrLocationLst.rows[x].CONVERTED_QTY);
+                 var TempBalQty = parseFloat(CurrLocationLst.rows[x].CONVERTED_TEMPQTY);
+                 var TotBalQty = BalQty + TempBalQty;
+                 $("#txtCurrBal"+ j).val(TotBalQty);
+                 
+                $("#txtUOM"+ j).val(CurrentConvUOM);
+
+            }
+        }
+
+    }
+     
+    function CreateLocationGrid() {    
+};
+    
+    function confirm()
+    {
+        $("#btnSave").prop('disabled', true);
+        
+        TotalAllocation = 0;
+        $('#tbPoItem tr').each(function (row, th) {
+            if (row > 0)
+            {
+                TotalAllocation +=   parseFloat($('#txtXferQty' + row).val());                
+            }
+        });
+        
+        if (TotalAllocation > parseFloat($('#txtAvailQty').text()) )
+        {
+            $.bigBoxFail({
+                        title: "Stock Transfer FAIL.",
+                        content: "Available Qty is lesser than Total Transfer Qty.<br> Please change the Transfer Qty(s) and try again...",
+                        timeout: 6000
+                    });
+            $("#btnSave").prop('disabled', false);
+            return;
+        }
+        
+       if ($('#ddlSource').val() === null || $('#ddlSource').val() === undefined )
+        {
+            
+            $.bigBoxFail({
+                        title: "Stock Transfer FAIL.",
+                        content: "Transfer From location is not selected.",
+                        timeout: 6000
+                    });
+            $("#btnSave").prop('disabled', false);
+            return;
+        }else
+        {
+             showYesNo({
+                title: "Stock Transfer...",
+                width: 420,
+                noClose: true,
+                isModal: true,
+                body: [
+                    "<br><h4>Are you sure to proceed Stock Transfer?<h4><br>"
+                ],
+                show: function () {
+                },
+                Yes: {
+                     text: "Yes",
+                    opt: function () {
+                        transferStock();
+                        hideYesNo();
+                    }
+                },
+                No: {
+                    text: "No",
+                    opt: function () {
+                        document.getElementById("btnSave").disabled = false;
+                        hideYesNo();
+                    }
+                }
+            });
+        }    
+        }
+        
+   function transferStock()
+   {
+       var $this = $(this);
+        var XferItemData = new Array();
+        var rowDesp = 0;
+         $('#tbPoItem tr').each(function (row, th) {
+             if (row > 0)
+             {
+                var rowid = $(this).closest('tr').attr('id');
+                var rowno = rowid.substring(2);
+
+                if (parseFloat($('#txtXferQty' + rowno).val() ) !== 0)
+                {
+                    XferItemData[rowDesp] = {
+                        "COMPCODE": CurrentCompCode
+                        ,"PRODCODE": CurrentStkCode
+                        ,"LOCATION_FROM": $('#ddlSource').val()
+                        ,"LOCATION_TO": $('#txtLocation' + rowno).val()
+                        , "CURRENT_BALANCE_FROM":  parseFloat($('#txtAvailQty').text())
+                        , "CURRENT_BALANCE_TO": parseFloat($('#txtCurrBal' + rowno).val())
+                        , "UOM_FROM": $('#txtAvailQtyUOM').text()
+                        , "UOM_TO": $('#txtUOM' + rowno).val()
+                        , "XFER_QTY":  parseFloat($('#txtXferQty' + rowno).val())
+                        , "CONTROL_DATETIME":  $('#ControlDateTime').val()
+
+                    };
+                    rowDesp = rowDesp + 1;
+                }
+            }
+        });
+
+        var ItemToSend = JSON.stringify(XferItemData);
+        $('#hidXferItems').load().val(ItemToSend).valid();
+        $this.off('click');
+        $.ajax({
+                type: "POST",
+                url: "${pageContext.request.contextPath}/Servlet_Transfer?SFC=CREATE_STOCK_TRANSFER",
+                data: {
+                    
+                    XFERITEMS: $('#hidXferItems').val(),
+                    COMPCODE: CurrentCompCode,
+                    PRODCODE: CurrentStkCode,
+                    CONVUOM: CurrentConvUOM,
+                    LOCATION_FROM: $('#ddlSource').val(),
+                    AVAIL_QTY: $('#txtAvailQty').text(),
+                    CONTROL_DATETIME: $('#ControlDateTime').val()
+                },
+                dataType: 'json',
+                beforeSend: function () {
+                    $.showLoadingNoStatus();
+                },
+                 success: function (response, status, xhr) {
+                if (response.bool === true) {
+                    $.bigBoxSuccess({
+                            title: "Success.",
+                            content: "Stock Transfer Successfully.",
+                        timeout: 6000
+                    });
+                    $('#btnClose').trigger('click');
+                } else {
+                    $.bigBoxFail({
+                        title: "Stock Transfer FAIL.",
+                        content: "There is some error during Stock Transfer creation.<br> Please try again...",
+                        timeout: 6000
+                    });
+                }
+                },
+                error: function (xhr, status, error) {
+                $.bigBoxFail({
+                    title: "Transaction Transfer ERROR",
+                    content: "There is some error occur during data transfer. Please try again later",
+                    timeout: 6000
+            });
+                },
+                complete: function (xhr, status) {
+                    if (xhr.status === 200) {
+                        $.hideLoadingNoStatus(function () {
+                           window.location.href = "#/NewStockTransfer";
+                        }, 500);
+                    } else {
+                        $.hideLoadingNoStatus(function () {
+                        }, 0);
+                    }
+                }
+    });
+   }
+    
+    
+    $("#btnAutoAllocate").click(function () {
+            DoRefershAllocationList();
+    });
+    
+    function DoRefershAllocationList()
+    {      
+        
+        $.get('${pageContext.request.contextPath}/Servlet_Transfer', {SFC: 'GET_STOCK_TRANSFER', METHOD: 'GET_AUTO_ALLOCATION', STKCODE: CurrentStkCode, COMPCODE: CurrentCompCode, CONVUOM: CurrentConvUOM
+        ,LOCATION:'', STKGROUP:'',STKTYPE:'', STKCONSUMABLE:'', DATEFROM:'', DATETO:''}, 
+        function (data) {
+            CurrentAllocation = JSON.parse(data);
+           
+        // alert(JSON.stringify(CurrentAllocation));
+//         alert(CurrentAllocation.rows.length.toString());
+         
+        $('#tbPoItem tr').each(function (row, th) {
+             if (row > 0)
+             {
+                 var sLoc = $('#txtLocation' + row).val();
+                 
+                 for (var i = 0; i < CurrentAllocation.rows.length; i++) 
+                {          
+//                     alert(sLoc);
+//                      alert(CurrentAllocation.rows[i].LOCATION);
+//                      alert(sLoc.toString() === CurrentAllocation.rows[i].LOCATION.toString());
+                    if (sLoc.toString() === CurrentAllocation.rows[i].LOCATION.toString())
+                    {
+//                        alert(CurrentAllocation.rows[i].REQUEST_QTY.toString());
+//                        TotalAllocation =TotalAllocation + CurrentAllocation.rows[i].REQUEST_QTY;
+                        $("#txtXferQty" + row).val(CurrentAllocation.rows[i].REQUEST_QTY);
+                         
+                        break;
+                    }
+//
+                }
+//                
+            }
+        });
+         }); 
+//        alert(TotalAllocation.toString());
+       
+    }
+</script>

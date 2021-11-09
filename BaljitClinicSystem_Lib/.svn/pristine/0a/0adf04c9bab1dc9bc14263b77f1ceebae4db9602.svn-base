@@ -1,0 +1,257 @@
+CREATE DEFINER=`root`@`localhost` PROCEDURE `SP_GET_STOCK_RETURN`(
+IN sMethod       varchar(50),
+IN sRetHdrIdx    varchar(10),
+IN sRetDtlIdx    varchar(10),
+IN sCompCode     varchar(200),
+IN sLocCode      varchar(10),
+IN sStkCode      varchar(50),
+IN sStkDesc      varchar(100),
+IN sStkGrp       varchar(10),
+IN sStkType      varchar(10),
+IN sConsumable   varchar(10),
+IN sDocDate      varchar(20),
+IN sOrderBy      varchar(30),
+IN sPage         varchar(10),
+IN sPerPage      varchar(10)
+
+)
+BEGIN
+
+      DECLARE _statement VARCHAR(8000);
+
+         SET _statement = "";      
+
+         IF sMethod = 'GET_STOCK_RETURN' THEN
+
+            SET _statement = 'SELECT hdr.reth_returnhdridx as Idx, hdr.reth_docno as DocNo,
+hdr.reth_docdate as DocDate, hdr.reth_remark as Remarks, hdr.reth_status as Status, hdr.reth_personname as PersonName,
+CONCAT(hdr.reth_company,"'" - "'",comp_name) as Company, CONCAT(hdr.reth_issuelocation,"'" - "'",il.loc_name) as Location
+,CONCAT(hdr.reth_recievelocation,"'" - "'",ir.loc_name) as RecvLocation
+                              FROM stkt_stockreturnheader hdr
+                              LEFT JOIN stkt_stockreturndetail dtl ON hdr.reth_returnhdridx = dtl.retd_returnhdridx
+                              LEFT JOIN stkm_company ON hdr.reth_company = comp_code
+                              LEFT JOIN stkm_location il ON hdr.reth_issuelocation = il.loc_code
+                              LEFT JOIN stkm_location ir ON hdr.reth_recievelocation = ir.loc_code
+                              WHERE reth_returnhdridx IS NOT NULL ';
+
+            IF (sCompCode <> '') THEN
+                    SET _statement = CONCAT(_statement, ' and hdr.reth_company = ', "'", sCompCode, "'" );
+            END IF;
+
+            IF (sStkCode <> '') THEN
+                    SET _statement = CONCAT(_statement, ' and dtl.retd_stockcode = ', "'", sStkCode, "'" );
+            END IF;
+
+            IF (sLocCode <> '') THEN
+                    SET _statement = CONCAT(_statement, ' and hdr.reth_issuelocation = ', "'", sLocCode, "'" );
+            END IF;
+
+            IF (sDocDate <> '') THEN
+                    SET _statement = CONCAT(_statement, ' and hdr.reth_docdate LIKE ', "'", sDocDate, "%'" );
+            END IF;
+
+            SET _statement = CONCAT(_statement, ' GROUP BY DocNo DESC' );
+            SET _statement = CONCAT(_statement, ' LIMIT ',  (sPage - 1) * sPerPage, ",", sPerPage );
+
+
+         END IF;
+
+
+         IF sMethod = 'COUNT_STOCK_RETURN' THEN
+
+
+            SET _statement = 'SELECT COUNT(Total2) as Total
+                              FROM (
+                                      SELECT COUNT(reth_returnhdridx) as Total2
+                                      FROM stkt_stockreturnheader hdr
+                                      LEFT JOIN stkt_stockreturndetail dtl ON hdr.reth_returnhdridx = dtl.retd_returnhdridx
+                                      WHERE hdr.reth_returnhdridx IS NOT NULL';
+
+            IF (sCompCode <> '') THEN
+                    SET _statement = CONCAT(_statement, ' and hdr.reth_company = ', "'", sCompCode, "'" );
+            END IF;
+
+            IF (sLocCode <> '') THEN
+                    SET _statement = CONCAT(_statement, ' and hdr.reth_issuelocation = ', "'", sLocCode, "'" );
+            END IF;
+
+            IF (sStkCode <> '') THEN
+                    SET _statement = CONCAT(_statement, ' and dtl.retd_stockcode = ', "'", sStkCode, "'" );
+            END IF;
+
+            IF (sDocDate <> '') THEN
+                    SET _statement = CONCAT(_statement, ' and hdr.reth_docdate LIKE ', "'", sDocDate, "%'" );
+            END IF;
+
+            SET _statement = CONCAT(_statement, ' GROUP BY hdr.reth_docno) A' );
+
+         END IF;
+
+
+         IF sMethod = 'GET_PRODUCT_COSTQTY_LIST' THEN
+
+            SET _statement = 'SELECT scq_costqtyidx AS Idx, scq_stockcode AS StkCode, stk_desc AS StkDesc,
+
+                              CASE
+                                  WHEN stk_consumable=''0'' THEN ''Drug''
+                                  WHEN stk_consumable=''1'' THEN ''Product''
+                                  WHEN stk_consumable=''2'' THEN ''Consumable''
+                              END AS StkCat,
+                              stk_groupcode AS StkGrp, stk_typecode AS StkType, scq_batchno AS BatchNo,
+                              DATE(scq_expirydate) AS ExpiryDate, round(scq_unitcost,2) AS UnitCost, scq_uomcode AS UOMCode, round(SUM(scq_qty),2) AS Qty
+                              
+                              FROM stkt_costqty
+                              LEFT JOIN stkm_stockmaster ON scq_stockcode = stk_stockcode
+                              WHERE scq_costqtyidx IS NOT NULL';
+            IF (sCompCode <> '') THEN
+                    SET _statement = CONCAT(_statement, ' and scq_companycode = ', "'", sCompCode, "'" );
+            END IF;
+
+            IF (sLocCode <> '') THEN
+                    SET _statement = CONCAT(_statement, ' and scq_locationcode = ', "'", sLocCode, "'" );
+            END IF;
+
+            IF (sStkCode <> '') THEN
+                    SET _statement = CONCAT(_statement, ' and scq_stockcode LIKE ', "'%", sStkCode, "%'" );
+            END IF;
+            
+			IF (sStkDesc <> '') THEN
+                    SET _statement = CONCAT(_statement, ' and stk_desc LIKE ', "'%", sStkDesc, "%'" );
+            END IF;
+
+            IF (sStkGrp <> '') THEN
+                    SET _statement = CONCAT(_statement, ' and stk_groupcode= ', "'", sStkGrp, "'" );
+            END IF;
+
+            IF (sStkType <> '') THEN
+                    SET _statement = CONCAT(_statement, ' and stk_typecode = ', "'", sStkType, "'" );
+            END IF;
+
+            IF (sConsumable <> '') THEN
+                    SET _statement = CONCAT(_statement, ' and stk_consumable = ', "'", sConsumable, "'" );
+            END IF;
+
+            SET _statement = CONCAT(_statement, ' GROUP BY StkCode, BatchNo, ExpiryDate, UnitCost, UOMCode ');
+            
+            SET _statement = CONCAT(_statement, ' LIMIT ',  (sPage - 1) * sPerPage, ",", sPerPage );
+
+         END IF;
+
+         IF sMethod = 'COUNT_PRODUCT_COSTQTY_LIST' THEN
+
+
+            SET _statement = 'SELECT COUNT(scq_costqtyidx) as Total
+                              FROM (SELECT scq_costqtyidx FROM stkt_costqty
+                              LEFT JOIN stkm_stockmaster ON scq_stockcode = stk_stockcode
+                              WHERE scq_costqtyidx IS NOT NULL';
+
+            IF (sCompCode <> '') THEN
+                    SET _statement = CONCAT(_statement, ' and scq_companycode = ', "'", sCompCode, "'" );
+            END IF;
+
+            IF (sLocCode <> '') THEN
+                    SET _statement = CONCAT(_statement, ' and scq_locationcode = ', "'", sLocCode, "'" );
+            END IF;
+
+            IF (sStkCode <> '') THEN
+                    SET _statement = CONCAT(_statement, ' and scq_stockcode LIKE ', "'%", sStkCode, "%'" );
+            END IF;
+            
+			IF (sStkDesc <> '') THEN
+                    SET _statement = CONCAT(_statement, ' and stk_desc LIKE ', "'%", sStkDesc, "%'" );
+            END IF;
+
+            IF (sStkGrp <> '') THEN
+                    SET _statement = CONCAT(_statement, ' and stk_groupcode= ', "'", sStkGrp, "'" );
+            END IF;
+
+            IF (sStkType <> '') THEN
+                    SET _statement = CONCAT(_statement, ' and stk_typecode = ', "'", sStkType, "'" );
+            END IF;
+
+            IF (sConsumable <> '') THEN
+                    SET _statement = CONCAT(_statement, ' and stk_consumable = ', "'", sConsumable, "'" );
+            END IF;
+
+            SET _statement = CONCAT(_statement, ' GROUP BY scq_stockcode, scq_batchno, scq_expirydate, scq_unitcost, scq_uomcode) A ');
+
+         END IF;
+
+
+         IF sMethod = 'GET_STOCK_RETURN_HEADER' THEN
+
+
+            SET _statement = '  SELECT *, comp_name, il.loc_name as loc_name, rl.loc_name as recloc_name 
+        FROM stkt_stockreturnheader
+         LEFT JOIN stkm_company ON reth_company = comp_code
+         LEFT JOIN stkm_location il ON reth_issuelocation = il.loc_code
+         LEFT JOIN stkm_location rl ON reth_issuelocation = rl.loc_code ';
+
+
+            SET _statement = CONCAT(_statement, 'WHERE reth_returnhdridx = ', "'", sRetHdrIdx, "'" );
+
+
+         END IF;
+
+
+         IF sMethod = 'GET_STOCK_RETURN_ITEMS' THEN
+
+
+            SET _statement = 'SELECT dtl.retd_returnhdtlidx AS DtlIdx, dtl.retd_stockcode as StkCode, stk.stk_desc as StkDesc, dtl.retd_uomcode AS UOM,
+                             TRUNCATE(dtl.retd_unitcost,2) AS UnitCost, dtl.retd_batchno AS BatchNo, dtl.retd_expirydate AS ExpiryDate, TRUNCATE(dtl.retd_qty,2) AS RetQty,
+                             dtl.retd_remarks AS Remarks, dtl.retd_status AS Status, TRUNCATE(dtl.retd_accepted_qty,2) AS AccpQty,
+                                     CASE
+                                        WHEN dtl.retd_status =''O'' THEN ''OPEN''
+                                        WHEN dtl.retd_status =''A'' THEN ''ACCEPTED''
+                                        WHEN dtl.retd_status =''R'' THEN ''REJECTED''
+                                        WHEN dtl.retd_status =''W'' THEN ''DISPOSED''
+                                     END AS StatusDesc
+                              FROM stkt_stockreturndetail dtl
+                              LEFT JOIN stkm_stockmaster stk ON stk.stk_stockcode = dtl.retd_stockcode ';
+
+
+            SET _statement = CONCAT(_statement, ' WHERE dtl.retd_returnhdridx = ', "'", sRetHdrIdx, "'"  );
+
+
+         END IF;
+
+         IF sMethod = 'GET_STOCK_RETURN_DTL_REPORT' THEN
+
+
+            SET _statement = 'SELECT reth_docno AS DocNo, reth_company AS CompCode, reth_issuelocation AS LocCode, DATE(reth_docdate) AS DocDate, reth_personname AS PersonName,
+                              reth_remark AS HdrRemarks, reth_status AS HdrStatus, retd_stockcode AS StkCode, retd_uomcode AS UOMCode, retd_unitcost AS UnitCost,
+                              retd_batchno AS BatchNo, retd_expirydate AS ExpiryDate, retd_qty AS ReturnQty, retd_accepted_qty AS AcceptQty, retd_remarks AS DtlRemarks,
+                              retd_status AS DtlStatus, stk_desc AS StkDesc,
+
+                              CASE
+                                   WHEN reth_status = ''O'' THEN ''Opened''
+                                   WHEN reth_status = ''P'' THEN ''Processed''
+                              END AS HdrStatusDesc,
+                              CASE
+                                   WHEN retd_status = ''A'' THEN ''Accepted''
+                                   WHEN retd_status = ''R'' THEN ''Rejected''
+                                   WHEN retd_status = ''O'' THEN ''Opened''
+                                   WHEN retd_status = ''W'' THEN ''Disposed''
+                              END AS DtlStatusDesc
+                              FROM stkt_stockreturnheader
+                              JOIN stkt_stockreturndetail ON reth_returnhdridx = retd_returnhdridx
+                              JOIN stkm_stockmaster ON retd_stockcode = stk_stockcode
+                              WHERE reth_returnhdridx IS NOT NULL ';
+
+            IF (sRetHdrIdx <> '') THEN
+                    SET _statement = CONCAT(_statement, ' AND reth_returnhdridx = ',"'",sRetHdrIdx,"'" );
+            END IF;
+
+            SET _statement = CONCAT(_statement, ' ORDER BY StkCode' );
+
+         END IF;
+
+
+
+SET @statement = _statement;
+PREPARE dynquery FROM @statement;
+EXECUTE dynquery;
+DEALLOCATE PREPARE dynquery;
+
+
+END

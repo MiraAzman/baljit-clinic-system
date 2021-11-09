@@ -1,0 +1,128 @@
+CREATE DEFINER=`root`@`localhost` PROCEDURE `SP_TRX_PACKAGE`(
+IN sMethod            	varchar(30),
+IN sPKH_PKHCODE		  	varchar(10),
+IN sPKH_PKHNAME 	  	varchar(100),
+IN sPKH_PKHPRICE 	  	decimal(15,3),
+IN sPKH_PKHCOST 		decimal(15,3),
+IN sPKH_PKHISACTIVE 	varchar(1),
+IN sPKREPORTGROUP 		varchar(6),
+IN sPKH_PKHPRICE2 		decimal(15,3),
+IN sPKH_PKHPRICE3 		decimal(15,3),
+IN sPKH_PKHPRICE4 		decimal(15,3),
+IN sPKH_PKHCGRP 		varchar(6),
+IN sPKH_PKHISIMMPACK 	varchar(1),
+IN sPKH_PKHISCOURSE 	varchar(1),
+IN sPKH_PKHCOURSETIMES 	int(11),
+IN sPKH_PKHGSTSUPPTAXCODE 	varchar(8),
+IN sPKDITEMCODE        varchar(30),
+IN sPKDREMARK        varchar(256),
+IN sPKDITEMCATEGORY        varchar(6),
+IN sPKDITEMGROUP        varchar(10),
+IN sPKDITEMPRICE        decimal(15,3),
+IN sPKDPRICERATIO        decimal(15,6),
+IN sBy                	varchar(10),
+IN sRecStatus         	varchar(4),
+OUT Result 				varchar(30),
+OUT Message 			varchar(30)
+)
+BEGIN
+IF sMethod = 'ADD_PACKAGEHEADER' THEN
+   IF NOT EXISTS(SELECT pkh_pkhcode FROM stkc_packageheader WHERE pkh_pkhcode = sPKH_PKHCODE) THEN
+    INSERT INTO stkc_packageheader
+    (pkh_pkhcode, pkh_pkhname, pkh_pkhprice, pkh_pkhcost, pkh_pkhisactive, pkreportgroup, 
+     pkh_pkhprice2, pkh_pkhprice3, pkh_pkhprice4, pkh_pkhcgrp, pkh_pkhisimmpack, pkh_pkhiscourse,
+     pkh_pkhcoursetimes, pkh_pkhgstsupptaxcode, createdby, createddt, recstatus)
+    VALUES
+    (sPKH_PKHCODE, sPKH_PKHNAME, sPKH_PKHPRICE, sPKH_PKHCOST, sPKH_PKHISACTIVE, sPKREPORTGROUP, 
+     sPKH_PKHPRICE2, sPKH_PKHPRICE3, sPKH_PKHPRICE4, sPKH_PKHCGRP, sPKH_PKHISIMMPACK, sPKH_PKHISCOURSE,
+     sPKH_PKHCOURSETIMES, sPKH_PKHGSTSUPPTAXCODE, sBy, NOW(), sRecStatus);
+
+    SELECT '00000' INTO Result;
+    SELECT  'Success Inserted' INTO Message;
+   END IF;
+END IF;
+
+IF sMethod = 'UPDATE_PACKAGEHEADER' THEN
+
+        UPDATE stkc_packageheader
+        SET pkh_pkhname = sPKH_PKHNAME,
+            pkh_pkhprice = sPKH_PKHPRICE,
+            pkh_pkhcost = sPKH_PKHCOST,
+            pkh_pkhisactive = sPKH_PKHISACTIVE,
+            pkreportgroup = sPKREPORTGROUP,
+            pkh_pkhprice2 = sPKH_PKHPRICE2,
+            pkh_pkhprice3 = sPKH_PKHPRICE3,
+            pkh_pkhprice4 = sPKH_PKHPRICE4,
+            pkh_pkhcgrp = sPKH_PKHCGRP,
+            pkh_pkhisimmpack = sPKH_PKHISIMMPACK,
+            pkh_pkhiscourse = sPKH_PKHISCOURSE,
+            pkh_pkhcoursetimes = sPKH_PKHCOURSETIMES,
+            pkh_pkhgstsupptaxcode = sPKH_PKHGSTSUPPTAXCODE,
+            modifiedby =  sBy,
+            modifieddt = NOW()
+        WHERE pkh_pkhcode = sPKH_PKHCODE;
+
+        SELECT '00000' INTO Result;
+        SELECT  'Success Inserted' INTO Message;
+
+END IF;
+
+IF sMethod = 'ADD_PACKAGE_DETAIL' THEN
+
+        INSERT INTO stkc_packagedetail (
+        pkdhdrcode,
+        pkditemcode,
+        pkdremark,
+        pkditemcategory,
+        pkditemgroup,
+        pkditemprice,
+        pkdpriceratio,
+        createdby,
+        createddt,
+        recstatus
+
+        ) VALUES (
+        sPKH_PKHCODE,
+        sPKDITEMCODE,
+        sPKDREMARK,
+        sPKDITEMCATEGORY,
+        sPKDITEMGROUP,
+        sPKDITEMPRICE,
+        sPKDPRICERATIO,
+        sBy,
+        NOW(),
+        sRecStatus
+        );
+
+        SELECT '00000' INTO Result;
+        SELECT  'Success Inserted' INTO Message;
+
+END IF;
+
+IF sMethod = 'UPDATE_PACKAGE_DETAIL' THEN
+
+        UPDATE stkc_packagedetail
+        SET pkdremark = sPKDREMARK,
+            pkditemprice = sPKDITEMPRICE,
+            pkdpriceratio = sPKDPRICERATIO,
+            recstatus = sRecStatus,
+            modifiedby = sBy,
+            modifieddt = NOW()
+
+        WHERE pkdhdrcode = sPKH_PKHCODE AND pkditemcode = sPKDITEMCODE;
+
+        SELECT '00000' INTO Result;
+        SELECT  'Success Inserted' INTO Message;
+
+END IF;
+
+IF sMethod = 'DELETE_PACKAGE_DETAIL' THEN
+
+        DELETE FROM stkc_packagedetail WHERE pkdhdrcode = sPKH_PKHCODE AND pkditemcode = sPKDITEMCODE;
+
+        SELECT '00000' INTO Result;
+        SELECT  'Success Inserted' INTO Message;
+
+END IF;
+
+END

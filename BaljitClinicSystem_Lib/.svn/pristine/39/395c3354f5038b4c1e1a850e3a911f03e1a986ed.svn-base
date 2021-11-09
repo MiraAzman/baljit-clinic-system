@@ -1,0 +1,216 @@
+package BusinessLogic;
+
+import BusinessData.DAL_PopulateData;
+import BusinessData.DAL_StockReq;
+import java.io.IOException;
+import java.sql.SQLException;
+import net.sf.json.JSONArray;
+import net.sf.json.JSONObject;
+import net.sf.json.JSONSerializer;
+
+/**
+ *
+ * @author N3355
+ */
+public class BLL_StockRequest {
+    public JSONObject ConvertJson(String sJsonIn) {
+       
+       JSONArray jsonarr = JSONArray.fromObject(sJsonIn);
+       JSONArray jsonArray = new JSONArray();
+       JSONObject json = null;       
+       JSONObject obj = new JSONObject();
+       String sLocCode = "";
+       
+       for(int i = 0; i < jsonarr.size(); i++){   
+           
+            if (sLocCode.equals("")) {
+                   // sLocCode = jsonarr.getJSONObject(i).getString("LocCode");
+                obj.put(jsonarr.getJSONObject(i).getString("LocCode"), "[" + jsonarr.getJSONObject(i) +"]");  
+            }
+          
+           else if (sLocCode.equals(jsonarr.getJSONObject(i).getString("LocCode"))) {
+                obj.accumulate(jsonarr.getJSONObject(i).getString("LocCode"),  jsonarr.getJSONObject(i));          
+            }else{
+                obj.put(jsonarr.getJSONObject(i).getString("LocCode"), "[" + jsonarr.getJSONObject(i) +"]");  
+            }
+            
+            
+            sLocCode = jsonarr.getJSONObject(i).getString("LocCode");
+            
+        }
+        System.out.println("obj-->" + obj.toString()); 
+        return obj;
+    }
+    
+     public String STOCK_REQUESTADDEDIT(JSONObject sJsonIn, String SiteName) {
+         
+         DAL_PopulateData obj_No = new DAL_PopulateData();
+         DAL_StockReq objReq = new DAL_StockReq();
+         String sMsg = "", sReqNo="", sLocCode="", sCompCode="";
+         double sQty = 0;
+         //JSONArray jReqMaster = JSONArray.fromObject(sJsonIn);
+         JSONObject jReqMaster =(JSONObject) JSONSerializer.toJSON(sJsonIn);       
+         JSONObject json = null;
+         
+         //System.out.println("jsonFilter-->" + jReqMaster.toString());   
+         JSONArray aryReqHead = null;
+         JSONArray aryReqNo = null;
+         JSONArray jsonLocCode = jReqMaster.names(); 
+         //System.out.println("jsonReqHeadArr-->" + jsonLocCode.toString());  
+//        BLL_Common.Common_Object rsReqNo = obj_No.DAL_GetNumber(new String[]{"GET_NUMBER","REQUEST",""});  
+//        aryReqNo = (JSONArray) JSONSerializer.toJSON(rsReqNo.getJSONArray(0).toString());
+//        JSONObject objReqNo = aryReqNo.getJSONObject(0);
+//        sReqNo = objReqNo.getString("NewNumber");
+         
+            for (int i = 0; i < jsonLocCode.size(); i++) {
+                JSONArray innerArray = jReqMaster.getJSONArray((String) jsonLocCode.get(i));
+                
+                
+                 if (sLocCode.equals("")) {
+                      sLocCode = jsonLocCode.get(i).toString();
+                 }else{
+                     sLocCode = jsonLocCode.get(i).toString();
+                     sCompCode = "";
+                     sQty = 0;
+                 }                
+                 
+                
+                 
+                 for (Object js : innerArray) {
+                      json = (JSONObject) js;
+                    
+                   
+                      
+                      if (sLocCode.equals(json.get("LocCode").toString().trim()) && (Double.parseDouble(json.get("ReqQty").toString().trim())) > 0) {
+                            sCompCode = json.getString("CompCode");
+                            
+                            sQty =  Double.parseDouble(json.get("ReqQty").toString().trim());
+                           
+                      }
+                      
+                     // aryReqHead = JSONArray.fromObject(json);
+                    
+                    sCompCode = json.get("CompCode").toString();                 
+                    sLocCode = json.get("LocCode").toString();
+                      
+                 }
+                 if (sQty > 0){
+                     
+                    BLL_Common.Common_Object rsReqNo = obj_No.DAL_GetNumber(SiteName, new String[]{"GET_NUMBER","REQUEST",""});  
+                    aryReqNo = (JSONArray) JSONSerializer.toJSON(rsReqNo.getJSONArray(0).toString());
+                    JSONObject objReqNo = aryReqNo.getJSONObject(0);
+                    sReqNo = objReqNo.getString("NewNumber");
+                     
+                 String[] aryHead = {
+                     "ADD_STOCKREQHEAD" /*0. pMethod    varchar(30)*/,
+                     sReqNo, /* 1. pReqNo        varchar(10)*/
+                     sCompCode, /* 2. pCompCode     varchar(10),*/
+                     sLocCode, /* 3. pLocCode      varchar(10),*/
+                     "", /* 4. pRemarks      varchar(100),*/
+                     "A", /* 5. pReqType      varchar(1),*/
+                     "O", /* 6. pStatusCode   varchar(2),*/
+                     "1", /* 7. precstatus    varchar(10),*/
+                     "", /* 8. pIDX          varchar(10),*/
+                     "", /* 9. pStkCode      varchar(16),*/
+                     "", /* 10.pUomCode      varchar(6),*/
+                     "", /* 11.pReqQty       varchar(10),*/
+                     "", /* 12.pVerifiedQty  varchar(10),*/
+                     "", /* 13.pApprovedQty  varchar(10),*/
+                     "", /* 14.pFillQty      varchar(10),*/
+                     "", /* 15.pCurrentBal   varchar(10),*/
+                     "", /* 16.pReasonCode   varchar(6),*/
+                     "", /* 17.pReasonRemark varchar(100),*/
+                     "SYSTEM", /* 18.pBy           varchar(20),*/
+                    
+                 };
+                 
+                 
+                 BLL_Common.Common_Object obj = objReq.DAL_ADDEDIT_STOCKREQ(SiteName, aryHead);
+                
+                  try {
+                    if (obj.getObjectArray(0).toString().equals("00000")) {
+                        REQ_DETAIL_ADDEDIT(sJsonIn, obj.getObjectArray(2).toString(), sLocCode, SiteName);
+                        obj.commit();
+                        //bReturn = true;
+                        //sMessage = sGrpPoNo;//obj.getObjectArray(1).toString();
+                    } else {
+                        obj.rollback();
+                    }
+                } catch (Exception e) {
+                    try {
+                            obj.rollback();
+                        } catch (SQLException ex) {
+                           // bReturn = false;
+                        }
+                }
+                 
+                 } 
+            }
+         
+         
+         
+         return sMsg;
+         
+         
+     }
+     
+      public boolean REQ_DETAIL_ADDEDIT(JSONObject sJsonIn, String sIDX, String sLocCode, String SiteName) throws IOException, SQLException {
+        boolean b = false;
+        DAL_StockReq objReq = new DAL_StockReq();
+       // BLL_Common.Common_Object objReqDet = new BLL_Common.Common_Object();
+       // JSONObject jsonFilter = sJsonIn;//(JSONObject) JSONSerializer.toJSON(JSONObject);
+        JSONObject jReqMaster =(JSONObject) JSONSerializer.toJSON(sJsonIn); 
+        JSONArray jLocCode = jReqMaster.names();
+       // System.out.println("jLocCode-->" + jLocCode.toString());  
+        for (int i = 0; i < sJsonIn.size(); i++) {
+            JSONArray innerArray = jReqMaster.getJSONArray((String) jLocCode.get(i));
+             for (Object js : innerArray) {
+                  JSONObject json = (JSONObject) js;
+                  
+                  if (sLocCode.equals(json.get("LocCode").toString().trim()) && (Double.parseDouble(json.get("ReqQty").toString().trim())) > 0) {
+                  String[] aryReqDet = {
+                     "ADD_STOCKREQDETAIL" /*0. pMethod    varchar(30)*/,
+                     "", /* 1. pReqNo        varchar(10)*/
+                     "", /* 2. pCompCode     varchar(10),*/
+                     "", /* 3. pLocCode      varchar(10),*/
+                     "", /* 4. pRemarks      varchar(100),*/
+                     "A", /* 5. pReqType      varchar(1),*/
+                     "O", /* 6. pStatusCode   varchar(2),*/
+                     "1", /* 7. precstatus    varchar(10),*/
+                     sIDX, /* 8. pIDX          varchar(10),*/
+                     json.get("StkCode").toString().trim(), /* 9. pStkCode      varchar(16),*/
+                     json.get("UOMCODE").toString().trim(), /* 10.pUomCode      varchar(6),*/
+                     json.get("ReqQty").toString().trim(), /* 11.pReqQty       varchar(10),*/
+                     "0", /* 12.pVerifiedQty  varchar(10),*/
+                     "0", /* 13.pApprovedQty  varchar(10),*/
+                     "0", /* 14.pFillQty      varchar(10),*/
+                     "0", /* 15.pCurrentBal   varchar(10),*/
+                     "", /* 16.pReasonCode   varchar(6),*/
+                     "", /* 17.pReasonRemark varchar(100),*/
+                     "SYSTEM", /* 18.pBy           varchar(20),*/
+                  };
+                  BLL_Common.Common_Object objReqDet = objReq.DAL_ADDEDIT_STOCKREQ(SiteName, aryReqDet);
+                 // objReqDet = objReq.DAL_ADDEDIT_STOCKREQ(aryReqDet);
+                   try {
+                  if (objReqDet.getObjectArray(0).toString().equals("00000")) {
+                      b = objReqDet.getObjectArray(0).toString().equals("00000");
+                      objReqDet.commit();
+                    } else {                        
+                        objReqDet.rollback();
+                    }
+                   } catch (Exception e) {
+                    try {
+                            objReqDet.rollback();
+                        } catch (SQLException ex) {
+                            b = false;
+                        }
+                }
+                  }
+             }
+        }
+            return b;
+            
+      }
+    
+    
+}

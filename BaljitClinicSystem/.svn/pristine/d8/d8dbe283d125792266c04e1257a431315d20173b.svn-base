@@ -1,0 +1,2082 @@
+<%@taglib prefix="jstl" uri="http://java.sun.com/jsp/jstl/core" %>
+<jsp:useBean id="DDL" scope="page" class="BusinessLogic.Servlet_PopulateData" />
+<style type="text/css">  
+    .ui-autocomplete {
+        cursor:pointer;
+        height:120px;
+        overflow-y:scroll;
+    }
+    .ui-jqgrid tr.jqgrow td {
+        word-wrap: break-word; /* IE 5.5+ CSS3 see http://www.w3.org/TR/css3-text/#text-wrap */
+        white-space: pre-wrap; /* CSS3 */
+        white-space: -moz-pre-wrap; /* Mozilla, since 1999 */
+        white-space: -pre-wrap; /* Opera 4-6 */
+        white-space: -o-pre-wrap; /* Opera 7 */
+        overflow: hidden;
+        height: auto;
+        vertical-align: middle;
+        padding-top: 3px;
+        padding-bottom: 3px 
+    }
+
+    .centered {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        margin-top: -50px;
+        margin-left: -200px;
+    }
+    div.errorContainer, div.errorContainer2{
+        display:none;
+        width:100%;
+    }
+    div.errorContainer, div.errorContainer2 ol li{
+        list-style-type:disc;
+        margin-left: 20px;
+    }
+    select:disabled{
+        background: #dddddd;
+    }
+    li{
+        list-style:none;
+    }
+    .disabledTab{
+        pointer-events: none;
+    }
+    input[type="text"].error { border: 1px solid #A94444; background-color:#FFF0F0; }
+    select.error { border: 1px solid #A94444; background-color:#FFF0F0; }
+    textarea.error { border: 1px solid #A94444; background-color:#FFF0F0; }
+</style>
+<link rel="stylesheet" type="text/css" href="css/your_style.css" />
+<link rel="stylesheet" type="text/css" href="js/plugin/jqgrid/ui.multiselect.css" />
+
+<section id="widget-grid" class="">
+    <!--<span>{{params}}</span>-->
+    <!--<input type="hidden" value={{params}} id="hidSupCode">-->
+    <input type="hidden" id="lblUserCode" value="<%= session.getAttribute("usercode")%>"/> 
+    <input type="hidden" id="lblUserComp" value="<%= session.getAttribute("CompCode")%>"  class="tboxreadonlyShort"/> 
+    <input type="hidden" id="lblAllowInterbranch" value="<%= session.getAttribute("APP_ALLOW_INTER_BRANCH_XFR")%>"  class="tboxreadonlyShort"/>    
+    <input type="hidden" id="lblAccess_ADD"/> 
+    <input type="hidden" id="lblAccess_EDIT"/> 
+    <input type="hidden" id="lblAccess_APPROVE"/> 
+    <div class="col-xs-12 col-sm-7 col-md-7 col-lg-12">
+        <h1 class="page-title txt-color-blueDark">
+            <!-- PAGE HEADER -->
+            <i class="fa-fw fa fa-file fa-2x"></i> 
+            Good Receive Note                                        
+             
+        </h1>
+    </div>
+    <div class="widget-body row">
+        <article class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+            <div class="row" style="padding-bottom:10px;padding-left:10px;padding-right:10px;">
+                <div class="errorContainer alert alert-danger alert-block">
+                    <h4 class="alert-heading">There were some field left out or invalid inputs. Please brief through the form and reenter necessarily.</h4>
+                    <ol>
+                    </ol>
+                </div>
+            </div>
+            <div class="row">
+                <form id="form_GRN" name="form_GRN">
+                    <article class="col-sm-12 col-md-12 col-lg-12">
+                        <div class="jarviswidget jarviswidget-color-blueDark" id="wid-id-1"  data-widget-editbutton="false" data-widget-custombutton="false"
+                             data-widget-deletebutton="false" data-widget-colorbutton="false" data-widget-fullscreenbutton="false" data-widget-togglebutton="false">
+                            <header>
+                                <span class="widget-icon"> <i class="fa fa-file"></i></span>
+                                <span><h2>&nbsp;Create GRN</h2></span>
+                            </header>
+                            <div class="row">
+                                <div class="widget-body">
+                                    <table id="tbGRN" class="table table-bordered table-striped" style="clear:both;">
+                                        <tbody>
+                                            <tr>
+                                                <td>GRN No.</td>
+                                                <td>:</td>
+                                                <td colspan="3">
+                                                    <input type="hidden" id="ControlDateTime" name="ControlDateTime" class="form-control" style="width:80px;float:left;margin-right:8px;" readonly/>
+                                                    <input type="text" id="txtGRNNo" name="txtGRNNo" class="form-control" style="width:150px;float:left;margin-right:8px;" readonly/>
+                                                    <input type="text" id="hidGRNID" name="hidGRNID" class="form-control" style="width:80px;float:left;margin-right:8px;" readonly/>
+                                                    <input type="button" id="btnSearchGRN" class="btn btn-default bg-color-blueDark txt-color-white" value="Search GRN..." style="float:left;"/>
+                                                </td>
+                                                <td><input type="checkbox" id="chkGenInv" name="chkGenInv" value="Y"/><label for="chkGenInv" class="label-option btn">Inter-Co Transfer(Supplier Invoice)</label></td>
+                                                <td>Status</td>
+                                                <td>:</td>
+                                                <td><input type="text" id="lblStatus" name="lblStatus" class="tboxreadonly" readonly value="NEW"/></td>
+                                            </tr>
+                                            <tr>
+                                                <td width="10%">Supplier</td>
+                                                <td width="1%">:</td>
+                                                <td width="22%">
+                                                    <label id="selectSupplier" class="searchbox" style="width: 220px;">
+                                                        <select class="form-control" id="ddlSupplier" name="ddlSupplier" rel="popover-hover" data-original-title="Supplier" data-content="Select Supplier." >
+                                                            <option value="">- Select Supplier -</option>       
+                                                        </select>
+                                                    </label>
+                                                </td>
+                                                <td width="10%">DO No.</td>
+                                                <td width="1%">:</td>
+                                                <td width="22%">  
+                                                    <input type="text" id="txtDONo" name="txtDONo" class="form-control"/>
+                                                </td>
+                                                <td width="10%" rowspan="4">Remarks</td>
+                                                <td width="1%" rowspan="4">:</td>
+                                                <td width="22%" rowspan="4">  
+                                                    <textarea id="txtRemarks" name="txtRemarks" class="form-control" maxlength="100" rows="10"></textarea>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>Supply Location</td>
+                                                <td>:</td>
+                                                <td>
+                                                    <label id="selectInLocation" class="searchbox" style="width:220px;">
+                                                        <select class="form-control" id="ddlInLocation" name="ddlInLocation" rel="popover-hover" data-original-title="Intersupplier Location" data-content="Select Intersupplier Location."  disabled="true"> 
+                                                            <option value="">- Select Supply Location -</option>
+                                                        </select>
+                                                    </label>
+                                                </td>
+                                                <td>DO Date</td>
+                                                <td>:</td>
+                                                <td>   
+                                                    <input name="txtDODate" id="txtDODate" placeholder="Delivery Order Date" class="searchbox-date" readonly=""/>                                                  
+                                                </td>
+                                            </tr>    
+                                            <tr>
+                                                <td>Receive Company</td>
+                                                <td>:</td>
+                                                <td>     
+                                                    <label id="selectCompany" class="searchbox" style="width:220px;">
+                                                        <select class="form-control" id="ddlCompany" name="ddlCompany" rel="popover-hover" data-original-title="Company" data-content="Select Company.">
+                                                            <option value="">- Select Company -</option>
+                                                        </select>    
+                                                    </label>  
+                                                </td>                                                
+                                                <td>Ref Invoice No.</td>
+                                                <td>:</td>
+                                                <td>
+                                                    <input type="text" id="txtInvNo" name="txtInvNo" class="form-control"/>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>GRN Date</td>
+                                                <td>:</td>
+                                                <td>
+                                                    <input name="txtGRNDate" id="txtGRNDate" placeholder="Goods Receive Note Date" class="searchbox-date" readonly=""/>
+                                                </td>
+                                                <td>Ref Invoice Date</td>
+                                                <td>:</td>
+                                                <td>
+                                                    <input name="txtInvDate" id="txtInvDate" placeholder="Invoice Date" class="searchbox-date" readonly=""/>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td colspan="9"><input type="checkbox" id="chkGSTIncGRN" name="chkGSTIncGRN" value="Y"/><label for="chkGSTIncGRN" class="label-option btn">GST Inclusive</label></td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            <div style="padding-bottom: 5px">
+                                <div class="table-responsive">
+                                    <div id="cjqgridRcvItem"></div>
+                                    <table id="jqgridRcvItem" class="table table-striped table-bordered"></table>
+                                    <div id="pjqgridRcvItem"></div>
+                                </div>
+<!--                                <table id="list47"></table>
+                                <div id="plist47"></div>-->
+
+                                <input type="button" id="btnRetrivePO" class="btn btn-default bg-color-blueDark txt-color-white" value="Retrive From PO" style="margin-right: 10px;"/>    
+                                <input type="button" id="btnAddItem" class="btn btn-default bg-color-blueDark txt-color-white" value="Add Item" style="margin-right: 10px;"/> 
+                                <input type="button" id="btnEdit" class="btn btn-default bg-color-blueDark txt-color-white" value="Edit Selected" style="margin-right: 10px;"/> 
+                                <input type="button" id="btnDelete" class="btn btn-default bg-color-blueDark txt-color-white" value="Delete Selected" style="margin-right: 25px;"/> 
+                                
+                                <!--<input type="checkbox" id="chkGenInv" name="chkGenInv" value="Y"/><label for="chkGenInv" class="label-option btn">Generate Supplier Invoice</label>-->
+                            </div>
+                            <div hidden>
+                                <input type="hidden" id="hidRcvItem" name="hidRcvItem"/>
+                            </div>
+                        </div>
+                    </article>
+                </form>
+            </div>
+
+        </article>
+        <div>
+            <div class="row">
+                <div class="col-sm-12">
+                    <div align="center" class="padding-5" >
+                    <input type="text" id="lblURLStatus" name="lblRecv" readonly class="tboxreadonly"  />    
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-sm-12">
+                    <div align="center" class="padding-5" >
+                        <input type="button" class="btn btn-default bg-color-blueDark txt-color-white form-btn" id="btnConfirm" name="btnConfirm" value="Confirm GRN" onclick="enableEdit()" style="margin-right:20px; display: none;"/>
+                        <input type="button" Id="btnSave"  class="btn btn-default bg-color-blueDark txt-color-white" value="Save" style="margin-right:20px;"/>
+                        <input type="button" Id="btnEditGRN" class="btn btn-default bg-color-blueDark txt-color-white" value="Edit" name="btnEditGRN" style="margin-right:20px; display: none;"/>
+                        <input type="button" Id="btnCancel"  class="btn btn-default bg-color-blueDark txt-color-white"  value="Cancel" name="btnCancel" style="margin-right:20px;"/>   
+                        <input type="button" id="btnPrint" class="btn btn-default bg-color-blueDark txt-color-white" name="btnPrint" onclick="LoadPrintPreview();" data-toggle='modal' data-target='#printPreview' value="Print" style="display:none;"/>                        
+                        <input type="button" Id="btnTest"  class="btn btn-default bg-color-blueDark txt-color-white"  value="test" name="btnTest" style="display: none;"/>  <!--style="display: none;" -->
+                        <!--onclick="location.href = '#/GRN'"-->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<div class="modal fade" id="ModAddGRN" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog" style="width: 91%;">
+        <div class="modal-content">
+            <div class="modal-header">
+<!--                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">
+                    &times;
+                </button>-->
+                <h4 class="modal-title" id="myModalLabel">Goods Receive Note Item</h4>
+            </div>
+
+            <div class="modal-body">
+                <div class="jarviswidget jarviswidget-color-blueDark" id="wid-id-3"  data-widget-editbutton="false" data-widget-custombutton="false"
+                 data-widget-deletebutton="false" data-widget-colorbutton="false" data-widget-fullscreenbutton="false" data-widget-togglebutton="false">
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-file"></i></span>
+                        <span><h2 id="GRNHeader"></h2></span>
+                    </header>                    
+                    <div class="padding-10">
+                        <input type="hidden" id="hidID" name="hidID"/>
+                        <input type="hidden" id="hidGRNDID" name="hidGRNDID"/>
+                        <table id="tbGRNItem" class="table table-bordered table-striped" style="clear:both;">
+                            <tbody>
+                                <tr>
+                                    <td>Product Code</td>
+                                    <td>:</td>
+                                    <td colspan="4">
+                                        <input type="text" id="txtPrdCode" name="txtPrdCode" class="form-control" style="width:200px;float:left;margin-right:8px;" readonly/>
+                                        <input type="text" id="txtPrdDesc" name="txtPrdDesc" class="form-control" style="width:450px;float:left;margin-right:10px;" readonly/>
+                                        <input type="button" id="btnLocatePrd" class="btn btn-default bg-color-blueDark txt-color-white" value="Locate Product Item..." style="float:left;"/>                                                                               
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td width="15%">Batch</td>
+                                    <td width="1%">:</td>
+                                    <td width="30%"><input type="text" id="txtBatch" name="txtBatch" class="form-control"/></td>
+                                    <td width="15%">Expiry</td>
+                                    <td width="1%">:</td>
+                                    <td width="30%">  
+                                        <input name="txtExpiry" id="txtExpiry" placeholder="Expiry Date" class="searchbox-date" readonly=""/>                                                  
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>PO</td>
+                                    <td>:</td>
+                                    <td>
+                                        <input type="text" id="txtPO" name="txtPO" class="form-control"/>
+                                        <input type="hidden" id="hidPOL" name="hidPOL"/>
+                                    </td>
+                                    <td>PO Date</td>
+                                    <td>:</td>
+                                    <td>
+                                        <input id="txtPODate" name="txtPODate" placeholder="PO Date" class="searchbox-date" readonly=""/>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>Order Qty</td>
+                                    <td>:</td>
+                                    <td>
+                                        <!--<div class="col-sm-12 col-md-4 col-lg-5">-->
+                                            <input class="form-control spinner-both"  id="txtOrderQty" name="txtOrderQty" value="1">
+                                        <!--</div>-->
+                                    </td>
+                                    <td>Order Bonus Qty</td>
+                                    <td>:</td>
+                                    <td>
+                                        <!--<div class="col-sm-12 col-md-4 col-lg-5">-->
+                                            <input class="form-control spinner-both"  id="txtBonusQty" name="txtBonusQty" value="1">
+                                        <!--</div>-->
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>UOM</td>
+                                    <td>:</td>
+                                    <td>
+                                        <label id="selectUOM" class="searchbox">
+                                            <select class="form-control" id="ddlUOM" name="ddlUOM" rel="popover-hover" data-original-title="UOM" data-content="UOM" style="width:250px;" onchange="convertUOM()">
+                                                <option value="">- Select UOM  -</option>
+                                            </select>    
+                                            <input type="hidden" id="ddlUOMPrevious" name="ddlUOMPrevious"/>
+                                        </label> 
+                                    </td>
+                                    <td>Disc</td>
+                                    <td>:</td>
+                                    <td>
+                                        <div id="rdDisc" style="float:left;">  
+                                            <input type="radio" id="rdDisc2" name="rdDisc" value="P" checked="true"/><label for="rdDisc2" class="label-option btn" style="width:50px">%</label>
+                                            <input type="radio" id="rdDisc3" name="rdDisc" value="A"/><label for="rdDisc3" class="label-option btn" style="width:50px">Amt</label>
+                                        </div> 
+                                        <div class="col-sm-12 col-md-4 col-lg-5" style="float: left;">
+                                            <input class="form-control spinner-both"  id="txtDisc" name="txtDisc" value="1">
+                                        </div>                                        
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>Received Qty</td>
+                                    <td>:</td>
+                                    <td>
+                                        <input class="form-control spinner-both"  id="txtRcvQty" name="txtRcvQty" value="1" onkeyup="convertUOM()">
+                                        <!--<input type="button" id="btnAllocateQty" class="btn btn-default bg-color-blueDark txt-color-white" value="Allocate Qty" style="float:left;"/>-->
+                                    </td>
+                                    <td>Received Bonus Qty</td>
+                                    <td>:</td>
+                                    <td>
+                                        <input class="form-control spinner-both"  id="txtRcvBonus" name="txtRcvBonus" value="0" onkeyup="convertUOM()">
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>Unit Cost</td>
+                                    <td>:</td>
+                                    <td>
+                                        <input class="form-control spinner-both"  id="txtCost" name="txtCost" value="1" onkeyup="convertUOM()">
+                                    </td>
+                                    <td>Gross Amt</td>
+                                    <td>:</td>
+                                    <td><input type="text" id="txtGross" name="txtGross" class="tboxreadonly" readonly/></td>
+                                </tr>
+                                <tr>
+                                    <td>GST Amt</td>
+                                    <td>:</td>
+                                    <td><input type="text" id="txtGSTAmt" name="txtGSTAmt" class="form-control" readonly/></td>
+                                    <td>Nett Total</td>
+                                    <td>:</td>
+                                    <td><input type="text" id="txtNettTotal" name="txtNettTotal" class="form-control" readonly/></td>                    
+                                </tr>
+                                <tr>
+
+                                </tr>
+                                <tr>
+                                    <td colspan="3" rowspan="2" style="background-color:LightCyan;">
+                                        <table id="tbGRNItem" class="table" border="0" style="background-color:LightCyan;">
+                                            <tbody>
+                                                <tr>
+                                                    <td>Received At</td>
+                                                    <td>:</td>
+                                                    <td>
+                                                        <label id="selectOutlet" class="searchbox">
+                                                            <select class="form-control" id="ddlOutlet" name="ddlOutlet" rel="popover-hover" data-original-title="Outlet" data-content="Select Location" style="width:250px;">
+                                                                <option value="">- Select Location -</option>
+                                                            </select>                                                
+                                                        </label>
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td>Conversion UOM</td>
+                                                    <td>:</td>
+                                                    <td>
+                                                        <label id="selectConvUOM" class="searchbox"> 
+                                                            <select class="form-control" id="ddlConvUOM" name="ddlConvUOM" style="width:250px;" onchange="convertUOM()"> 
+                                                                <option value="">(No Conversion)</option>
+                                                            </select>    
+                                                        </label>
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td>Converted Qty</td>
+                                                    <td>:</td>
+                                                    <td><input type="text" id="txtConvQty" name="txtConvQty" class="form-control" readonly style="width:250px;"/></td>
+                                                </tr>
+                                                <tr>
+                                                    <td>New Unit Cost</td>
+                                                    <td>:</td>
+                                                    <td><input type="text" id="txtConvCost" name="txtConvCost" class="form-control" readonly style="width:250px;"/></td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </td>
+                                    <td>GST Code (Purchase)</td>
+                                    <td>:</td>
+                                    <td>
+                                        <input type="hidden" id="hidGST" name="hidGST"/>
+                                        <label id="selectGSTCode" class="searchbox">
+                                            <select class="form-control" id="ddlGSTCode" name="ddlGSTCode" rel="popover-hover" data-original-title="GST Code" data-content="Select GST Code" style="width:250px;">
+                                                <option value="">- Select GST Code (Purchase)-</option>
+                                            </select>                                                
+                                        </label>
+                                        <div>
+                                            <input type="checkbox" id="chkGSTInc" name="chkGSTInc" value="Y" disabled="true"/><label for="chkGSTInc" class="label-option btn" disabled="true">GST Inclusive</label>
+                                        </div>                                        
+                                    </td>                                   
+                                </tr>    
+                                <tr>
+                                    <td>GST Code (Supply)</td>
+                                    <td>:</td>
+                                    <td>
+                                        <!--<input type="hidden" id="hidGSTSup" name="hidGSTSup"/>-->
+                                        <label id="selectGSTCodeSup" class="searchbox">
+                                            <select class="form-control" id="ddlGSTCodeSup" name="ddlGSTCodeSup" rel="popover-hover" data-original-title="GST Code" data-content="Select GST Code" style="width:250px;">
+                                                <option value="">- Select GST Code (Supply)-</option>
+                                            </select>                                                
+                                        </label>
+                                        <div>
+                                            <input type="checkbox" id="chkGSTIncSup" name="chkGSTIncSup" value="Y" disabled="true"/><label for="chkGSTIncSup" class="label-option btn" disabled="true">GST Inclusive</label>
+                                        </div>                                        
+                                    </td>
+                                </tr>   
+                            </tbody>
+                        </table>
+                        <div class="col-sm-12">
+                            <div align="center" class="padding-5" >
+                                <input type="button" Id="btnSaveItem"  class="btn btn-default bg-color-blueDark txt-color-white" value="OK" style="margin-right:20px;"/>
+                                <input type="button" Id="btnCancelItem"  class="btn btn-default bg-color-blueDark txt-color-white"  value="Cancel"/>
+                            </div>
+                        </div>
+                    </div>                   
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="ModPOItem" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog" style="width: 91%;">
+        <div class="modal-content">
+            <div class="modal-header">
+<!--                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">
+                    &times;
+                </button>-->
+                <h4 class="modal-title" id="myModalLabel">Purchase Order Item</h4>
+            </div>
+
+            <div class="modal-body">
+                <div class="jarviswidget jarviswidget-color-blueDark" id="wid-id-3"  data-widget-editbutton="false" data-widget-custombutton="false"
+                 data-widget-deletebutton="false" data-widget-colorbutton="false" data-widget-fullscreenbutton="false" data-widget-togglebutton="false">
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-file"></i></span>
+                        <span><h2 id="POHeader">&nbsp;Search PO Item</h2></span>
+                    </header>                    
+                    <div class="padding-10">
+                        <table id="tbPOItem" class="table table-bordered table-striped" style="clear:both;">
+                            <tbody>
+                                <tr>
+                                    <td>Supplier</td> 
+                                    <td>:</td>
+                                    <td colspan="2">
+                                        <input type="text" id="txtPOSupplierCode" name="txtPOSupplierCode" class="form-control" readonly style="width:150px;float:left;margin-right:8px;"/>
+                                        <input type="text" id="txtPOSupplier" name="txtPOSupplier" class="form-control" readonly style="width:350px;float:left;margin-right:8px;"/>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td width="15%">PO No.</td>
+                                    <td width="1%">:</td>
+                                    <td width="30%"><input type="text" id="txtPOSearch" name="txtPOSearch" placeholder="-- Enter PO Number --" class="searchbox-text"/></td>
+                                    <td width="50%"><input type="button" id="btnSearchPO" class="btn btn-default bg-color-blueDark txt-color-white" value="Search"/></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <input type="hidden" id="hidComp" name="hidComp"/>
+                        
+                        <div class="container" width="100%" id="dvPOGrid">
+                            <div class="table-responsive">
+                                <div id="cjqgridPOItem" class="jqgrid-table-nopadding">
+                                    <table id="jqgridPOItem" class="table table-striped table-bordered"></table>
+                                    <div id="pjqgridPOItem"></div>
+                                </div>
+                            </div>
+                            
+                            <div align="center" class="padding-5">          
+                                <select class="form-control" id="ddlDefaultOutlet" name="ddlDefaultOutlet" style="width:150px;margin-top:5px;float:left;">
+                                    <option value="">- Select Location -</option>                                           
+                                </select>
+                                <input type="button" Id="btnSelPO"  class="btn btn-default bg-color-blueDark txt-color-white" value="OK" style="margin-right:20px;"/>
+                                <input type="button" Id="btnCancelPO"  class="btn btn-default bg-color-blueDark txt-color-white" value="Cancel"/>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<jsp:include page="../../../includes/loading-no-status.jsp"/>
+<jsp:include page="../../../includes/PopUpInitPage.jsp"/>
+<jsp:include page="../../../includes/yes-no.jsp"/>
+<script src="js/jquery.confirm.min.js"></script>
+<script type="text/javascript">
+
+    pageSetUp();
+    var issuloc = "";
+   
+    var myStkUOM = {};
+    
+    getDLL("ddlSupplier", "GET_SUPPLIER", "", "");
+    getDLL("ddlUOM", "GET_STOCKUOM", "", "");
+    getDLL("ddlConvUOM", "GET_STOCKUOM", "", "");
+    getDLL("ddlGSTCode", "GET_ACTIVEGSTCODE", "PURCHASE", "");
+    getDLL("ddlGSTCodeSup", "GET_ACTIVEGSTCODE", "SUPPLY", "");
+
+    function getDLL (ddl, method, param1, param2) {
+        $.get('${pageContext.request.contextPath}/Servlet_PopulateData', {SFC: 'GET_DLL', METHOD: method, P1: param1, P2: param2}, function (data) {
+            for(var i=0; i < data.length; i++){                                                          
+                $("#"+ddl).append($("<option>").val(data[i].VALUE).html(data[i].TEXT));
+            }     
+        });     
+    }       
+    
+    $().ready(function () {        
+      
+        //$(".numeric").numeric();
+        var container = $('div.errorContainer');
+        var validator = $("#form_GRN").validate({
+            rules: {
+                    ddlSupplier: "required",
+                    ddlCompany: "required"               
+            },
+            messages: {
+                        ddlSupplier: "Supplier must be selected.",
+                        ddlCompany: "Company must be selected."
+            },
+            errorContainer: container,
+            errorLabelContainer: $("ol", container),
+            wrapper: 'li'
+        });
+
+        $.get('${pageContext.request.contextPath}/Servlet_Role', {
+            SFC: 'GET_ROLE_ACCESS', 
+            MENU_DESC: 'Goods Receive',//$(document).attr('title'), 
+            USER_CODE: $("#lblUserCode").val()}, 
+            function (data) {
+            $('#lblAccess_ADD').val(data.object1[0].rfc_add);
+            $('#lblAccess_EDIT').val(data.object1[0].rfc_edit);
+            $('#lblAccess_APPROVE').val(data.object1[0].ref_approve);
+            
+            if($('#lblAccess_ADD').val() === '0') {
+                $('#btnAddItem').hide();
+            }
+        });
+    });
+                    
+    $(document).ready(function () {
+        var tempDate = new Date();
+        $("#txtDODate, #txtInvDate, #txtGRNDate, #txtExpiry, #txtPODate").datepicker({
+            numberOfMonths: 1,
+            changeMonth: true,
+            changeYear: true,
+            dateFormat: "yy-mm-dd"
+        });
+        
+        var fromDate = $.datepicker.formatDate('yy-mm-dd', new Date(tempDate.getFullYear(), tempDate.getMonth(), tempDate.getDate()));
+        $("#txtDODate, #txtInvDate, #txtGRNDate, #txtExpiry, #txtPODate").val(fromDate);   
+        
+        $("#txtOrderQty, #txtBonusQty, #txtDisc, #txtRcvQty, #txtCost, #txtRcvBonus") //#txtRcvBonus,
+            .spinner({
+                min: 0,
+                max: 2500,
+                step: 1,
+                start: 1000,
+                numberFormat: "n"
+            })
+            .val(0);    
+        
+        $('.ui-spinner-button').click(function() { $(this).siblings('input').change(); });
+        
+        $('#txtGSTAmt, #txtGross, #txtNettTotal').val(0);
+
+        //GET GST PERCENT (PURCHASE)
+        $('#hidGST').val(0);
+        $('#ddlGSTCode').on('change', function() {
+            var GSTCode = $("#ddlGSTCode").val(),
+                unitPrice = $('#txtCost').val(),
+                GSTIn = $('#chkGSTInc').is(':checked') ? "Y" : "N",
+                DiscType = $(":radio[name='rdDisc']:checked").val(),
+                Qty = $('#txtRcvQty').val(),
+                DiscVal = $('#txtDisc').val(),
+                dataGST;
+            if(GSTCode.length > 0){
+                //alert(GSTCode);
+                $.get('${pageContext.request.contextPath}/Servlet_GST', {GSTCODE: GSTCode, SFC: 'GET_GST', GSTTYPE: 'PURCHASE'}, function (data) {
+                    var arrData = data.object1[0];
+                    
+                    $('#hidGST').val(arrData.gst_taxrate);   
+                    dataGST = calGST($('#hidGST').val(),unitPrice, GSTIn, DiscType, Qty, DiscVal);
+                    
+                    $("#txtGSTAmt").val(dataGST.gstAmt);
+                    $("#txtGross").val(dataGST.grossTotal);
+                    $("#txtNettTotal").val(dataGST.nettTotal);
+                });               
+            }
+            else{
+                $('#hidGST').val(0);
+                dataGST = calGST(0,unitPrice, GSTIn, DiscType, Qty, DiscVal);
+                
+                $("#txtGSTAmt").val(dataGST.gstAmt);
+                $("#txtGross").val(dataGST.grossTotal);
+                $("#txtNettTotal").val(dataGST.nettTotal);
+            }            
+        });
+        //END GET
+        
+        $('#txtCost, #txtRcvQty, #chkGSTInc, #rdDisc, #txtDisc').on('change', function() {
+            var gstRate = $('#hidGST').val(),
+                unitPrice = $('#txtCost').val(),
+                GSTIn = $('#chkGSTInc').is(':checked') ? "Y" : "N",
+                DiscType = $(":radio[name='rdDisc']:checked").val(),
+                Qty = $('#txtRcvQty').val(),
+                DiscVal = $('#txtDisc').val(),
+                dataGST;
+                
+            dataGST = calGST(gstRate, unitPrice, GSTIn, DiscType, Qty, DiscVal);
+            $("#txtGSTAmt").val(dataGST.gstAmt);
+            $("#txtGross").val(dataGST.grossTotal);
+            $("#txtNettTotal").val(dataGST.nettTotal);
+        });       
+        
+        $('#chkGSTIncGRN').on('change', function(){
+            var GSTIn;
+            
+            if($('#chkGSTIncGRN').is(':checked'))
+            {
+                $('#chkGSTInc, #chkGSTIncSup').prop('checked',true);
+                GSTIn = "Y";
+            }
+            else
+            {
+                $('#chkGSTInc, #chkGSTIncSup').prop('checked',false);
+                GSTIn = "N";
+            }
+            
+            //recalculate gst
+            var ids = $("#jqgridRcvItem").jqGrid('getDataIDs'), 
+                dataGST, hid;
+            if (ids.length > 0){
+                for(var i=0; i < ids.length; i++){
+                    hid = $("#jqgridRcvItem").jqGrid('getRowData', ids[i]);
+                    dataGST = calGST(hid.GST_PUR_Rate, hid.COST, GSTIn, hid.DISC_TYPE, hid.RCV_QTY, hid.DISC);
+                    hid.GROSS = dataGST.grossTotal;
+                    hid.GST_AMT = dataGST.gstAmt;
+                    hid.NETT_AMT = dataGST.nettTotal;
+                    hid.GST_Inc = GSTIn;
+                    $('#jqgridRcvItem').jqGrid('setRowData', ids[i], hid);
+                    
+ 
+                }
+            }
+        });
+        
+        $('#ddlCompany').on('change', function() {
+            var comCode = $("#ddlCompany").val();
+            var ddl = $("#ddlOutlet");
+//alert("A");            
+            if(comCode.length > 0){
+                 $.get('${pageContext.request.contextPath}/Servlet_PopulateData', {SFC: 'GET_DLL', METHOD: 'GET_LOCATION', P1: comCode, P2: ''}, function (data) {
+                    var arrData = data;
+                    
+                    //------
+                    var    AllowInterbranch = $('#lblAllowInterbranch').val();
+                    var arrDataFiltered = [];
+                    
+                    if (AllowInterbranch === "N") 
+                    {
+                        for(var i=0; i < arrData.length; i++)
+                        {
+                            
+                            if (arrData[i].IS_MAINSTORE
+                        === "Y")
+                            {
+                               arrDataFiltered.push(arrData[i]);
+                            }
+                             
+                        }
+                    }
+                    else
+                    {
+                        arrDataFiltered = data;
+                    }
+
+                    createOption(ddl, arrDataFiltered, '- Select Location -'); 
+                    createOption($("#ddlDefaultOutlet"), arrDataFiltered, '- Select Location -'); 
+                 });
+            }
+            else{
+                createOption(ddl, '', '- Select Location -'); 
+            }
+            
+//            var ids = $("#jqgridRcvItem").jqGrid('getDataIDs'), 
+//                hid;
+//            if (ids.length > 0){
+//                for(var i=0; i < ids.length; i++){
+//                    hid = $("#jqgridRcvItem").jqGrid('getRowData', ids[i]);
+//                    hid.OUTLET = "";
+//                    $('#jqgridRcvItem').jqGrid('setRowData', ids[i], hid);
+//                }
+//            }
+        });
+        
+        $('#ddlSupplier').on('change',function(){
+            var ddl = $("#ddlInLocation");
+            var supCode = $("#ddlSupplier").val();
+            
+            if($("#chkGenInv").is(":checked")){
+                
+                if(supCode.length > 0){
+                    
+                    $.get('${pageContext.request.contextPath}/Servlet_PopulateData', {SFC: 'GET_DLL', METHOD: 'GET_LOCATION', P1: supCode, P2: ''}, function (data) {
+                        var arrData = data;
+                        createOption(ddl, arrData, '- Select Supplier Location -');                        
+                    });
+                }else{
+                    
+                    createOption(ddl,'','- Select Supplier Location -');
+                }
+            }
+             
+        });
+        
+        $("#chkGenInv").on('change', function(){
+            var ddlLoc = $("#ddlInLocation");
+            var ddlSup = $("#ddlSupplier");
+            createOption(ddlLoc, '', '- Select Supplier Location -');
+            
+            if($("#chkGenInv").is(":checked")){
+                $("#btnRetrivePO").prop('disabled', true); //pengkee 2018aug07
+                ddlLoc.prop("disabled", false);
+                $.get('${pageContext.request.contextPath}/Servlet_PopulateData', {SFC: 'GET_DLL', METHOD: 'GET_COMP', P1: '<%= session.getAttribute("CompCode")%>', P2: ''}, function (data) {
+                    var arrData = data;
+                    createOption(ddlSup, arrData, '- Select Supplier -'); 
+                 });
+            }else{
+                $("#btnRetrivePO").prop('disabled', false); //pengkee 2018aug07
+                ddlLoc.prop("disabled", true);    
+                $.get('${pageContext.request.contextPath}/Servlet_PopulateData', {SFC: 'GET_DLL', METHOD: 'GET_SUPPLIER', P1: '', P2: ''}, function (data) {
+                    var arrData = data;
+                    createOption(ddlSup, arrData, '- Select Supplier -'); 
+                 });
+            }
+        });
+
+//        $("#ddlUOM").focus(function () {
+//            // Store the current value on focus, before it changes
+//            $("#ddlUOMPrevious").val($("#ddlUOM").val());
+//        });
+    });  
+    
+    var pagefunction = function () {      
+        //alert("0000111");  
+        $.get('${pageContext.request.contextPath}/Servlet_PopulateData', {SFC: 'GET_DLL', METHOD: 'GET_COMP', P1: '<%= session.getAttribute("CompCode")%>', P2: ''}, function (data) {
+            var arrData = data;
+            createOption($("#ddlCompany"), arrData, '- Select Company -'); 
+            $('#ddlCompany').trigger("change");
+        });
+        
+        loadScript("js/plugin/jqgrid/ui.multiselect.js", function () {
+            loadScript("js/plugin/jqgrid/grid.locale-en.min.js", function () {
+                loadScript("js/plugin/jqgrid/jquery.jqGrid.min.js", function () {
+                    loadScript("js/column-chooser.js", function () {
+                       run_jqgrid_function(); 
+                       getCurrDateTime();
+                    });
+                    });
+                });
+            });
+    
+    function run_jqgrid_function() {
+        var data = [], //[{"PRD_Code":"ZYRT","RCV_QTY":"","UOM":"TAB","PO":"CM000001"},{"PRD_Code":"ZYRT","RCV_QTY":"","UOM":"TAB","PO":"CM000002"},{"PRD_Code":"ZYRT","RCV_QTY":"","UOM":"TAB","PO":"CM000003"}],            
+            grid = $("#jqgridRcvItem"),
+            gridPager = "#p" + grid.selector.toString().substring(1),
+            conDiv = $("#c" + grid.selector.toString().substring(1)),
+            defaultColName =  [ '#','Prod Code','Received Qty','Received Bonus','UOM','Unit Cost','Gross Amt','GST Amt',
+                                'Nett Amt','Disc','Batch','Expiry','PO','PO Line','Prod Desc','PO Date','Order Qty','Order Bonus',
+                                'Disc Type','GST Code','GST Inclusive','Rcv Location','GST SUPPLY CODE','GST Purchase Rate',
+                                'Converted Qty', 'Converted Unit Cost', 'Converted UOM', 'CONTROL_DATETIME'],
+            defaultColMol = [
+                {name: 'GRND_IDX', index: 'GRND_IDX', width: 80, hidden: true, sortable: false},
+                {name: 'PRD_Code', index: 'PRD_Code', must: true, hidedlg: true, width: 120, sortable: false},
+                {name: 'RCV_QTY', index: 'RCV_QTY',  width: 120, sortable: false},
+                {name: 'RCV_BONUS', index: 'RCV_BONUS', width: 120, sortable: false},
+                {name: 'UOM', index: 'UOM', width: 120, sortable: false},
+                {name: 'COST', index: 'COST', width: 120, sortable: false},
+                {name: 'GROSS', index: 'GROSS', width: 120, hidden: true, sortable: false},
+                {name: 'GST_AMT', index: 'GST_AMT', width: 120, sortable: false},
+                {name: 'NETT_AMT', index: 'NETT_AMT', width: 120, sortable: false},
+                {name: 'DISC', index: 'DISC', width: 120, sortable: false},
+                {name: 'BATCH', index: 'BATCH', width: 120, sortable: false},
+                {name: 'EXPIRY', index: 'EXPIRY', width: 120, sortable: false},
+                {name: 'PO', index: 'PO', width: 120, sortable: false},
+                {name: 'POLine', index: 'POLine', width: 80, sortable: false},
+                {name: 'PRD_Desc', index: 'PRD_Desc', width: 220, hidden: true, sortable: false},                
+                {name: 'PO_DATE', index: 'PO_DATE', width: 120, hidden: true, sortable: false},
+                {name: 'ORDER_QTY', index: 'ORDER_QTY', width: 120, hidden: true, sortable: false},
+                {name: 'ORDER_BONUS', index: 'ORDER_BONUS', width: 120, hidden: true, sortable: false},                
+                {name: 'DISC_TYPE', index: 'DISC_TYPE', width: 120, hidden: true, hidedlg: true, sortable: false},         
+                {name: 'gst_code', index: 'gst_code', width: 120, hidden: true, sortable: false},
+                {name: 'GST_Inc', index: 'GST_Inc', width: 120, hidden: true, sortable: false},
+                {name: 'OUTLET', index: 'OUTLET', width: 120, sortable: false},
+                {name: 'GST_Code_Sup', index: 'GST_Code_Sup', width: 120, hidden: true, sortable: false},
+                {name: 'GST_PUR_Rate', index: 'GST_PUR_Rate', width: 120, hidden: true, sortable: false},
+                {name: 'CONV_QTY', index: 'CONV_QTY', hidden: true},
+                {name: 'CONV_UNITCOST', index: 'CONV_UNITCOST', hidden: true},
+                {name: 'CONV_UOM', index: 'CONV_UOM', hidden: true},
+                {name: 'CONTROL_DATETIME', index: 'CONTROL_DATETIME', width: 120, hidden: true, sortable: false}
+            ];
+            
+        grid.jqGrid({
+            data: data,
+            datatype: "local",
+            colNames: defaultColName,
+            colModel: defaultColMol,
+            gridview: true,
+            rownumWidth: 40,
+            rowNum: 20,
+            rowList: [10, 20, 25, 30, 50, 100],
+            pager: gridPager,
+            sortname: '',
+            viewrecords: true,
+            sortorder: 'desc',
+            toolbarfilter: true,
+            autowidth: true,
+            shrinkToFit: true,
+            loadonce: false,
+            height: 'auto',
+            scrollerbar: false
+//            onSelectRow: function (id) {
+//                //debugger;
+//                rowData = jQuery(this).getRowData(id);
+//                GridId = id;
+//            }
+        });
+        
+         // resize
+        $(window).on('resize', function () {
+            grid.jqGrid('setGridWidth', conDiv.width());
+        });
+        grid.on('myRefresh', function () {
+            resizeWidth({grid: grid, gridDiv: conDiv});
+        });
+        grid.jqGrid('setGridWidth', conDiv.width());
+        
+        var gridPO = $("#jqgridPOItem"),
+            gridPagerPO = "#p" + gridPO.selector.toString().substring(1),
+            //conDivPO = $("#c" + gridPO.selector.toString().substring(1)),
+            defaultColNamePO =  [ 'PO','#','Prod Code','Prod Desc','Balance Qty','Received Qty','Received Bonus','UOM',
+                                'Unit Cost','Gross Amt','GST Amt','Nett Amt','Disc','Batch','Expiry','PO Date','Order Qty','Order Bonus',
+                                'Disc Type','GST Code','GST Inclusive','GST Rates','Outlet','Fulfill'],
+            defaultColMolPO = [
+                {name: 'PoNo', index: 'PoNo', sortable: true, must: true, hidedlg: true, width: 120},
+                {name: 'LineNo', index: 'LineNo', sortable: true, must: true, hidedlg: true, width: 30},
+                {name: 'StkCode', index: 'StkCode', sortable: true, width: 120},
+                {name: 'StkDesc', index: 'StkDesc', sortable: true, width: 220},
+                {name: 'PODTL_BalanceQty', index: 'PODTL_BalanceQty', sortable: true, width: 80},      
+                {name: 'RcvQty', index: 'RcvQty', sortable: true, width: 80}, 
+                {name: 'RcvQtyBonus', index: 'RcvQtyBonus', sortable: true, width: 80, hidden: true},
+                {name: 'UomCode', index: 'UomCode', sortable: true, width: 80},
+                {name: 'UnitCost', index: 'UnitCost', sortable: true, width: 80},
+                {name: 'GrossTotal', index: 'GrossTotal', sortable: true, width: 80, hidden: true}, //unused
+                {name: 'GstAmt', index: 'GstAmt', sortable: true, width: 80, hidden: true},  //unused
+                {name: 'NettAmt', index: 'NettAmt', sortable: true, width: 80, hidden: true}, //unused
+                {name: 'DiscPerc', index: 'DiscPerc', sortable: true, width: 80},
+                {name: 'Batch', index: 'Batch', sortable: true, width: 120, hidden: true}, //unused
+                {name: 'EXPIRY', index: 'EXPIRY', sortable: true, width: 120, hidden: true}, //unused               
+                {name: 'PoDate', index: 'PoDate', sortable: true, width: 120},          
+                {name: 'Qty', index: 'Qty', sortable: true, width: 80},
+                {name: 'QtyBonus', index: 'QtyBonus', sortable: true, width: 80},
+                {name: 'DiscOpt', index: 'DiscOpt', sortable: true, width: 120},
+                {name: 'GstPurCode', index: 'GstPurCode', sortable: true, width: 120, hidden: true},
+                {name: 'GStInc', index: 'GStInc', sortable: true, width: 120, hidden: true}, //unused
+                {name: 'GstTaxRate', index: 'GstTaxRate', sortable: true, width: 120, hidden: true},
+                {name: 'LocCode', index: 'LocCode', sortable: true, width: 120, hidden: true},
+                {name: 'DtlFulfill', index: 'DtlFulfill', sortable: true, width: 120}
+            ];
+        gridPO.jqGrid({
+            url: '${pageContext.request.contextPath}/Servlet_PurchaseOrder',
+            postData: {
+                        SFC: 'GET_PO_LIST',               
+                        SUPCODE: $('#txtPOSupplierCode').val(),
+                        COMPANY: $('#hidComp').val(),
+                        PONO: $('#txtPOSearch').val(),
+                        STATUS: 'OPEN',
+                        DTFROM: '',
+                        DTTO: '',
+                        GRPNO: '',
+                        STKCODE: '',
+                        POSTATUS: ''                        
+                },
+            //data: data,
+            datatype: "json",
+            mtype: 'POST',
+            colNames: defaultColNamePO,
+            colModel: defaultColMolPO,
+           // rownumbers: true,
+            gridview: true,
+            rownumWidth: 40,
+            rowNum: 20,
+            rowList: [10, 20, 25, 30, 50, 100],
+            pager: gridPagerPO,
+            sortname: 'PoNo, LineNo',
+            viewrecords: true,
+            sortorder: 'asc',
+            toolbarfilter: true,
+            autowidth: true,
+            shrinkToFit: true,
+            loadonce: false,
+            height: 'auto',
+            scrollerbar: false,  
+            multiselect:true,
+            loadComplete: function () {
+                    //$("#ModPOItem").modal("show");
+                $("#ddlDefaultOutlet").prop("disabled", true);
+            },
+            onSelectRow: function(row, isSelected) {
+                var ids = $('#jqgridPOItem').jqGrid('getGridParam','selarrrow');
+                if (ids.length>0) {
+                    $("#ddlDefaultOutlet").prop("disabled", false);
+                    $('#ddlDefaultOutlet option')[1].selected = true;
+                } else {
+                    $("#ddlDefaultOutlet").val("");
+                    $("#ddlDefaultOutlet").prop("disabled", true);                  
+                }
+            },
+            onSelectAll: function(row, isSelected) {
+                var ids = $('#jqgridPOItem').jqGrid('getGridParam','selarrrow');
+                if (ids.length>0) {
+                    $("#ddlDefaultOutlet").prop("disabled", false);
+                    $('#ddlDefaultOutlet option')[1].selected = true;
+                } else {
+                    $("#ddlDefaultOutlet").val("");
+                    $("#ddlDefaultOutlet").prop("disabled", true);                   
+                }
+            }
+        });
+        
+        // resize
+        $(window).on('resize', function () {
+            $('#jqgridPOItem').jqGrid('setGridWidth', $('#dvPOGrid').width());
+        });
+    };   
+    };
+    pagefunction();
+
+    function getCurrDateTime() { 
+        $.get('${pageContext.request.contextPath}/Servlet_SystemEnvironmentSettings', {SFC: 'GET_CURRENTDATETIME'}, function (data) {
+            var arrData = String(data); 
+                //alert("Server data : "  + data);
+            var currentdate = new Date(); 
+            var datetime = currentdate.getFullYear() + "."  
+                            + currentdate.getMonth()  + "." 
+                            + currentdate.getDate() + " "
+                            + currentdate.getHours() + ":"  
+                            + currentdate.getMinutes() + ":" 
+                            + currentdate.getSeconds();
+
+            if (arrData === "") { 
+                $("#ControlDateTime").val(datetime);
+            }
+            else { 
+                $("#ControlDateTime").val(arrData);
+            }
+            //alert($("#ControlDateTime").val());     
+        });   
+    };
+
+    function enableEdit(){  
+
+       // refreshGrid();
+    };
+    
+    function refreshGrid()
+    {
+        $("#jqgridRcvItem").jqGrid('clearGridData');
+        $("#jqgridRcvItem").jqGrid('setGridParam', {
+            data: JSON.parse($('#hidRcvItem').val()),
+            datatype: 'local'
+        }).trigger("reloadGrid");
+
+//        var recordcount1 = $("#jqgridRcvItem").getGridParam("records");
+//        var datarow = [{ "PRD_Code": recordcount1 + 1, "EXPIRY": "12/13/2013", "PO": "test", "COST": "1000"}];
+//        $("#jqgridRcvItem").addRowData(recordcount1 + 1,datarow, "last");
+        //alert("test");
+    }
+    
+    function checkEditHeader(){
+        var ids = $("#jqgridRcvItem").jqGrid('getDataIDs');
+        if (ids.length > 0){
+            $("#ddlCompany").prop("disabled",true);
+            $("#ddlSupplier").prop("disabled", true);
+            $("#chkGenInv").prop("disabled",true);
+        }else{
+            $("#ddlCompany").prop("disabled",false);
+            $("#ddlSupplier").prop("disabled", false);
+            $("#chkGenInv").prop("disabled",false);
+        }
+    }
+    
+    $("#btnSaveItem").click(function(){
+        var GRNItem = {
+            "GRND_IDX": $("#hidGRNDID").val()
+            , "PRD_Code": $("#txtPrdCode").val()
+            , "RCV_QTY": $("#txtRcvQty").val()
+            , "RCV_BONUS": $("#txtRcvBonus").val()     
+            , "UOM": $("#ddlUOM").val()
+            , "COST": $("#txtCost").val()
+            , "GROSS": $("#txtGross").val()
+            , "GST_AMT": $("#txtGSTAmt").val()
+            , "NETT_AMT": $("#txtNettTotal").val()
+            , "DISC": $("#txtDisc").val()
+            , "BATCH": $("#txtBatch").val()
+            , "EXPIRY": $("#txtExpiry").val()
+            , "PO": $("#txtPO").val()
+            , "POLine": $("#hidPOL").val()
+            , "PRD_Desc": $("#txtPrdDesc").val()
+            , "PO_DATE": $("#txtPODate").val()
+            , "ORDER_QTY": $("#txtOrderQty").val()
+            , "ORDER_BONUS": $("#txtBonusQty").val()
+            , "DISC_TYPE": $(":radio[name='rdDisc']:checked").val()
+            , "gst_code": $("#ddlGSTCode").val()
+            , "GST_Inc": $("#chkGSTInc").is(":checked") ? "Y": "N"
+            , "OUTLET": $("#ddlOutlet").val()
+            , "GST_Code_Sup": $("#ddlGSTCodeSup").val()
+            , "GST_PUR_Rate": $('#hidGST').val()
+            , "CONV_QTY": $('#txtConvQty').val()
+            , "CONV_UNITCOST": $('#txtConvCost').val()
+            , "CONV_UOM": $('#ddlConvUOM').val()            
+            , "CONTROL_DATETIME": $('#ControlDateTime').val()
+        }; 
+
+        
+        //LLT -- This is for Edit purpose --
+        if ($("#hidID").val().length > 0){
+            $('#jqgridRcvItem').jqGrid('setRowData', $("#hidID").val(), GRNItem);
+        }
+        // -- end edit --
+
+        var hid = $("#jqgridRcvItem").jqGrid('getGridParam', 'data');
+        var arItem = [];        
+        if (hid.length > 0)
+        {
+            //arItem = JSON.parse(hid);
+            arItem = hid;
+        };
+
+        //LLT --This is for Add purpose --
+        if ($("#hidID").val().length === 0){
+            arItem.push(GRNItem);
+        }
+        // -- end add --
+
+        $('#hidRcvItem').val(JSON.stringify(arItem));
+        //alert(JSON.stringify(JSON.parse($('#hidRcvItem').val())));
+        
+        resetModal();
+        $("#ModAddGRN").modal("hide");
+        refreshGrid();
+        checkEditHeader();
+    });
+    
+    function resetModal(){
+        //reset GRN item modal
+        $(':input','#tbGRNItem')
+        .removeAttr('checked')
+        .removeAttr('selected')
+        .not(':button, :submit, :reset, :hidden, :radio, :checkbox')
+        .val('');
+
+        $(":radio[value='P']",'#tbGRNItem').prop("checked",true);
+
+        var tempDate = new Date();
+        var fromDate = $.datepicker.formatDate('yy-mm-dd', new Date(tempDate.getFullYear(), tempDate.getMonth(), tempDate.getDate()));
+        $("#txtExpiry, #txtPODate").val(fromDate); 
+        $("#txtOrderQty, #txtBonusQty, #txtDisc, #txtRcvQty, #txtRcvBonus, #txtCost, #txtGSTAmt, #txtGross, #txtNettTotal").val('0');
+        //end reset
+    };
+    
+    $("#btnCancelItem").click(function(){
+        resetModal();
+        $("#ModAddGRN").modal("hide");
+    });
+    
+    $("#btnAddItem").click(function(){
+        if ($('#ddlCompany').val() === "" || $('#ddlSupplier').val() === ""){
+            alert("Please select company and supplier.");
+        }else{
+            if($('#chkGSTIncGRN').is(':checked'))
+            {
+                $('#chkGSTInc, #chkGSTIncSup').prop('checked',true);
+            }
+            else
+            {
+                $('#chkGSTInc, #chkGSTIncSup').prop('checked',false);
+            }
+            $("#btnLocatePrd").prop("disabled", false);
+            $("#hidID").val('');
+            $("#hidGRNDID").val('0');
+            $('#hidGST').val('0');
+            $("#hidPOL").val('0');
+            $("#GRNHeader").html("&nbsp;Add GRN Item");
+            createOption($("#ddlUOM"), '', '- Select UOM -');
+            $("#ModAddGRN").modal("show");
+        }
+    });
+
+    function calGST(gstRate, unitPrice, GSTIn, DiscType, Qty, DiscVal)
+    { 
+        // gstRate : 0 or 0.06        
+        if (gstRate > '1') {
+            gstRate = gstRate / 100;
+        }
+        
+        var grossTotal = 0, gstAmt = 0, nettTotal = 0;
+        var grossTotal_AfterGst = 0, disc;
+        
+            if(DiscType === 'P'){
+            disc = (unitPrice * Qty) * (DiscVal / 100);          
+        } else {
+            disc = DiscVal;        
+            }      
+                grossTotal = (unitPrice * Qty) - disc;
+        
+        if(GSTIn === "N"){
+            if (gstRate > '0') {
+                gstAmt = grossTotal * gstRate;
+                nettTotal = grossTotal + gstAmt;
+            } else {
+                nettTotal = grossTotal;
+            }
+        } else {
+            if (gstRate > '0') {
+                grossTotal_AfterGst = grossTotal / 106 * 100;
+                gstAmt = grossTotal - grossTotal_AfterGst;
+                nettTotal = grossTotal_AfterGst + gstAmt;
+                
+                grossTotal = grossTotal_AfterGst;
+            } else {
+                nettTotal = grossTotal;
+        }
+        }
+        
+        nettTotal = nettTotal.toFixed(2);
+        grossTotal = grossTotal.toFixed(2);
+        gstAmt = gstAmt.toFixed(2);
+        return {gstAmt : gstAmt, grossTotal : grossTotal, nettTotal : nettTotal};        
+    }
+    
+    function createOption(ddl, arrData, stext) {
+        ddl.html('');
+        ddl.append($("<option>"). 
+        attr("value",'').
+        data("sel", 0).
+        text(stext));
+        
+        if(arrData.length > 0){
+            for(var i=0; i < arrData.length; i++){
+                ddl.append($("<option>"). 
+                attr("value",arrData[i].VALUE).
+                data("sel", 0).
+                text(arrData[i].TEXT));
+            }
+        }
+    }
+    
+    function searchProduct() {
+        showProduct({width: 1000, height: 600}).done(function (rowIn) {
+            // alert(JSON.stringify(rowIn.stk_stockcode));
+            var hid = $("#jqgridRcvItem").jqGrid('getGridParam', 'data');
+            var isDup = false;
+//            if(hid.length > 0){
+//                for(var i=0; i<hid.length; i++){
+//                    if(rowIn.stk_stockcode === hid[i].PRD_Code){
+//                        isDup = true;
+//                        alert('Stock Code: ' + rowIn.stk_stockcode + ' is duplicated. Please choose another code.');
+//                        break;
+//                    }
+//                }
+//            }
+            BindStockUOM(rowIn.stk_stockcode, rowIn.stk_baseuomcode, "");     
+            getStockSupplier(rowIn.stk_stockcode, $("#ddlCompany").val(), $("#ddlSupplier").val());
+            if(isDup === false){                
+                $("#txtPrdCode").val(rowIn.stk_stockcode);
+                $("#txtPrdDesc").val(rowIn.stk_desc);
+                $("#ddlGSTCode").val(rowIn.stk_gstpurcode);
+               //$("#ddlUOM").val(rowIn.stk_baseuomcode); 
+                $('#hidGST').val(rowIn.gst_taxrate);
+               //$('#txtCost').val(rowIn.stk_unitcost);
+            }
+        });
+    };
+    
+    function searchGRN() { 
+        issuloc="";
+        var ddl = $("#ddlOutlet");
+        var ddlLoc = $("#ddlInLocation");
+        var ddlSup = $("#ddlSupplier");
+        showGRN({width: 1000, height: 600}).done(function (rowIn) {
+
+            $("#txtGRNNo").val(rowIn.GRN_No);
+            $("#hidGRNID").val(rowIn.sgrh_grnhdridx);               
+            rowIn.sgrh_intersupplier === "Y" ? $("#chkGenInv").prop("checked",true) : $("#chkGenInv").prop("checked",false);
+            
+            //DO CHANGE CHKBOX            
+            createOption(ddlLoc, '', '- Select Supplier Location -');            
+            if($("#chkGenInv").is(":checked")){
+                $.get('${pageContext.request.contextPath}/Servlet_PopulateData', {SFC: 'GET_DLL', METHOD: 'GET_COMP', P1: '<%= session.getAttribute("CompCode")%>', P2: ''}, function (data) {
+                    var arrData = data;
+                    createOption(ddlSup, arrData, '- Select Supplier -'); 
+                    $("#ddlSupplier").val(rowIn.GRN_SupCode);
+                 });
+            }else{  
+                $.get('${pageContext.request.contextPath}/Servlet_PopulateData', {SFC: 'GET_DLL', METHOD: 'GET_SUPPLIER', P1: '', P2: ''}, function (data) {
+                    var arrData = data;
+                    createOption(ddlSup, arrData, '- Select Supplier -'); 
+                    $("#ddlSupplier").val(rowIn.GRN_SupCode);
+                 });
+            }
+            //END DO CHANGE CHKBOX
+            
+            //DO CHANGE DDLSUP
+            if($("#chkGenInv").is(":checked")){
+                if(rowIn.GRN_SupCode.length > 0){
+                    $.get('${pageContext.request.contextPath}/Servlet_PopulateData', {SFC: 'GET_DLL', METHOD: 'GET_LOCATION', P1: rowIn.GRN_SupCode, P2: ''}, function (data) {
+                        var arrData = data;
+                        createOption(ddlLoc, arrData, '- Select Supplier Location -'); 
+                        $("#ddlInLocation").val(rowIn.sgrh_location);
+                    });
+                }else{
+                    createOption(ddlLoc,'','- Select Supplier Location -');
+                    $("#ddlInLocation").val(rowIn.sgrh_location);
+                }
+               
+                issuloc = rowIn.sgrh_location;   //pengkee 2018aug07
+
+            
+            }
+            //END DO CHANGE DDLSUP
+            
+            //DO CHANGE DDLCOMPANY
+            if(rowIn.GRN_Company.length > 0){
+                 $.get('${pageContext.request.contextPath}/Servlet_PopulateData', {SFC: 'GET_DLL', METHOD: 'GET_LOCATION', P1: rowIn.GRN_Company, P2: ''}, function (data) {
+                    var arrData = data;
+                    createOption(ddl, arrData, '- Select Outlet -'); 
+                 });
+            }
+            else{
+                createOption(ddl, '', '- Select Outlet -'); 
+            }
+            //END DO CHANGE DDLCOMPANY
+            
+            $("#txtDONo").val(rowIn.sgrh_dono);
+            $("#txtRemarks").val(rowIn.sgrh_remark);            
+            $("#txtDODate").val(rowIn.sgrh_dodate);
+            $("#ddlCompany").val(rowIn.GRN_Company);
+            $("#txtInvNo").val(rowIn.sgrh_invno);
+            $("#txtGRNDate").val(rowIn.GRN_Date);
+            $("#txtInvDate").val(rowIn.sgrh_invdate);
+
+            rowIn.sgrh_isgstinclusive === "Y" ? $("#chkGSTIncGRN").prop("checked",true) : $("#chkGSTIncGRN").prop("checked",false);
+            
+            $.get('${pageContext.request.contextPath}/Servlet_GRN', {SFC: 'GET_GRN_LIST', METHOD: 'DETAIL', GRNNUM: rowIn.sgrh_grnhdridx}, function (data) {
+                var arrData = JSON.parse(data);
+
+
+                $('#hidRcvItem').val(JSON.stringify(arrData.rows));
+                refreshGrid();
+                showDisplay(rowIn.GRN_Status); 
+            });
+//        alert($('#ddlCompany').val());
+            $('#ddlCompany').trigger("change");
+
+        });
+    };
+    
+    $("#btnLocatePrd").click(function(){
+        searchProduct(); 
+    });
+    
+    $("#btnEdit").click(function(){
+        var grid = $('#jqgridRcvItem');
+        var ids = grid.jqGrid('getGridParam','selrow');
+        $("#btnLocatePrd").prop("disabled", true);
+
+        if (ids) {
+            var rowData = $('#jqgridRcvItem').jqGrid('getRowData', ids); 
+            BindStockUOM(rowData.PRD_Code, rowData.UOM, rowData.CONV_UOM); 
+            $("#hidID").val(ids);
+            $("#hidGRNDID").val(rowData.GRND_IDX);
+            $("#txtPrdCode").val(rowData.PRD_Code);
+            $("#txtRcvQty").val(rowData.RCV_QTY);
+            $("#txtRcvBonus").val(rowData.RCV_BONUS);
+            $("#ddlUOM").val(rowData.UOM);
+            $("#txtCost").val(rowData.COST);
+            $("#txtGross").val(rowData.GROSS);
+            $("#txtGSTAmt").val(rowData.GST_AMT);
+            $("#txtNettTotal").val(rowData.NETT_AMT);
+            $("#txtDisc").val(rowData.DISC);
+            $("#txtBatch").val(rowData.BATCH);
+            $("#txtExpiry").val(rowData.EXPIRY);
+            $("#txtPO").val(rowData.PO);
+            $("#hidPOL").val(rowData.POLine);
+            $("#txtPrdDesc").val(rowData.PRD_Desc);
+            $("#txtPODate").val(rowData.PO_DATE);
+            $("#txtOrderQty").val(rowData.ORDER_QTY);
+            $("#txtBonusQty").val(rowData.ORDER_BONUS);
+            rowData.DISC_TYPE === "P" ? $(":radio[name='rdDisc'][value='P']").prop("checked", true) : $(":radio[name='rdDisc'][value='A']").prop("checked", true);
+            $("#ddlGSTCode").val(rowData.gst_code);
+            rowData.GST_Inc === "Y" ? $("#chkGSTInc, #chkGSTIncSup").prop("checked", true) : $("#chkGSTInc, #chkGSTIncSup").prop("checked", false);
+            $("#ddlOutlet").val(rowData.OUTLET);
+            $('#hidGST').val(rowData.GST_PUR_Rate);
+            $("#ddlGSTCodeSup").val(rowData.GST_Code_Sup);
+            $("#CONTROL_DATETIME").val( $('#ControlDateTime').val());
+
+            if (rowData.CONV_QTY !== '0.000') {
+                $("#txtConvQty").val(rowData.CONV_QTY);
+            }
+            
+            if (rowData.CONV_UNITCOST !== '0.000') {
+                $("#txtConvCost").val(rowData.CONV_UNITCOST);
+            }
+
+            $("#GRNHeader").html("&nbsp;Edit GRN Item");
+            $("#ModAddGRN").modal("show");
+
+            //$('#jqgridRcvItem').jqGrid('setRowData', ids, rowData);
+            //alert(JSON.stringify(rowData));
+        }
+        else{
+            alert("Please select a record to edit.");
+        }
+    });
+    
+    $("#btnDelete").click(function(){
+        var grid = $('#jqgridRcvItem');
+        var ids = grid.jqGrid('getGridParam','selrow');
+        var rowData = grid.jqGrid('getRowData', ids);
+
+        if (ids) {
+            $.confirm({
+                text: "Are you sure you want to delete this row?",
+                title: "Confirmation required",
+                dialogClass: "modal-dialog modal-sm",
+                confirm: function() {
+                    if(rowData.GRND_IDX !== "0"){
+                        $.ajax({
+                            type: "POST",
+                            url: "${pageContext.request.contextPath}/Servlet_GRN?SFC=DELETE_GRN_DETAIL",
+                            data: {
+                                GRNDIDX: rowData.GRND_IDX
+                        , "CONTROL_DATETIME":  $('#ControlDateTime').val()
+                            },
+                            dataType: 'json',
+                            beforeSend: function () {
+                                $.showLoadingNoStatus();
+                            },
+                            success: function(data) {
+                                var arrReturn = data;                  
+                                $.hideLoadingNoStatus(function () {                    
+                                    if (arrReturn.bool === false) {
+                                        $.bigBoxFail({
+                                            title: "FAILED To Delete GRN item.",
+                                            content: "There is some error during GRN item delete process.<br> Please try again...<br><br>" + arrReturn.msg,
+                                            timeout: 6000
+                                        });
+                                    }else{
+                                        grid.jqGrid('delRowData',ids);
+                                        checkEditHeader();
+                                    }
+                                },500);
+                            }
+                        });
+                    }else{
+                        grid.jqGrid('delRowData',ids);
+                        checkEditHeader();
+                    }    
+                },
+                cancel: function() {
+                    // nothing to do
+                }
+            });
+            //
+        }
+        else{
+            alert("Please select a record to delete.");
+        };
+    });
+    
+    $("#btnRetrivePO").click(function(){    
+        if ($('#ddlCompany').val() === "" || $('#ddlSupplier').val() === ""){
+            alert("Please select company and supplier.");
+        }else{
+            $('#txtPOSearch').val('');
+            $("#jqgridPOItem").jqGrid('clearGridData');
+            $('#txtPOSupplierCode').val($('#ddlSupplier').val());
+            $('#ddlSupplier').val() !== "" ? $('#txtPOSupplier').val($('#ddlSupplier option:selected').text()) : $('#txtPOSupplier').val("");
+            $('#hidComp').val($('#ddlCompany').val());
+
+            $("#jqgridPOItem").jqGrid('setGridParam', {
+                postData: {
+                    SFC: 'GET_PO_LIST',               
+                    SUPCODE: $('#txtPOSupplierCode').val(),
+                    COMPANY: $('#hidComp').val(),
+                    PONO: $('#txtPOSearch').val(),
+                    STATUS: 'OPEN',
+                    DTFROM: '',
+                    DTTO: '',
+                    GRPNO: '',
+                    STKCODE: '',
+                    POSTATUS: '"0","Partial",'    
+                }
+            }).trigger("reloadGrid");
+
+            $("#ModPOItem").modal("show");
+        }
+    });
+    
+    $('#btnSearchPO').click(function(){
+        $("#jqgridPOItem").jqGrid('setGridParam', {
+            postData: {
+                SFC: 'GET_PO_LIST',               
+                SUPCODE: $('#txtPOSupplierCode').val(),
+                COMPANY: $('#hidComp').val(),
+                PONO: $('#txtPOSearch').val(),
+                STATUS: 'OPEN',
+                DTFROM: '',
+                DTTO: '',
+                GRPNO: '',
+                STKCODE: '',
+                POSTATUS: '"0","Partial",'     
+            }
+        }).trigger("reloadGrid");
+    });
+    
+    $('#btnCancelPO').click(function(){
+        $('#txtPOSearch').val('');
+        $("#ModPOItem").modal("hide");
+    });
+    
+    $('#btnSelPO').click(function(){
+        var grid = $('#jqgridPOItem');
+        var ids = grid.jqGrid('getGridParam','selarrrow');
+        if (ids.length>0) {
+            var hid = $("#jqgridRcvItem").jqGrid('getGridParam', 'data');
+            var array = [];
+            if (hid.length > 0){
+                array = hid;
+            };
+            
+            for (var i=0, il=ids.length; i < il; i++) {
+                var gstRate = grid.jqGrid('getCell', ids[i], 'GstTaxRate'),
+                unitPrice = grid.jqGrid('getCell', ids[i], 'UnitCost'),
+                //GSTIn = $('#chkGSTIncGRN').is(':checked') ? "Y" : "N",
+                GSTIn = grid.jqGrid('getCell', ids[i], 'GStInc'),
+                DiscType = grid.jqGrid('getCell', ids[i], 'DiscOpt'),
+                BalQty = grid.jqGrid('getCell', ids[i], 'PODTL_BalanceQty'),
+                DiscVal = grid.jqGrid('getCell', ids[i], 'DiscPerc'),
+                OrderQty = grid.jqGrid('getCell', ids[i], 'Qty'),
+                dataGST,
+                isDup = false;
+
+                if(DiscType === 'A')
+                {
+                    DiscVal = (parseFloat(DiscVal)/OrderQty) * BalQty;
+                }
+                
+                dataGST = calGST(gstRate, unitPrice, GSTIn, DiscType, BalQty, DiscVal);
+
+                var data = {
+                    "GRND_IDX": "0"
+                    , "PRD_Code": grid.jqGrid('getCell', ids[i], 'StkCode')
+                    , "RCV_QTY": BalQty
+                    , "RCV_BONUS": grid.jqGrid('getCell', ids[i], 'RcvQtyBonus') //LLT Modified 2016-05-23  
+                    , "UOM": grid.jqGrid('getCell', ids[i], 'UomCode')
+                    , "COST": unitPrice
+                    , "GROSS": dataGST.grossTotal
+                    , "GST_AMT": dataGST.gstAmt
+                    , "NETT_AMT": dataGST.nettTotal
+                    , "DISC": DiscVal
+                    , "BATCH": ''
+                    , "EXPIRY": $.datepicker.formatDate('yy-mm-dd', new Date())
+                    , "PO": grid.jqGrid('getCell', ids[i], 'PoNo')
+                    , "POLine": grid.jqGrid('getCell', ids[i],'LineNo')
+                    , "PRD_Desc": grid.jqGrid('getCell', ids[i], 'StkDesc')
+                    , "PO_DATE": grid.jqGrid('getCell', ids[i], 'PoDate')
+                    , "ORDER_QTY": OrderQty
+                    , "ORDER_BONUS": grid.jqGrid('getCell', ids[i], 'QtyBonus')
+                    , "DISC_TYPE": DiscType
+                    , "gst_code": grid.jqGrid('getCell', ids[i], 'GstPurCode')
+                    , "GST_Inc": GSTIn
+                    , "OUTLET": $("#ddlDefaultOutlet").val()    
+                    //, "OUTLET": grid.jqGrid('getCell', ids[i], 'LocCode')    
+                    , "GST_Code_Sup": ""
+                    , "GST_PUR_Rate" : gstRate
+                    , "CONTROL_DATETIME": $('#ControlDateTime').val()
+                }; 
+                
+                //check duplicate item
+//                if (array.length > 0){
+//                    for(var j=0; j < array.length; j++){
+//                        if(data.PRD_Code === array[j].PRD_Code){
+//                            isDup = true;
+//                            alert('Stock Code: ' + data.PRD_Code + ' is duplicated. This PO '+ data.PO + ' #('+ data.POLine + ') will not be added.');
+//                            break;
+//                        }
+//                    }
+//                }
+                //End check duplicated item
+                
+                if(isDup === false){
+                    array.push(data);  
+                }
+            }           
+
+            $('#hidRcvItem').val(JSON.stringify(array));
+
+            $('#txtPOSearch').val('');
+            $("#ModPOItem").modal("hide");
+            refreshGrid();
+            checkEditHeader();
+        }
+    });
+    
+    $('#btnSave').click(function(){ 
+        
+        //alert($('#ControlDateTime').val());
+        if ($('#ControlDateTime').val() === "") {
+            getCurrDateTime();         
+        }   
+    
+        $("#ddlSupplier, #ddlCompany, #chkGenInv, #ddlInLocation").prop("disabled", false);
+        //check location & UOM
+        for(var i=1; i<=$("#jqgridRcvItem").getRowData().length; i++){
+            $('#jqgridRcvItem').jqGrid('setCell', i, 'CONTROL_DATETIME',  $('#ControlDateTime').val());
+            
+            //RCV_QTY,CONV_UNITCOST,CONV_UOM
+            var conv_qty = $('#jqgridRcvItem').jqGrid('getCell', i,'CONV_QTY');
+            if (conv_qty === '') {
+                var ori_recv_qty = $('#jqgridRcvItem').jqGrid('getCell', i,'RCV_QTY');
+                $('#jqgridRcvItem').jqGrid('setCell', i, 'CONV_QTY', ori_recv_qty);
+            }
+            
+            var conv_unitcost = $('#jqgridRcvItem').jqGrid('getCell', i,'CONV_UNITCOST');
+            
+            if (conv_unitcost === '') {
+                var ori_cost = $('#jqgridRcvItem').jqGrid('getCell', i,'COST');
+                $('#jqgridRcvItem').jqGrid('setCell', i, 'CONV_UNITCOST', ori_cost);
+            }
+            
+            var conv_uom = $('#jqgridRcvItem').jqGrid('getCell', i,'CONV_UOM');
+            if (conv_uom === '') {
+                var ori_uom = $('#jqgridRcvItem').jqGrid('getCell', i,'UOM');
+                $('#jqgridRcvItem').jqGrid('setCell', i, 'CONV_UOM', ori_uom);
+            }
+            
+        }
+        showYesNo({
+           title: "Goods Received...",
+           width: 420,
+           noClose: true,
+           isModal: true,
+           body: [
+               "<br><h4>Are you sure to proceed save GRN Received?<h4><br>"
+           ],
+           show: function () {
+           },
+           Yes: {
+                text: "Yes",
+               opt: function () {           
+                   grnReceived();
+                   hideYesNo();
+                   document.getElementById("btnSave").disabled = false;
+               }
+           },
+           No: {
+               text: "No",
+               opt: function () {
+                   document.getElementById("btnSave").disabled = false;
+                   hideYesNo();
+               }
+           }
+       });
+            
+    });
+        
+        
+    function grnReceived()
+    {        
+        var hid = $("#jqgridRcvItem").jqGrid('getGridParam', 'data');
+        var array = [];
+        var bSave = true;
+        if (hid.length > 0){
+            array = hid;
+        };
+        
+        var $validGRN = $("#form_GRN").valid();
+        if($validGRN === false){
+            bSave = false;
+        }
+        
+        if($("#chkGenInv").is(":checked") && $("#ddlInLocation").val()===""){
+            bSave = false;
+            alert("Please select Intersupplier location.");
+        }
+
+        if(array.length > 0){
+            for(var i=0; i<array.length; i++){
+    
+                if(array[i].OUTLET.length === 0){
+                    bSave = false;
+                    alert('Received location cannot be blanked. Please select location before save.');
+                    break;
+                }
+                
+                if(array[i].UOM.length === 0){
+                    bSave = false;
+                    alert('UOM cannot be blanked. Please select UOM before save.');
+                    break;
+                }           
+            }
+        }else{
+            bSave = false;
+        }
+        
+        if(bSave === true){
+            //do save job
+            var grnmethod;
+            if($("#lblStatus").val()==="NEW"){
+                grnmethod = "ADD";
+            }else{
+                grnmethod = "UPDATE";
+            }
+            $.ajax({
+                type: "POST",
+                url: "${pageContext.request.contextPath}/Servlet_GRN?SFC=INSERT_GRN",
+                data: {
+                     GRNMASTER: JSON.stringify($('#form_GRN').serializeArray()),
+                     GRNDETAIL: JSON.stringify(array),
+                     GRNMETHOD: grnmethod
+                },
+                dataType: 'json',
+                beforeSend: function () {
+                      $.showLoadingNoStatus();
+                },
+                success: function(data) {
+                    issuloc="";//pengkee 2018aug07
+                    var arrReturn = data;                  
+                    $.hideLoadingNoStatus(function () {                    
+                        if (arrReturn.bool === true) {                            
+                            $("#txtGRNNo").val(arrReturn.grnno);
+                            $("#hidGRNID").val(arrReturn.idx);
+                            $.bigBoxSuccess({
+                                title: "GRN SUCCESS CREATED.",
+                                content: "GRN No " + arrReturn.grnno + " " + arrReturn.msg,
+                                timeout: 6000
+                            });
+                            $.get('${pageContext.request.contextPath}/Servlet_GRN', {SFC: 'GET_GRN_LIST', METHOD: 'DETAIL', GRNNUM: arrReturn.idx}, function (data) {
+                                var arrData = JSON.parse(data);
+                                $('#hidRcvItem').val(JSON.stringify(arrData.rows));
+                                refreshGrid();
+                                showDisplay('SAVED');
+                               
+                                //pengkee 2018aug07    
+                                issuloc = $("#ddlInLocation").val();
+                                if(issuloc === null)
+                                {
+                                    issuloc = "";
+                                }
+                                if (issuloc !=="")
+                                {
+                                    CheckServerAvailability(); //pengkee 2018aug07
+                                }
+
+                            });
+                        } else {
+                            $("#ddlSupplier, #ddlCompany, #chkGenInv, #ddlInLocation").prop("disabled", true);
+                            $.bigBoxFail({
+                                title: "FAILED To Create GRN.",
+                                content: "There is some error during GRN creation.<br> Please try again... <br><br>" + arrReturn.msg,
+                                timeout: 6000
+                            });
+                        }
+                    },500);
+                },
+                    error: function (xhr, status, error) {
+                        $.bigBoxFail({
+                            title: "Transaction ERROR",
+                            content: "There is some error occur during GRN received. Please try again later",
+                            timeout: 6000
+                        });
+                    },
+                    complete: function (xhr, status) {
+                         $.hideLoadingNoStatus(function () {
+                            }, 0);
+                }
+            });
+        }
+        else
+        {
+            $.bigBox({
+                title: "Warning!",
+                content: "Please add GRN item proceeed to save!!",
+                color: "#C46A69",
+                //timeout: 6000,
+                icon: "fa fa-warning shake animated",
+                timeout: 6000
+    });
+            document.getElementById("btnSave").disabled = false;
+        }
+        
+    }
+    
+    function showDisplay(sMode){
+$("#lblURLStatus").val("");//pengkee 2018aug07
+//issuloc="";
+        if(sMode === 'CONFIRMED'){ 
+            document.getElementById('btnSave').style.display = 'none';
+            document.getElementById('btnConfirm').style.display = 'none';
+            document.getElementById("btnEditGRN").style.display = 'none';
+            $("#lblStatus").val("CONFIRMED");
+            $('#form_GRN *').prop('disabled',true);
+            $('#btnSearchGRN').prop("disabled",false);
+            $('#btnPrint').show();
+
+        }else if(sMode === 'SAVED'){            
+             
+            var ids = $("#jqgridRcvItem").jqGrid('getDataIDs');
+            if (ids.length > 0){
+                if($('#lblAccess_APPROVE').val() === '1') {
+                    document.getElementById('btnConfirm').style.display = '';
+                    $("#btnConfirm").prop('disabled', false); //pengkee 2018aug07
+                    $("#lblURLStatus").val("");//pengkee 2018aug07
+                    if (issuloc !=="")
+                    {
+                        CheckServerAvailability(); //pengkee 2018aug07
+                    }
+                }             
+            }else{ 
+                document.getElementById('btnConfirm').style.display = 'none';
+            }
+            
+            document.getElementById('btnSave').style.display = 'none';
+            
+            if($('#lblAccess_EDIT').val() === '1') {
+                document.getElementById("btnEditGRN").style.display = '';
+            }           
+            $("#lblStatus").val("SAVED");
+            $('#form_GRN *').prop('disabled',true);
+            $('#btnSearchGRN').prop("disabled",false);
+            document.getElementById("btnPrint").style.display = '';
+            $('#btnPrint').show();
+        }else if(sMode === 'EDIT'){
+            document.getElementById('btnSave').style.display = '';
+            document.getElementById('btnConfirm').style.display = 'none';
+            document.getElementById("btnEditGRN").style.display = 'none';
+            $("#lblStatus").val("EDIT");
+            $('#form_GRN *').prop('disabled',false);
+            
+            if(!$("#chkGenInv").is(":checked")){
+                $('#ddlInLocation').prop("disabled", true);
+            }
+            checkEditHeader();
+            $('#btnPrint').show();
+        }else if(sMode === 'NEW'){
+            document.getElementById('btnSave').style.display = '';
+            document.getElementById('btnConfirm').style.display = 'none';  
+            document.getElementById("btnEditGRN").style.display = 'none';
+            $('#form_GRN *').prop('disabled',false);
+            
+            $(':input','#form_GRN')
+            .removeAttr('checked')
+            .removeAttr('selected')
+            .not(':button, :submit, :reset, :radio, :checkbox')
+            .val('');
+    
+            var tempDate = new Date();
+            var fromDate = $.datepicker.formatDate('yy-mm-dd', new Date(tempDate.getFullYear(), tempDate.getMonth(), tempDate.getDate()));
+            $("#txtDODate, #txtGRNDate, #txtInvDate").val(fromDate); 
+            $("#lblStatus").val("NEW");
+            $("#chkGenInv").change();
+            $("#ddlCompany").change();
+            $("#jqgridRcvItem").jqGrid('clearGridData');
+            $('#btnPrint').hide();
+        }
+    };
+
+    function LoadPrintPreview() {
+        loadScript("js/print-preview.js", function () {          
+            var jObj = {              
+                1: "GET_GRN_REPORT_2",
+                2: "", 
+                3: "", 
+                4: "",
+                5: "", 
+                6: "",
+                7: "",
+                8: "",
+                9: "",
+                10: "",
+                11: "",
+                12: "", 
+                13: "",
+                14: $('#txtGRNNo').val()
+            }; 
+            
+            var param = {};                       
+            var object = {};
+            object.procParam = jObj;
+            object.jasperName = 'GRN_Report_2';
+            object.procString = 'SP_GET_GRN_RPT(?,?,?,?,?,?,?,?,?,?,?,?,?,?)';
+            object.fixParam = param;
+            printToPage(object);                                           
+        });      
+    };
+
+    function CheckServerAvailability() //pengkee 2018Aug07
+        {    
+            $.get('${pageContext.request.contextPath}/Servlet_ApplicationSetting', {SFC: 'GET_LOCATION_URL_STATUS', LOCATION:issuloc}, function (data) {
+            var arrData = String(data);
+
+            if (arrData === 'N'){                 
+                 
+                bServerOK = false;      
+                               
+            }     
+            else
+            {
+                bServerOK = true;
+            }
+              
+             if (bServerOK === false){                 
+                  $("#btnConfirm").prop('disabled', true);
+                 
+                  var sMsg = "Web Server for " + issuloc + " is not available for GRN Confirmation!";
+                  $("#lblURLStatus").val(sMsg);
+ 
+                  
+                   $.bigBoxFail({
+                        title: "Unabe to connect Web Server",
+                        content: sMsg,
+                        timeout: 6000
+                       
+                        });                       
+            }     
+            else
+            {
+
+
+            }
+        });
+            
+        };
+
+    $("#btnConfirm").click(function(){
+        for(var i=1; i<=$("#jqgridRcvItem").getRowData().length; i++){
+            $('#jqgridRcvItem').jqGrid('setCell', i, 'CONTROL_DATETIME',  $('#ControlDateTime').val());
+        }
+
+        showYesNo({
+            title: "Confirm GRN Received...",
+            width: 420,
+            noClose: true,
+            isModal: true,
+            body: [
+                "<br><h4>Are you sure to confirm GRN Received?<h4><br>"
+            ],
+            show: function () {
+            },
+            Yes: {
+                text: "Yes",
+                opt: function () {           
+                    confirmGRN();
+                    hideYesNo();
+                    document.getElementById("btnConfirm").disabled = false;
+                }
+            },
+            No: {
+                text: "No",
+                opt: function () {
+                    document.getElementById("btnConfirm").disabled = false;
+                    hideYesNo();
+                }
+            }
+        });
+
+    });
+        
+    function confirmGRN()
+    {
+        $.ajax({
+            type: "POST",
+            url: "${pageContext.request.contextPath}/Servlet_GRN?SFC=CONFIRM_GRN",
+            data: {
+                GRNIDX: $("#hidGRNID").val(), "CONTROL_DATETIME":  $('#ControlDateTime').val()
+            },
+            dataType: 'json',
+            beforeSend: function () {
+                $.showLoadingNoStatus();
+            },
+            success: function(data) {
+                var arrReturn = data;                                      
+                if (arrReturn.bool === true) {
+                    //start PO fulfill update
+                    $.ajax({
+                        type: "POST",
+                        url: "${pageContext.request.contextPath}/Servlet_PurchaseOrder?SFC=UPDATE_PO_FULFILL",
+                        data: {
+                            GRNIDX: $("#hidGRNID").val()
+                        },
+                        dataType: 'json',                  
+                        success: function(data) {
+                            var arrReturn_PO = data;                  
+                            $.hideLoadingNoStatus(function () {                
+                                if (arrReturn_PO.bool === true) {
+                                    $.bigBoxSuccess({
+                                        title: "GRN SUCCESS CONFIRMED.",
+                                        content: "GRN Confirmed",
+                                        timeout: 6000
+                                    });
+                                    showDisplay('CONFIRMED');
+                                } else {
+                                    $.bigBoxFail({
+                                        title: "FAILED To Confirm GRN.",
+                                        content: "There is some error during PO Update.<br> Please try again",
+                                        timeout: 6000
+                                    });
+                                }
+                            },500);
+                        },
+                        error: function() {                         
+                            $.bigBoxFail({
+                                title: "FAILED To Confirm GRN.",
+                                content: "There is some error during PO Update.<br> Please try again",
+                                timeout: 6000
+                            });                          
+                        },
+                        complete: function (xhr, status) {
+                            if (xhr.status === 200) {
+                                $.hideLoadingNoStatus(function () {
+                                   location.reload();
+                                }, 500);
+                            } else {
+                                $.hideLoadingNoStatus(function () {
+                                }, 0);
+                            }
+                        }
+                    });                           
+                } else {
+                    $.hideLoadingNoStatus(function () {   
+                        $.bigBoxFail({
+                            title: "FAILED To Confirm GRN.",
+                            content: "There is some error during GRN confirmation.<br> Please try again... <br><br>" + arrReturn.msg,
+                            timeout: 6000
+                        });
+                    },500);
+                }
+            }
+        });
+    }
+    
+    $("#btnCancel").click(function(){ 
+        showDisplay('NEW');
+    }); 
+    
+    $("#btnEditGRN").click(function(){
+        showDisplay('EDIT');
+    });
+    
+    $('#btnSearchGRN').click(function(){
+        searchGRN();  
+    });
+    
+    function BindStockUOM(stkCode, uom, convUOM) { 
+            $.get('${pageContext.request.contextPath}/Servlet_Stock', {SFC: 'GET_REL_STKUOM', STKCODE: stkCode}, function (data) {
+                myStkUOM = JSON.parse(data);
+
+                //var ddl = $("#ddlUOM");
+                createOption($("#ddlUOM"), myStkUOM.rows, '- Select UOM -');
+                $("#ddlUOM").val(uom);
+                
+                createOption($("#ddlConvUOM"), myStkUOM.rows, '(No Conversion)'); 
+                if (convUOM !== "") {
+                    $("#ddlConvUOM").val(convUOM);
+                }
+            });
+    }
+    
+    function getStockSupplier(stkCode, CompCode, SuppCode){
+        $.get('${pageContext.request.contextPath}/Servlet_Company', {SFC: 'GET_COMP_SUPP_STK', STKCODE: stkCode, COMPCODE: CompCode, SUPPCODE: SuppCode}, function (Compdata) {                                                        
+            var compStkjsonData = JSON.parse(Compdata);                                                         
+
+            if (compStkjsonData.rows.length > 0) {
+                $("#txtCost").val(parseFloat(compStkjsonData.rows[0].UnitCost).toFixed(2));
+            }
+        });
+    }
+    
+    function convertUOM(){
+        var ddlUOM = $("#ddlUOM").val(); 
+        var ddlConvUOM = $("#ddlConvUOM").val();
+                
+        if (ddlConvUOM === "") {
+            $("#txtConvQty, #txtConvCost").val("");
+        }
+        
+        if(ddlConvUOM !== '' && ddlUOM !== ''){
+            var qty = parseInt($("#txtRcvQty").val()) + parseInt($("#txtRcvBonus").val()); 
+            
+            $.get('${pageContext.request.contextPath}/Servlet_Stock', {
+                SFC: 'CONVERT_UOM',   
+                QTY: qty,
+                CURRUOM: ddlConvUOM,
+                PREVUOM: ddlUOM,
+                PRODCODE: $("#txtPrdCode").val(),
+                UNITCOST: $("#txtCost").val()
+            }, function (data) {                 
+                $("#txtConvQty").val(JSON.parse(data).rows[0].RcvQty);
+                $("#txtConvCost").val(JSON.parse(data).rows[0].Cost);
+            });
+        }
+        
+        var gstRate = 
+                $('#hidGST').val(),
+                unitPrice = $('#txtCost').val(),
+                GSTIn = $('#chkGSTInc').is(':checked') ? "Y" : "N",
+                DiscType = $(":radio[name='rdDisc']:checked").val(),
+                Qty = $('#txtRcvQty').val(),
+                DiscVal = $('#txtDisc').val(),
+                dataGST;
+                
+            dataGST = calGST(gstRate, unitPrice, GSTIn, DiscType, Qty, DiscVal);
+            $("#txtGSTAmt").val(dataGST.gstAmt);
+            $("#txtGross").val(dataGST.grossTotal);
+            $("#txtNettTotal").val(dataGST.nettTotal);
+        //$("#ddlUOMPrevious").val($("#ddlUOM").val());           
+    }
+    
+    // ---- THIS IS FOR TEST PURPOSE ONLY
+    $('#btnTest').click(function(){
+        var request = $.ajax({
+                type: "POST",
+                url: "${pageContext.request.contextPath}/Servlet_GRN?SFC=DT_GRN",
+                data: {
+                     GRNIDX: $("#hidGRNID").val()
+                },
+                dataType: 'json',
+                beforeSend: function () {
+                      $.showLoadingNoStatus();
+                },
+                success: function(data) {
+                    var arrReturn = data;                  
+                    $.hideLoadingNoStatus(function () {                    
+                        if (arrReturn.bool === true) {
+                            $.bigBoxSuccess({
+                                title: "GRN SUCCESS CONFIRMED.",
+                                content: "GRN Confirmed",
+                                timeout: 6000
+                            });
+                            showDisplay('CONFIRMED');
+                        } else {
+                            $.bigBoxFail({
+                                title: "FAILED To Confirm GRN.",
+                                content: "There is some error during GRN confirmation.<br> Please try again... <br><br>" + arrReturn.msg,
+                                timeout: 6000
+                            });
+                        }
+                    },500);
+                }
+            });
+    });
+    //END TEST
+</script>

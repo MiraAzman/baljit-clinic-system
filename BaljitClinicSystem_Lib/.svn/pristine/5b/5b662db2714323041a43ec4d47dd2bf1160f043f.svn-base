@@ -1,0 +1,308 @@
+CREATE DEFINER=`root`@`localhost` PROCEDURE `SP_GET_PRODUCT`(
+IN sMethod          varchar(30),
+IN sPrdCode         varchar(2000),
+IN sPrdName         varchar(100),
+IN sPrdGrpFrom      varchar(20),
+IN sPrdGrpTo        varchar(20),
+IN sPrdTypeFrom     varchar(20),
+IN sPrdTypeTo       varchar(20),
+In sPrdCat          varchar(50),
+IN sOrderBy varchar(30),
+IN sPage varchar(10),
+IN sPerPage varchar(10)
+
+)
+BEGIN
+
+
+  DECLARE _statement VARCHAR(8000);
+  DECLARE isString VARCHAR(1);
+
+  SET isString = 'Y';
+
+  IF sMethod = 'GET_PRODUCT_LIST' THEN
+
+   SET _statement = ' SELECT STM.stk_stockidx, STM.stk_stockcode, STM.stk_desc, STM.stk_consumable, STM.stk_groupcode, STM.stk_typecode,
+                             STM.stk_baseuomcode, 
+                      CASE
+                           WHEN STM.stk_consumable=''0'' THEN ''Drug''
+             WHEN STM.stk_consumable=''1'' THEN ''product''
+                           WHEN STM.stk_consumable=''2'' THEN ''consumable''
+                    END AS stk_consumable, STM.stk_gstpurcode, IFNULL(GST.gst_taxrate,0) as gst_taxrate
+                    FROM stkm_stockmaster STM
+                    Left outer join stkm_gstcodemalaysia GST on STM.stk_gstpurcode = GST.gst_code
+                    WHERE STM.stk_stockcode IS NOT NULL ';
+
+   IF (sPrdCode <> '') THEN
+           IF (locate(',',sPrdCode) = 0) THEN
+                    SET _statement = CONCAT(_statement, ' AND STM.stk_stockcode LIKE ',"'%",sPrdCode ,"%' ");
+            ELSE
+                    SET _statement = CONCAT(_statement, ' AND STM.stk_stockcode IN (',sPrdCode, ') ');
+            END IF;
+   END IF;
+
+   IF (sPrdName <> '') THEN
+            SET _statement = CONCAT(_statement, ' AND STM.stk_desc LIKE ',"'%", sPrdName ,"%'", ' ');
+   END IF;
+
+   IF  (sPrdGrpFrom <> '' and sPrdGrpTo <> '') THEN
+         SET _statement = CONCAT(_statement, ' AND STM.stk_groupcode >= ',"'", sPrdGrpFrom ,"'", ' AND stk_groupcode <= ' ,"'", sPrdGrpTo ,"'",' ');
+   END IF;
+
+   IF  (sPrdTypeFrom <> '' and sPrdTypeTo <> '') THEN
+         SET _statement = CONCAT(_statement, ' AND STM.stk_typecode >= ',"'", sPrdTypeFrom ,"'", ' AND stk_typecode <= ' ,"'", sPrdTypeTo ,"'",' ');
+   END IF;
+
+    IF  (sPrdCat <> '') THEN
+         SET _statement = CONCAT(_statement, ' AND STM.stk_consumable = ',"'", sPrdCat ,"'", ' ');
+   END IF;
+
+
+
+
+    IF sOrderBy <> ''  THEN
+     SET _statement = CONCAT(_statement, 'ORDER BY  ',  sOrderBy);
+   ELSE
+      SET _statement = CONCAT(_statement, 'ORDER BY stk_stockcode ');
+   END IF;
+
+       SET _statement = CONCAT(_statement, ' LIMIT ',  (sPage - 1) * sPerPage, ",", sPerPage );
+
+END IF;
+
+
+IF sMethod = 'COUNT_PRODUCT_LIST' THEN
+
+   SET _statement = ' SELECT Count(STM.stk_stockidx) as Total
+                      FROM stkm_stockmaster STM
+                      Left outer join stkm_gstcodemalaysia GST on STM.stk_gstpurcode = GST.gst_code
+                      WHERE STM.stk_stockcode IS NOT NULL ';
+
+   
+    IF (sPrdCode <> '') THEN
+           IF (locate(',',sPrdCode) = 0) THEN
+                    SET _statement = CONCAT(_statement, ' AND STM.stk_stockcode LIKE ',"'%",sPrdCode ,"%' ");
+            ELSE
+                    SET _statement = CONCAT(_statement, ' AND STM.stk_stockcode IN (',sPrdCode, ') ');
+            END IF;
+   END IF;
+
+   IF (sPrdName <> '') THEN
+    SET _statement = CONCAT(_statement, ' AND STM.stk_desc LIKE ',"'%", sPrdName ,"%'", ' ');
+   END IF;
+
+   IF  (sPrdGrpFrom <> '' and sPrdGrpTo <> '') THEN
+         SET _statement = CONCAT(_statement, ' AND STM.stk_groupcode >= ',"'", sPrdGrpFrom ,"'", ' AND stk_groupcode <= ' ,"'", sPrdGrpTo ,"'",' ');
+   END IF;
+
+    IF  (sPrdTypeFrom <> '' and sPrdTypeTo <> '') THEN
+         SET _statement = CONCAT(_statement, ' AND STM.stk_typecode >= ',"'", sPrdTypeFrom ,"'", ' AND stk_typecode <= ' ,"'", sPrdTypeTo ,"'",' ');
+   END IF;
+
+    IF  (sPrdCat <> '') THEN
+         SET _statement = CONCAT(_statement, ' AND STM.stk_consumable = ',"'", sPrdCat ,"'", ' ');
+   END IF;
+
+
+
+
+END IF;
+
+
+IF sMethod = 'PRODUCT_DETAIL' THEN
+
+   SET _statement = ' SELECT SM.stk_stockidx, SM.stk_stockcode, SM.stk_desc, SM.stk_barcode, SM.stk_shortname,
+                      SM.stk_groupcode, PrdGrp.CD_CDDESC as GrpCodeDesc,
+                      SM.stk_typecode, PrdType.CD_CDDESC as PrdTypedesc,
+
+                      SM.stk_accountgroup, AccGrp.CD_CDDESC as AccGrpdesc,
+					  SM.stk_baseuomcode2, SM.stk_unitcost2,
+
+                      SM.stk_baseuomcode, PrdUom.UOM_UOMDESC as UomDesc,
+                      SM.stk_precautioncode, Caution.CD_CDDESC as cautiondesc,
+                      SM.stk_instructioncode, Instruction.CD_CDDESC as InstructionDesc,
+                      SM.stk_durationcode, duration.CD_CDDESC as DurationDesc,
+                      SM.stk_dosagecode, Dosage.CD_CDDESC as dosageDesc,
+                      SM.stk_frequencycode, Freq.CD_CDDESC as FreqDesc,
+                      SM.stk_indicationcode, Indication.CD_CDDESC as IndicationDesc,
+                      SM.stk_consumable, stk_mediafiles, stk_api,  
+                      CASE
+                       WHEN SM.stk_consumable=''0'' THEN ''Drug''
+                       WHEN SM.stk_consumable=''1'' THEN ''product''
+                       WHEN SM.stk_consumable=''2'' THEN ''consumable''
+                      END AS stk_consumableDesc,
+                      SM.stk_gstpurcode as GSTPurCode, SM.stk_gstmedsupcode as GSTMedSupCode, SM.stk_gstotcsupcode as GSTOTCSupCode,
+                      SM.stk_isactive as IsActive, SM.stk_defaultbrandowner as BrandOwner
+                      ,SM.stk_unitcost as UnitCost
+                      FROM stkm_stockmaster SM
+                      Left outer join stkc_codedesc PrdGrp on SM.stk_groupcode = PrdGrp.CD_CDCODE and PrdGrp.CD_CDTYPE = ''STKGRP''
+                      Left outer join stkc_codedesc PrdType on SM.stk_typecode = PrdType.CD_CDCODE and PrdType.CD_CDTYPE = ''STKTYP''
+                        Left outer join stkc_codedesc AccGrp on SM.stk_accountgroup = AccGrp.CD_CDCODE and AccGrp.CD_CDTYPE = ''ACCGRP''
+                      Left outer join stkc_codedesc Caution on SM.stk_precautioncode = Caution.CD_CDCODE and Caution.CD_CDTYPE = ''DCAU''
+                      Left outer join stkc_codedesc Instruction on SM.stk_instructioncode = Instruction.CD_CDCODE and Instruction.CD_CDTYPE = ''DINS''
+                      Left outer join stkc_codedesc duration on SM.stk_durationcode = duration.CD_CDCODE and duration.CD_CDTYPE = ''DDUR''
+                      Left outer join stkc_codedesc Freq on SM.stk_frequencycode = Freq.CD_CDCODE and Freq.CD_CDTYPE = ''DFRQ''
+                      Left outer join stkc_codedesc Dosage on SM.stk_dosagecode = Dosage.CD_CDCODE and Dosage.CD_CDTYPE = ''DDOS''
+                      Left outer join stkc_codedesc Indication on SM.stk_indicationcode = Indication.CD_CDCODE and Indication.CD_CDTYPE = ''DIND''
+                      Left outer join stkm_stockuom PrdUom on SM.stk_baseuomcode = PrdUom.UOM_UOMCODE
+                      WHERE SM.stk_stockcode IS NOT NULL';
+
+   IF (sPrdCode <> '') THEN
+    SET _statement = CONCAT(_statement, ' AND stk_stockcode = ',"'",sPrdCode ,"'", ' ');
+   END IF;
+
+
+
+
+
+
+END IF;
+
+
+IF sMethod = 'PRODUCT_UOMCONV' THEN
+
+   SET _statement = ' SELECT STKUOM.uomc_uomconvidx, STKUOM.uomc_stockcode, SM.STK_DESC,
+                      STKUOM.UOMC_ConvUOMCODE, ConvUOM.UOM_UOMDESC as ConvUOMDesc,
+                      STKUOM.uomc_baseuomcode, BaseUOM.UOM_UOMDESC as BaseUOMDesc,
+                      TRUNCATE(STKUOM.uomc_convfactor,2) AS uomc_convfactor
+                      FROM stkm_uomconversion STKUOM
+                      Left outer join stkm_stockuom BaseUOM on STKUOM.uomc_baseuomcode = BaseUOM.UOM_UOMCODE
+                      Left outer join stkm_stockuom ConvUOM on STKUOM.UOMC_ConvUOMCODE = ConvUOM.UOM_UOMCODE
+                      left outer join stkm_stockmaster SM on SM.stk_stockcode = STKUOM.uomc_stockcode
+                      WHERE STKUOM.uomc_stockcode IS NOT NULL';
+
+   IF (sPrdCode <> '') THEN
+    SET _statement = CONCAT(_statement, ' AND STKUOM.uomc_stockcode = ',"'",sPrdCode ,"'", ' ');
+   END IF;
+
+END IF;
+
+IF sMethod = 'COUNT_PRODUCT_UOMCONV' THEN
+
+   SET _statement =  'SELECT COUNT(STKUOM.uomc_uomconvidx) AS Total
+                      FROM stkm_uomconversion STKUOM
+                      Left outer join stkm_stockuom BaseUOM on STKUOM.uomc_baseuomcode = BaseUOM.UOM_UOMCODE
+                      Left outer join stkm_stockuom ConvUOM on STKUOM.UOMC_ConvUOMCODE = ConvUOM.UOM_UOMCODE
+                      left outer join stkm_stockmaster SM on SM.stk_stockcode = STKUOM.uomc_stockcode
+                      WHERE STKUOM.uomc_stockcode IS NOT NULL ';
+
+   IF (sPrdCode <> '') THEN
+    SET _statement = CONCAT(_statement, ' AND STKUOM.uomc_stockcode = ',"'",sPrdCode ,"'", ' ');
+   END IF;
+
+END IF;
+
+
+IF sMethod = 'PRODUCT_PRICE' THEN
+
+   SET _statement = 'SELECT SPRC.sprc_stockcode, SM.STK_DESC,
+                     SPRC.sprc_priceidx, TRUNCATE(SPRC.sprc_unitprice,2) AS sprc_unitprice, SPRC.sprc_uomcode, UOM.uom_uomdesc, SPRC.sprc_factor,
+                     TRUNCATE(SPRC.sprc_unitprice2,2) AS sprc_unitprice2, TRUNCATE(SPRC.sprc_unitprice3,2) AS sprc_unitprice3, TRUNCATE(SPRC.sprc_unitprice4,2) AS sprc_unitprice4
+                     FROM stkm_stockprices SPRC
+                     Left outer join stkm_stockmaster SM on SM.stk_stockcode = SPRC.sprc_stockcode
+                     Left outer join stkm_stockuom UOM on UOM.UOM_UOMCODE = SPRC.SPRC_UOMCODE
+                     Where SPRC.sprc_stockcode IS NOT NULL ';
+
+   IF (sPrdCode <> '') THEN
+    SET _statement = CONCAT(_statement, ' AND SPRC.sprc_stockcode = ',"'",sPrdCode ,"'", ' ');
+   END IF;
+
+END IF;
+
+IF sMethod = 'COUNT_PRODUCT_PRICE' THEN
+
+   SET _statement = 'SELECT COUNT(SPRC.SPRC_PriceIDX) AS Total
+                     FROM stkm_stockprices SPRC
+                     Left outer join stkm_stockmaster SM on SM.stk_stockcode = SPRC.sprc_stockcode
+                     Left outer join stkm_stockuom UOM on UOM.UOM_UOMCODE = SPRC.SPRC_UOMCODE
+                     Where SPRC.sprc_stockcode IS NOT NULL ';
+
+   IF (sPrdCode <> '') THEN
+    SET _statement = CONCAT(_statement, ' AND SPRC.sprc_stockcode = ',"'",sPrdCode ,"'", ' ');
+   END IF;
+
+END IF;
+
+IF sMethod = 'GET_DATAEX' THEN
+ SET isString = 'N';
+    
+    SELECT * FROM stkm_stockmaster WHERE stk_stockcode = sPrdCode;
+    
+    SELECT * FROM stkm_stockprices WHERE sprc_stockcode = sPrdCode;
+    
+    SELECT * FROM stkm_uomconversion WHERE uomc_stockcode = sPrdCode;
+    
+    
+    /* SELECT IFNULL(wsc_url,'') AS wsc_url FROM wsm_config WHERE wsc_url is not null AND wsc_url <> ''; */
+    SELECT IFNULL(wsc_url,'') AS wsc_url, IFNULL(wsc_companycode,'') AS wsc_companycode
+  , IFNULL(wsc_locationcode,'') AS wsc_locationcode
+  FROM wsm_config; /* WHERE wsc_url is not null AND wsc_url <> ''; */
+END IF;
+
+IF sMethod = 'GET_DATAEX_LOC' THEN
+        SET isString = 'N';
+
+        SELECT * FROM stkm_stockmaster WHERE stk_stockcode = sPrdCode;
+
+        SELECT * FROM stkm_stockprices WHERE sprc_stockcode = sPrdCode;
+
+        SELECT * FROM stkm_uomconversion WHERE uomc_stockcode = sPrdCode;
+END IF;
+
+IF sMethod = 'SEARCH_PRODUCT_LIST' THEN
+
+   SET _statement = ' SELECT STM.stk_stockidx as StkIDX, STM.stk_stockcode as StkCode, STM.stk_desc as StkDesc, STM.stk_consumable, STM.stk_groupcode, STM.stk_typecode,
+                             STM.stk_baseuomcode,
+                      CASE
+                           WHEN STM.stk_consumable=''0'' THEN ''Drug''
+             WHEN STM.stk_consumable=''1'' THEN ''product''
+                           WHEN STM.stk_consumable=''2'' THEN ''consumable''
+                    END AS stk_consumable, STM.stk_gstpurcode, IFNULL(GST.gst_taxrate,0) as gst_taxrate
+                    FROM stkm_stockmaster STM
+                    Left outer join stkm_gstcodemalaysia GST on STM.stk_gstpurcode = GST.gst_code
+                    WHERE STM.stk_stockcode IS NOT NULL ';
+
+   IF (sPrdCode <> '') THEN
+
+                    SET _statement = CONCAT(_statement, ' AND STM.stk_stockcode= ',"'",sPrdCode ,"'", ' ');
+           
+   END IF;
+
+   IF (sPrdName <> '') THEN
+            SET _statement = CONCAT(_statement, ' AND STM.stk_desc LIKE ',"'%", sPrdName ,"%'", ' ');
+   END IF;
+
+
+   SET _statement = CONCAT(_statement, 'ORDER BY stk_stockcode ');
+
+  
+
+
+END IF;
+
+
+IF sMethod = 'CHECK_STOCK' THEN
+
+              
+                     SET _statement = ' Select bal.bal_stockcode, bal.bal_companycode, bal.bal_location From stkm_stockbalance bal ' ;
+                     SET _statement = CONCAT(_statement, ' WHERE bal.bal_stockcode = ',"'",sPrdCode ,"'", ' ');
+                     SET _statement = CONCAT(_statement, ' Group by  bal.bal_stockcode, bal.bal_companycode, bal.bal_location  ');
+
+                
+
+
+
+
+   END IF;
+
+
+
+
+IF isString = 'Y' THEN
+ SET @statement = _statement;
+ PREPARE dynquery FROM @statement;
+ EXECUTE dynquery;
+ DEALLOCATE PREPARE dynquery;
+END IF;
+
+END

@@ -1,0 +1,105 @@
+CREATE DEFINER=`root`@`localhost` PROCEDURE `SP_GET_STOCK_COSTQTY`(
+IN sMethod          varchar(30),
+IN sStkCode         varchar(20),
+IN sConvUOM        varchar(10),
+IN sCompCode        varchar(20),
+IN sLocationCode    varchar(30),
+IN sSortMethod      varchar(10)
+
+)
+BEGIN
+
+
+
+
+
+
+
+
+
+ DECLARE _statement VARCHAR(8000);
+ DECLARE lockTime	VARCHAR(20);
+ DECLARE isString	VARCHAR(1);
+ 
+ SET isString = 'Y';
+
+   IF sMethod = 'GET_DETAILS' THEN
+            SET _statement = 'select scq_costqtyidx, scq_companycode,scq_locationcode,scq_stockcode,scq_stockidx,';
+            SET _statement = CONCAT(_statement, 'scq_batchno,scq_expirydate,scq_uomcode,scq_uomidx,');
+            SET _statement = CONCAT(_statement, 'scq_qty,');
+
+            SET _statement = CONCAT(_statement, 'F_CONVERT_UOM(scq_qty,', "'", sConvUOM, "'", ',scq_uomcode,scq_stockcode) AS CONVERTED_QTY,');
+
+
+            SET _statement = CONCAT(_statement, 'createdby,createddt,modifiedby,modifieddt,recstatus,scq_receiveddate,');
+            SET _statement = CONCAT(_statement, 'systemname,scq_unitcost from stkt_costqty ');
+
+            SET _statement = CONCAT(_statement, ' WHERE scq_stockcode = ',"'",sStkCode ,"'" );
+            SET _statement = CONCAT(_statement, ' AND scq_locationcode = ',"'",sLocationCode ,"'" );
+
+            SET _statement = CONCAT(_statement, ' AND scq_companycode = ',"'",sCompCode ,"'" );
+
+            CASE sSortMethod
+            WHEN 'FIFO' THEN
+                    SET _statement = CONCAT(_statement, ' order by scq_receiveddate ' );
+            WHEN 'LIFO' THEN
+                    SET _statement = CONCAT(_statement, ' order by scq_receiveddate desc' );
+            WHEN 'EXPIRYDATE' THEN
+                    SET _statement = CONCAT(_statement, ' order by scq_expirydate' );
+            ELSE
+                    SET _statement = CONCAT(_statement, ' order by scq_receiveddate' );
+            END CASE;
+
+   END IF;
+   
+   IF sMethod = 'GET_DATAEX' THEN
+			SET lockTime = now();
+			SET isString = 'N';
+
+            UPDATE stkt_costqty LEFT OUTER JOIN wsm_config
+			ON scq_locationcode = wsc_locationcode
+            SET dataexchangelocked = lockTime
+            WHERE dataexchangestatus = 'I'  AND wsc_locationcode IS NOT NULL;
+
+			SELECT stkt_costqty.*, IFNULL(wsc_locationcode,'') as wsc_locationcode, IFNULL(wsc_url,'') as wsc_url,
+            IFNULL(wsc_userid,'') as wsc_userid, IFNULL(wsc_password,'') as wsc_password, scq_locationcode as Location
+            FROM stkt_costqty LEFT OUTER JOIN wsm_config
+			ON scq_locationcode = wsc_locationcode
+            WHERE dataexchangestatus = 'I' AND dataexchangelocked = lockTime;
+
+            SELECT DISTINCT scq_locationcode as Location, wsc_url, wsc_userid, wsc_password
+            FROM stkt_costqty LEFT OUTER JOIN wsm_config
+			ON scq_locationcode = wsc_locationcode
+            WHERE dataexchangestatus = 'I' AND dataexchangelocked = lockTime AND wsc_locationcode IS NOT NULL;
+
+   END IF;
+   IF sMethod = 'GET_DATAEX_24APR2017' THEN
+			SET lockTime = now();
+			SET isString = 'N';
+
+            UPDATE stkt_costqty LEFT OUTER JOIN wsm_config
+			ON scq_locationcode = wsc_locationcode
+            SET dataexchangelocked = lockTime
+            WHERE dataexchangestatus = 'I' AND (dataexchangelocked is null) AND wsc_locationcode IS NOT NULL;
+            
+			SELECT stkt_costqty.*, IFNULL(wsc_locationcode,'') as wsc_locationcode, IFNULL(wsc_url,'') as wsc_url,
+            IFNULL(wsc_userid,'') as wsc_userid, IFNULL(wsc_password,'') as wsc_password, scq_locationcode as Location
+            FROM stkt_costqty LEFT OUTER JOIN wsm_config
+			ON scq_locationcode = wsc_locationcode
+            WHERE dataexchangestatus = 'I' AND dataexchangelocked = lockTime;
+            
+            SELECT DISTINCT scq_locationcode as Location, wsc_url, wsc_userid, wsc_password
+            FROM stkt_costqty LEFT OUTER JOIN wsm_config
+			ON scq_locationcode = wsc_locationcode
+            WHERE dataexchangestatus = 'I' AND dataexchangelocked = lockTime AND wsc_locationcode IS NOT NULL;
+            
+   END IF;
+
+
+IF isString = 'Y' THEN
+	SET @statement = _statement;
+	PREPARE dynquery FROM @statement;
+	EXECUTE dynquery;
+	DEALLOCATE PREPARE dynquery;
+END IF;
+END

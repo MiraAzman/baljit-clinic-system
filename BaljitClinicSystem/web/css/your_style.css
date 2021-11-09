@@ -1,0 +1,261 @@
+/*
+ * It is advised not to edit the smartadmin_production.css
+ * as this will override any changes you make in the 
+ * later versions of this theme. 
+ * 
+ * We advise that you use use this CSS to override 
+ * SmartAdmin styles. 
+ * 
+ * Rename the stylesheet to whatever your liking so it will stay
+ * unique to you with each update of SmartAdmin.
+ */
+
+/*
+ * INDEX
+ * 
+ * - HTML
+ * - BODY
+ * - CUSTOM STYLES
+ */
+
+/*.searchbox-text{
+    background: url("../img/toolbar_find.png") top right no-repeat;
+    background-size: 16px 16px;
+    height:25px;
+    padding-right:20px;
+}*/
+
+.searchbox-text{
+    background: url("../img/toolbar_find.png") right no-repeat;
+    background-color: white;
+    background-size: 24px 24px;
+    border: 1px solid #999; 
+    outline:0; 
+    padding-left: 25px;
+    padding-right: 25px;
+    height:30px;
+    min-width: 125px;
+    max-width: 300px;
+    width: 100%;
+}
+
+.searchbox-date{
+    background: url("../img/calander.png") right no-repeat;
+    background-color: white;
+    background-size: 28px 28px;
+    border: 1px solid #999; 
+    outline:0; 
+    padding-left: 25px;
+    padding-right: 25px;
+    height:30px;
+    min-width: 125px;
+    max-width: 300px;
+    width: 100%;
+    cursor: pointer;
+}
+
+.searchbox-select{
+    background-color: white;
+    /*background-size: 24px 24px;*/
+    border: 1px solid #cfcfcf; 
+    outline:0; 
+    padding-left: 25px;
+    padding-right: 25px;
+    height:30px;
+    min-width: 125px;
+    max-width: 300px;
+    width: 100%;
+    cursor: pointer;
+    box-shadow: inset 1px 4px 9px -9px;
+}
+
+.textarea-remark{
+    height:60px;
+    min-width: 125px;
+    max-width: 300px;
+    max-height: 200px;
+    width: 100%;
+    padding-left: 25px;
+    padding-right: 25px;
+    padding-top: 10px;
+}
+
+.textarea-display {
+    height:'auto';
+    min-width: 125px;
+    max-width: 300px;
+    width: 100%;
+    padding-left: 25px;
+    padding-right: 25px;
+    padding-top: 10px;
+    padding-bottom: 10px;
+    resize: none;
+}
+
+.display-text{
+    background-color: white;
+    background-size: 24px 24px;
+    border: 1px solid #999; 
+    outline:0; 
+    padding-left: 25px;
+    padding-right: 25px;
+    height:30px;
+    min-width: 125px;
+    max-width: 300px;
+    width: 100%;
+}
+
+.checkboxes label {
+    display: block;
+    float: left;
+    padding-right: 10px;
+    white-space: nowrap;
+}
+.checkboxes input {
+    vertical-align: middle;
+}
+.checkboxes label span {
+    vertical-align: middle;
+    padding-right: 10px;
+}
+
+.label-option{
+    width: 140px;
+    text-align: center;
+    cursor: pointer;
+}
+
+.selection-criteria{
+    width: 100%;
+    max-width: 1200px;
+    //background-color: #008DC4;
+}
+
+.selection-criteria td {
+    padding: 7px;
+}
+
+.selection-criteria tr td:not(:last-child){
+
+}
+
+.selection-criteria tr:last-child td,.selection-criteria tr:last-child th{
+    padding-bottom: 20px;
+}
+
+.selection-criteria th {
+    padding: 7px;
+    width:1%;
+    white-space:nowrap;
+}
+
+.search-button {
+    padding: 5px;
+    padding-bottom: 20px;
+    float:right;
+}
+
+.centered {
+    width: 80%;
+    height: 80%;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    margin-top: -50px;
+    margin-left: -200px;
+}
+
+.button-function{
+    padding: 5px;
+    margin-bottom: 5px;
+}
+
+.jqgrid-table{
+    width: 100%;
+    padding: 5px;
+    margin-bottom: 10px;
+}
+
+.jqgrid-table-nopadding{
+    width: 100%;
+}
+
+.pg-input{
+    background-color: white;
+    background-size: 24px 24px;
+    border: 1px solid #999; 
+    outline:0;
+    height: 25px;
+}
+
+.select-action-button{
+    display: inline-block;
+    height: 25px;
+    width: 100%;
+    outline: none;
+    color: #74646e;
+    border: 1px solid #C8BFC4;
+    border-radius: 4px;
+    box-shadow: inset 1px 1px 2px #ddd8dc;
+    background: #fff;
+}
+
+.account-display{
+    width: 100%;
+    max-width: 1200px;
+    //background-color: #008DC4;
+}
+
+.account-display td {
+    padding: 0px;
+}
+
+.account-display tr td:not(:last-child){
+
+}
+
+.account-display tr:last-child td,.account-display tr:last-child th{
+    padding-bottom: 20px;
+}
+
+.account-display th {
+    padding: 0px;
+    padding-right: 10px;
+    width:1%;
+    white-space: nowrap;
+}
+
+.display-label{
+    background-color: white;
+    border: 0px solid #999; 
+    outline:0; 
+    padding-left: 25px;
+    padding-right: 25px;
+    height:30px;
+    min-width: 125px;
+    max-width: 150px;
+    width: 100%;
+    text-align: right;
+}
+
+/*input[type=checkbox] {
+    display:none;
+}
+
+input[type=checkbox] + label
+{
+    background: url("../img/check_radio_sheet.png") 1px no-repeat;
+    background-size: 410% 100%;
+    height: 16px;
+    width: 16px;
+    margin-top: 7px;
+}
+
+input[type=checkbox]:checked + label
+{
+    background: url("../img/check_radio_sheet.png") -13.5px no-repeat;
+    background-size: 410% 100%;
+    height: 16px;
+    width: 16px;
+    margin-top: 7px;
+}*/

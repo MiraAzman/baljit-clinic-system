@@ -1,0 +1,364 @@
+CREATE DEFINER=`root`@`localhost` PROCEDURE `SP_TRX_STOCK_LEDGER`(
+IN sMethod            varchar(30),
+IN sStockLedgerHdrIdx INTEGER,
+IN sStockLedgerDtlIdx INTEGER,
+IN sSLDGCompany VARCHAR(10),
+IN sSLDGLocation VARCHAR(10),
+IN sSLDGFinYear INTEGER,
+IN sSLDGFinPeriod INTEGER,
+IN sSLDGReasonCode VARCHAR(6),
+IN sSLDGTrxType VARCHAR(6),
+IN sSLDGSupplierCode VARCHAR(10),
+IN sSLDGInterCompanySupplier VARCHAR(4),
+IN sSLDGDocNo VARCHAR(10),
+IN sSLDGDocDate VARCHAR(25),
+IN sSLDGRefNo VARCHAR(30),
+IN sSLDGRefDate VARCHAR(25),
+IN sSLDGInvNo VARCHAR(30),
+IN sSLDGInvDate VARCHAR(25),
+IN sSLDGDoNo VARCHAR(30),
+IN sSLDGDoDate VARCHAR(25),
+IN sSLDGRemark VARCHAR(100),
+IN sSLDGIsGSTInclusive VARCHAR(1),
+IN sSLDLLineNo INTEGER,
+IN sSLDLStockIdx INTEGER,
+IN sSLDLStockCode VARCHAR(16),
+IN sSLDLUOMCode VARCHAR(6),
+IN sSLDLUOMIdx INTEGER,
+IN sSLDLUnitCost VARCHAR(20),
+IN sSLDLQty VARCHAR(20),
+IN sSLDLDiscAmt VARCHAR(20),
+IN sSLDLSubTotalAmt VARCHAR(20),
+IN sSLDLDiscPercent VARCHAR(20),
+IN sSLDLDiscOption VARCHAR(1),
+IN sSLDLExpiryDate VARCHAR(25),
+IN sSLDLBatchNo VARCHAR(10),
+IN sSLDLPONo VARCHAR(30),
+IN sSLDLLocation VARCHAR(10),
+IN sSLDLPOQty  VARCHAR(20),
+IN sSLDLBonusQty VARCHAR(20),
+IN sSLDLPOBonusQty VARCHAR(20),
+IN sSLDLPOLineNo INTEGER,
+IN sSLDLPOIdx INTEGER,
+IN sSLDLConvUOMIdx INTEGER,
+IN sSLDLConvQty VARCHAR(20),
+IN sSLDLConvUnitCost VARCHAR(20),
+IN sSLDLConvUOMCode VARCHAR(6),
+IN sSLDLUnitPrice VARCHAR(20),
+IN sSLDLGSTPurcode VARCHAR(8),
+IN sSLDLGSTTaxRates VARCHAR(20),
+IN sSLDLGSTAmt VARCHAR(20),
+IN sSLDLGrossTotal VARCHAR(20),
+
+
+IN sSystemName VARCHAR(10),
+
+
+
+
+IN sBy                varchar(10),
+IN sRecStatus         varchar(4),
+
+IN sDataExchangeStatus varchar(2),   
+
+IN sSLDLCurrBal VARCHAR(20),
+IN sControlDateTime   VARCHAR(20),
+OUT Result varchar(30),
+OUT Message varchar(30),
+OUT retStockLedgerHdrIdx INTEGER,
+OUT retStockLedgerDtlIdx INTEGER
+
+)
+BEGIN
+
+        
+
+
+
+
+
+        DECLARE _statement VARCHAR(8000);
+
+        DECLARE dtDocDate DATETIME;
+        DECLARE dtInvDate DATETIME;
+        DECLARE dtDODate DATETIME;
+        DECLARE dtExpDate DATETIME;
+        DECLARE dtRefDate DATETIME;
+
+        DECLARE dt VARCHAR(20);
+
+-- Declare exception handler for failed insert
+        DECLARE code CHAR(5) DEFAULT '00000';
+        DECLARE CONTINUE HANDLER FOR SQLEXCEPTION
+        BEGIN
+                GET DIAGNOSTICS CONDITION 1
+                code = RETURNED_SQLSTATE;
+        END;
+
+        IF sControlDateTime = '' THEN
+                SELECT now() INTO dt;
+        ELSE
+               SELECT sControlDateTime INTO dt;
+        END IF;
+        
+        SET dtDocDate = null;
+        SET dtInvDate = null;
+        SET dtDODate = null;
+        SET dtExpDate = null;
+        SET dtRefDate = null;
+
+
+        IF sSLDGDocDate <> '' THEN
+           SET dtDocDate  = STR_TO_DATE(REPLACE(sSLDGDocDate,"'",''), '%Y-%m-%d %H:%i:%s'); 
+        END IF;
+
+         IF sSLDGInvDate <> '' THEN
+           SET dtInvDate  = STR_TO_DATE(REPLACE(sSLDGInvDate,"'",''), '%Y-%m-%d %H:%i:%s');
+        END IF;
+
+         IF sSLDGDoDate <> '' THEN
+           SET dtDODate  = STR_TO_DATE(REPLACE(sSLDGDoDate,"'",''), '%Y-%m-%d %H:%i:%s');
+        END IF;
+
+        IF sSLDLExpiryDate <> '' THEN
+           SET dtExpDate  = STR_TO_DATE(REPLACE(sSLDLExpiryDate,"'",''), '%Y-%m-%d %H:%i:%s');
+        END IF;
+
+        IF sSLDGRefDate <> '' THEN
+           SET dtRefDate  = STR_TO_DATE(REPLACE(sSLDGRefDate,"'",''), '%Y-%m-%d %H:%i:%s');
+        END IF;
+      
+        IF sSLDLStockIdx = 0 THEN
+			SELECT stk_stockidx
+            FROM stkm_stockmaster
+            WHERE stk_stockcode = sSLDLStockCode
+            INTO sSLDLStockIdx;
+        END IF;
+
+
+        SELECT SUM(F_CONVERT_UOM(stkm_stockbalance.bal_balanceqty, sSLDLUOMCode, stkm_stockbalance.bal_uom,stkm_stockbalance.bal_stockcode))
+                FROM stkm_stockbalance
+         WHERE stkm_stockbalance.bal_stockcode = sSLDLStockCode
+                 AND stkm_stockbalance.bal_companycode = sSLDGCompany
+                 AND stkm_stockbalance.bal_location = sSLDLLocation
+         group by bal_companycode, bal_location,bal_stockcode
+         into @CurrBalanceQty;
+
+         /* AMIRA 2018AUG01 */
+/* AND stkm_stockbalance.bal_location = sSLDGLocation */
+
+        IF sSLDLCurrBal <> '-99999' THEN
+           SET @CurrBalanceQty = sSLDLCurrBal;
+        END IF;
+
+
+        IF sMethod = 'ADD_STOCKLEDGERHEADER' THEN
+
+         
+
+
+
+                  INSERT INTO stkt_stockledgerheader (
+                         sldg_company,
+                         sldg_location,
+                         sldg_finyear,
+                         sldg_finperiod,
+                         sldg_reasoncode,
+                         sldg_trxtype,
+                         sldg_suppliercode,
+                         sldg_intercompanysupplier,
+                         sldg_docno,
+                         sldg_docdate,
+                         sldg_refno,
+                         sldg_refdate,
+                         sldg_invno,
+                         sldg_invdate,
+                         sldg_dono,
+                         sldg_dodate,
+                         sldg_remark,
+                         sldg_isgstinclusive,
+                         systemname,
+
+                         dataexchangestatus,
+                         dataexchangelocked,
+
+                         createdby,
+                         createddt,
+                         recstatus)
+                   VALUES (
+
+
+                        sSLDGCompany,
+                        sSLDGLocation,
+                        sSLDGFinYear,
+                        sSLDGFinPeriod,
+                        sSLDGReasonCode,
+                        sSLDGTrxType,
+                        sSLDGSupplierCode,
+                        sSLDGInterCompanySupplier,
+                        sSLDGDocNo,
+                                dtDocDate,
+                         sSLDGRefNo,
+                                 dtRefDate ,
+                        sSLDGInvNo,
+                                dtInvDate ,
+                           sSLDGDoNo,
+                         dtDODate,
+                        sSLDGRemark,
+                        sSLDGIsGSTInclusive,
+                        sSystemName,
+
+                        sDataExchangeStatus,
+                        null,
+
+                        sBy,
+                        dt,
+                        sRecStatus
+                        );
+
+
+                  SELECT '00000' INTO Result;
+                  SELECT  'Success Inserted' INTO Message;
+
+                  SELECT LAST_INSERT_ID() INTO retStockLedgerHdrIdx;
+                  SELECT 0 INTO retStockLedgerDtlIdx;
+
+                  
+
+        END IF;
+
+        IF sMethod = 'ADD_STOCKLEDGERDETAIL' THEN
+
+
+
+
+             
+
+
+
+
+           INSERT INTO stkt_stockledgerdetail (
+
+
+
+                sldl_stockledgerhdridx,
+
+                sldl_lineno,
+                sldl_stockidx,
+                sldl_stockcode,
+                sldl_uomcode,
+                sldl_uomidx,
+                sldl_unitcost,
+                sldl_qty,
+                sldl_discamt,
+                sldl_subtotalamt,
+                sldl_discpercent,
+                sldl_discoption,
+                sldl_expirydate,
+                sldl_batchno,
+                sldl_pono,
+                sldl_location,
+                sldl_poqty ,
+                sldl_bonusqty,
+                sldl_pobonusqty,
+                sldl_polineno,
+                sldl_poidx,
+                sldl_convuomidx,
+                sldl_convqty,
+                sldl_convunitcost,
+                sldl_convuomcode,
+                sldl_unitprice,
+                sldl_gstpurcode,
+                sldl_gsttaxrates,
+                sldl_gstamt,
+                sldl_grosstotal,
+
+                dataexchangestatus,
+                dataexchangelocked,
+
+                sldl_currentbalance,
+                createdby,
+                createddt,
+                recstatus)
+           VALUES
+           (
+
+                sStockLedgerHdrIdx,
+
+                sSLDLLineNo,
+                sSLDLStockIdx,
+                sSLDLStockCode,
+                sSLDLUOMCode,
+                sSLDLUOMIdx,
+                sSLDLUnitCost,
+                sSLDLQty,
+                sSLDLDiscAmt,
+                sSLDLSubTotalAmt,
+                sSLDLDiscPercent,
+                sSLDLDiscOption,
+                        dtExpDate ,
+                sSLDLBatchNo,
+                sSLDLPONo,
+                sSLDLLocation,
+                sSLDLPOQty ,
+                sSLDLBonusQty,
+                sSLDLPOBonusQty,
+                sSLDLPOLineNo,
+                sSLDLPOIdx,
+                sSLDLConvUOMIdx,
+                sSLDLConvQty,
+                sSLDLConvUnitCost,
+                sSLDLConvUOMCode,
+                sSLDLUnitPrice,
+                sSLDLGSTPurcode,
+                sSLDLGSTTaxRates,
+                sSLDLGSTAmt,
+                sSLDLGrossTotal,
+
+                sDataExchangeStatus,
+                null,
+
+                @CurrBalanceQty,
+
+                sBy,
+                dt,
+                sRecStatus);
+
+
+                  SELECT '00000' INTO Result;
+                  SELECT  'Success Inserted' INTO Message;
+
+                  SELECT LAST_INSERT_ID() INTO retStockLedgerDtlIdx;
+                  SET @retStockLedgerHdrIdx = @sStockLedgerHdrIdx;
+
+
+
+     END IF;
+
+     IF sMethod = 'UPD_DATAEXH' THEN
+		UPDATE stkt_stockledgerheader SET
+        dataexchangestatus = sDataExchangeStatus, dataexchangelocked = null
+        WHERE sldg_stockledgerhdridx = sStockLedgerHdrIdx;
+     END IF;
+     
+     IF sMethod = 'UPD_DATAEXD' THEN
+		UPDATE stkt_stockledgerdetail SET
+        dataexchangestatus = sDataExchangeStatus, dataexchangelocked = null
+        WHERE sldl_stockledgerdtlidx = sStockLedgerDtlIdx;			 
+     END IF;
+
+       -- Check whether the insert was successful
+     IF code <> '00000' THEN
+
+
+                SELECT code INTO Result;
+                SELECT  'Failed to update' INTO Message;
+
+                select 0 into retStockLedgerHdrIdx;
+                select 0 into retStockLedgerDtlIdx;
+
+
+        END IF;
+
+
+END

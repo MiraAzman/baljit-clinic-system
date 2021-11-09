@@ -1,0 +1,489 @@
+var smartApp = angular.module('smartApp', [
+    'ngRoute',
+    //'ngAnimate', // this is buggy, jarviswidget will not work with ngAnimate :(
+    'ui.bootstrap',
+    'plunker',
+    'app.controllers',
+    'app.demoControllers',
+    'app.main',
+    'app.navigation',
+    'app.localize',
+    'app.activity',
+    'app.smartui'
+]);
+
+smartApp.config(['$routeProvider', '$provide', function ($routeProvider, $provide) {
+
+        $routeProvider
+                .when('/', {
+                    redirectTo: '/dashboard'
+                })
+
+                
+                .when('/test_webservices', {
+                    templateUrl: 'views/test_webservices.jsp',
+                    controller: 'PageViewController'
+                })
+
+                /* We are loading our views dynamically by passing arguments to the location url */
+
+                // A bug in smartwidget with angular (routes not reloading). 
+                // We need to reload these pages everytime so widget would work
+                // The trick is to add "/" at the end of the view.
+                // http://stackoverflow.com/a/17588833
+                .when('/dashboard', {
+                    templateUrl: 'views/dashboard.jsp',
+                    controller: 'PageViewController'
+                })
+                
+
+                
+                //Product - Kenji
+                .when('/ProductMasterList', {
+                    templateUrl: 'views/Product/Prd_MasterList.jsp',
+                    controller: 'PageViewController'
+                })
+                
+                .when('/AddNewProduct', {
+                    templateUrl: 'views/Product/Prd_AddEdit.jsp',
+                    controller: 'PageViewController'
+                })
+                
+                .when('/ProductDetail/:PRDCODE', {
+                    templateUrl: 'views/Product/Prd_Detail.jsp',
+                    controller: 'DetailViewController'
+                })
+                
+                //Purchase Order - Kenji
+                .when('/PurchaseOrderList', {
+                    templateUrl: 'views/PurchaseOrder/PO_Listing.jsp',
+                    controller: 'PageViewController'
+                })
+                
+                   .when('/CreatePurchaseOrder', {
+                    templateUrl: 'views/PurchaseOrder/PO_AddEdit.jsp',
+                    controller: 'PageViewController'
+                })
+                
+                //Stock Request - Kenji
+                .when('/StockRequestList', {
+                    templateUrl: 'views/StockRequest/Req_History.jsp',
+                    controller: 'PageViewController'
+                })
+                
+                //LLT 2015-12-16 - Add supplier nav
+                .when('/SupplierMasterList', {
+                    templateUrl: 'views/Supplier/Sup_MasterList.jsp',
+                    controller:'PageViewController'
+                })
+                
+                .when('/SupplierDetail/:SUPCODE',{
+                    templateUrl:'views/Supplier/Sup_Detail.jsp',
+                    controller:'DetailViewController'
+                })
+                
+                .when('/AddNewSupplier',{
+                    templateUrl: 'views/Supplier/Sup_AddEdit.jsp',
+                    controller: 'PageViewController'
+                })
+                //LLT END
+                
+                //LLT 2015-12-28 - Add GRN nav
+                .when('/AddGRNItem',{
+                    templateUrl: 'views/StockReceive/GRN_AddEdit.jsp',
+                    controller: 'PageViewController'
+                })
+                
+                .when('/GRN',{
+                    templateUrl: 'views/StockReceive/GRN.jsp',
+                    controller: 'PageViewController'
+                })
+                .when('/GRN2',{
+                    templateUrl: 'views/StockReceive/GRN_Listing.jsp',
+                    controller: 'PageViewController'
+                })
+                //LLT END Add GRN nav
+                
+                //Stock Transfer List
+                 .when('/NewStockTransfer', {
+                    templateUrl: 'views/StockTransfer/Xfr_HistoryList.jsp',
+                    controller: 'PageViewController'
+                })
+                
+//                 .when('/AddNewStockTransfer', {
+//                    templateUrl: 'views/StockTransfer/Xfr_Add.jsp',
+//                    controller: 'PageViewController'
+//                })
+                  .when('/AddNewStockTransfer', {
+                    templateUrl: 'views/StockTransfer/Xfr_New.jsp',
+                    controller: 'PageViewController'
+                })
+                
+                 .when('/ViewStockTransfer/:HeaderID', {
+                    templateUrl: 'views/StockTransfer/Xfr_Detail.jsp',
+                    controller: 'DetailViewController'
+                })
+                
+//                 .when('/ViewStockTransfer:/:HeaderID', {
+//                    templateUrl: 'views/StockTransfer/Xfr_Details.jsp',
+//                    controller: 'DetailViewController'
+//                })
+                
+                //Stock Despatch List
+                  .when('/StockDespatchList', {
+                    templateUrl: 'views/StockDespatch/Desp_HistoryList.jsp',
+                    controller: 'PageViewController'
+                })
+                
+                 .when('/AddNewStockDespatch', {
+                    templateUrl: 'views/StockDespatch/Desp_Add.jsp',
+                    controller: 'PageViewController'
+                })
+                
+                .when('/StockDespatchDetail/:DESPHDRIDX', {
+                    templateUrl: 'views/StockDespatch/Desp_Detail.jsp',
+                    controller: 'DetailViewController'
+                })
+
+                //Stock Adjustment
+                .when('/StockAdjustmentList', {
+                    templateUrl: 'views/StockAdjustment/Adj_HistoryList.jsp',
+                    controller: 'PageViewController'
+                })
+                .when('/AddNewStockAdjustment', {
+                    templateUrl: 'views/StockAdjustment/Adj_Add.jsp',
+                    controller: 'PageViewController'
+                })
+                .when('/StockAdjustmentDetail/:ADJHDRIDX', {
+                    templateUrl: 'views/StockAdjustment/Adj_Detail.jsp',
+                    controller: 'DetailViewController'
+                })
+
+//Location Setup 
+                .when('/LocationList', {
+                    templateUrl: 'views/MasterSetup/Loc_Listing.jsp',
+                    controller: 'PageViewController'
+                })
+                .when('/AddNewLoc', {
+                    templateUrl: 'views/MasterSetup/Loc_AddNew.jsp',
+                    controller: 'PageViewController'
+                })
+                .when('/LocDetail/:LOCCODE*/:COMPCODE*', {
+                    templateUrl: 'views/MasterSetup/Loc_Detail.jsp',
+                    controller: 'DetailViewController'
+                })
+                
+                .when('/EnvironmentSettings', {
+                    templateUrl: 'views/MasterSetup/SystemEnvSettings_Detail.jsp',
+                    controller: 'PageViewController'
+                })
+                //Company Setup 
+                .when('/CompanyList', {
+                    templateUrl: 'views/MasterSetup/Comp_Listing.jsp',
+                    controller: 'PageViewController'
+                })
+                .when('/AddNewComp', {
+                    templateUrl: 'views/MasterSetup/Comp_AddNew.jsp',
+                    controller: 'PageViewController'
+                })
+                .when('/CompDetail/:COMPCODE', {
+                    templateUrl: 'views/MasterSetup/Comp_Detail.jsp',
+                    controller: 'DetailViewController'
+                })
+
+//Stock Supplier Setup
+                .when('/StockSupplierList/:STKCODE*/:DEFAULTUOM*', {
+                    templateUrl: 'views/MasterSetup/StkSupplier_Detail.jsp',
+                    controller: 'DetailViewController'
+                })
+                
+                .when('/StockSupplier/:STKCODE/:DEFAULTUOM', {
+                    templateUrl: 'views/MasterSetup/StkSupplier_Detail.jsp',
+                    controller: 'DetailViewController'
+                })
+                
+                //Stock Reorder Setup
+                .when('/StockReorderList/:STKCODE*/:DEFAULTUOM*', {
+                    templateUrl: 'views/MasterSetup/StkReorder_Detail.jsp',
+                    controller: 'DetailViewController'
+                })
+                .when('/StockReorder/:STKCODE/:DEFAULTUOM', {
+                    templateUrl: 'views/MasterSetup/StkReorder_Detail.jsp',
+                    controller: 'DetailViewController'
+                })
+               
+               .when('/StockUnitCost/:STKCODE/:DEFAULTUOM', {
+                    templateUrl: 'views/MasterSetup/StkUnitCost.jsp',
+                    controller: 'DetailViewController'
+                })
+                
+               //Code Setup 
+//                .when('/CodeSetupList', {
+//                    templateUrl: 'views/MasterSetup/StkCode_Listing.jsp',
+//                    controller: 'PageViewController'
+//                })
+                
+//                .when('/CodeSetupList/:TYPE*', {
+//                    templateUrl: 'views/MasterSetup/StkCode_Listing.jsp',
+//                    controller: 'PageViewController'
+//                })
+                 .when('/CodeSetupList/:TYPE*', {
+                    templateUrl: 'views/MasterSetup/StkCode_Listing.jsp',
+                    controller: 'DetailViewController'
+                })
+//                .when('/AddNewList/:TYPE*', {
+//                    templateUrl: 'views/MasterSetup/StkCode_AddNew.jsp',
+//                    controller: 'DetailViewController'
+//                })
+//                .when('/CodeDetail/:TYPE*/:CODE*', {
+//                    templateUrl: 'views/MasterSetup/StkCode_Detail.jsp',
+//                    controller: 'DetailViewController'
+//                })
+                
+                .when('/AddNewList/:TYPE*/:DESC*', {
+                    templateUrl: 'views/MasterSetup/StkCode_AddNew.jsp',
+                    controller: 'DetailViewController'
+                })
+                .when('/CodeDetail/:TYPE*/:CODE*/:DESC*', {
+                    templateUrl: 'views/MasterSetup/StkCode_Detail.jsp',
+                    controller: 'DetailViewController'
+                })
+                
+                //User Setup 
+                .when('/UserList', {
+                    templateUrl: 'views/MasterSetup/User_Listing.jsp',
+                    controller: 'PageViewController'
+                })
+                .when('/AddNewUser', {
+                    templateUrl: 'views/MasterSetup/User_AddNew.jsp',
+                    controller: 'PageViewController'
+                })
+                .when('/UserDetail/:CODE*', {
+                    templateUrl: 'views/MasterSetup/User_Detail.jsp',
+                    controller: 'DetailViewController'
+                }) 
+                
+                //reports
+                .when('/StockBalanceReport', {
+                    templateUrl: 'views/Report/StkBalance_Report.jsp',
+                    controller: 'PageViewController'
+                })
+                
+                .when('/StockMovementReport', {
+                    templateUrl: 'views/Report/StkMovement_Report.jsp',
+                    controller: 'PageViewController'
+                })
+                
+                .when('/AddNewRequest', {
+                    templateUrl: 'views/StockRequest/Add_Req.jsp',
+                    controller: 'PageViewController'
+                })
+                .when('/StockStatusReport', {
+                    templateUrl: 'views/Report/StkStatus_Report.jsp',
+                    controller: 'PageViewController'
+                })
+                .when('/StockSalesReport', {
+                    templateUrl: 'views/Report/StkSales_Report.jsp',
+                    controller: 'PageViewController'
+                })
+                 .when('/StockRequestReport', {
+                    templateUrl: 'views/Report/StkRequest_Report.jsp',
+                    controller: 'PageViewController'
+                })
+                .when('/StockTransferReport', {
+                    templateUrl: 'views/Report/StkTransfer_Report.jsp',
+                    controller: 'PageViewController'
+                })
+                .when('/StockDespatchReport', {
+                    templateUrl: 'views/Report/StkDespatch_Report.jsp',
+                    controller: 'PageViewController'
+                })
+                .when('/StockSalesReportHIS', {
+                    templateUrl: 'views/Report/StkSales_Report_HIS.jsp',
+                    controller: 'PageViewController'
+                })
+                .when('/ItemSalesReportHIS', {
+                    templateUrl: 'views/Report/ItemSales_Report_HIS.jsp',
+                    controller: 'PageViewController'
+                })
+                .when('/GRNReport2', {
+                    templateUrl: 'views/Report/GRN_Report2.jsp',
+                    controller: 'PageViewController'
+                })
+                .when('/POReport', {
+                    templateUrl: 'views/Report/PO_Report.jsp',
+                    controller: 'PageViewController'
+                })
+                .when('/StkPerformanceReport', {
+                    templateUrl: 'views/Report/Stk_Performance_Report.jsp',
+                    controller: 'PageViewController'
+                })
+                .when('/TopRequestedStkRpt', {
+                    templateUrl: 'views/Report/Top_Requested_Stk_Report.jsp',
+                    controller: 'PageViewController'
+                })
+                .when('/TopDispensedStkRpt', {
+                    templateUrl: 'views/Report/Top_Dispensed_Stk_Report.jsp',
+                    controller: 'PageViewController'
+                })
+                .when('/TopActiveStkRpt', {
+                    templateUrl: 'views/Report/Top_Active_Stk_Report.jsp',
+                    controller: 'PageViewController'
+                })
+        
+        //  Add UOM nav
+                .when('/UOMMasterList', {
+                    templateUrl: 'views/MasterSetup/StkUOM_MasterList.jsp',
+                    controller:'PageViewController'
+                })
+                
+                .when('/UOMDetail/:UOMCODE',{
+                    templateUrl:'views/MasterSetup/StkUOM_Detail.jsp',
+                    controller:'DetailViewController'
+                })
+                
+                .when('/AddNewUOM',{
+                    templateUrl: 'views/MasterSetup/StkUOM_AddEdit.jsp',
+                    controller: 'PageViewController'
+                })
+                //  END
+                
+                //Role 
+                .when('/RoleList', {
+                    templateUrl: 'views/RoleSetup/RoleSearch.jsp',
+                    controller: 'PageViewController'
+                })
+                
+                .when('/AddRole', {
+                    templateUrl: 'views/RoleSetup/RoleAdd.jsp',
+                    controller: 'PageViewController'
+                })
+                
+                 //MenuList 
+                .when('/MenuList', {
+                    templateUrl: 'views/RoleSetup/RoleSearch.jsp',
+                    controller: 'PageViewController'
+                })
+                
+                .when('/StockReturnList', {
+                    templateUrl: 'views/StockReturn/Ret_HistoryList.jsp',
+                    controller:'PageViewController'
+                })
+                
+                .when('/AddNewStockReturn', {
+                    templateUrl: 'views/StockReturn/Ret_Add.jsp',
+                    controller: 'PageViewController'
+                })
+                
+                .when('/StockReturnDetail/:RETHDRIDX', {
+                    templateUrl: 'views/StockReturn/Ret_Detail.jsp',
+                    controller: 'DetailViewController'
+                })
+                
+                .when('/GRNReport', {
+                    templateUrl: 'views/Report/GRN_Report.jsp',
+                    controller: 'PageViewController'
+                })
+                
+                /* pengkee 2017Dec20 */
+                .when('/GSTInputListingReport', {
+                    templateUrl: 'views/Report/GSTInputListing_Report.jsp',
+//                    templateUrl: 'views/Report/GRN_Report.jsp',
+                    controller: 'PageViewController'
+                })
+                
+                //Pricing Setup 
+                .when('/ChargeItemList', {
+                    templateUrl: 'views/ChargeItem/CHGItem_Listing.jsp',
+                    controller: 'PageViewController'
+                })
+//                .when('/AddNewChargeItem/:CATEGORY*', {
+//                    templateUrl: 'views/ChargeItem/CHGItem_Add.jsp',
+//                    controller: 'DetailViewController'
+//                })
+                //Aaron
+                .when('/AddNewChargeItem/:CATEGORY*/:DESC*', {   //path01
+                    templateUrl: 'views/ChargeItem/CHGItem_Add.jsp',
+                    controller: 'DetailViewController'
+                })
+//                .when('/ChargeItemDetail/:IDX*/:CATEGORY*', {
+//                    templateUrl: 'views/ChargeItem/CHGItem_Detail.jsp',
+//                    controller: 'DetailViewController'
+//                })
+                //Aaron
+                .when('/ChargeItemDetail/:IDX*/:CATEGORY*/:DESC*', { //path01
+                    templateUrl: 'views/ChargeItem/CHGItem_Detail.jsp',
+                    controller: 'DetailViewController'
+                })
+                
+                //LLT 2016-07-27 - Add Package nav
+                .when('/ChargePackageList', {
+                    templateUrl: 'views/ChargePackageItem/CHGPackage_Listing.jsp',
+                    controller:'PageViewController'
+                })
+                
+                .when('/AddNewPackage',{
+                    templateUrl: 'views/ChargePackageItem/CHGPackage_Add.jsp',
+                    controller: 'PageViewController'
+                })
+                
+                .when('/PackageDetail/:PACKCODE',{
+                    templateUrl:'views/ChargePackageItem/CHGPackage_Detail.jsp',
+                    controller:'DetailViewController'
+                })
+                //LLT END
+                
+               .when('/StockReturnReport', {
+                    templateUrl: 'views/Report/StockReturnReport.jsp',
+                    controller: 'PageViewController'
+                })                
+                .when('/ChangePassword', {
+                    templateUrl: 'views/MasterSetup/User_Change_Password.jsp',
+                    controller: 'PageViewController'
+                })               
+                .when('/ManageStkReqTemplate', {
+                    templateUrl: 'views/StockRequest/Manage_Req_Template.jsp',
+                    controller: 'PageViewController'
+                })
+                .when('/AddReqByTemplate', {
+                    templateUrl: 'views/StockRequest/Add_Req_By_Template.jsp',
+                    controller: 'PageViewController'
+                })
+                .when('/ReqByTemplateDetail/:IDX',{
+                    templateUrl:'views/StockRequest/Req_By_Template_Detail.jsp',
+                    controller:'DetailViewController'
+                })
+                .when('/ManageSpecialReqRemarks', {
+                    templateUrl: 'views/StockRequest/Manage_Special_Req_Remarks.jsp',
+                    controller: 'PageViewController'
+                })
+                .when('/ReqByTemplateList', {
+                    templateUrl: 'views/StockRequest/Req_By_Template_List.jsp',
+                    controller: 'PageViewController'
+                })
+                
+                
+                .otherwise({
+                    redirectTo: '/dashboard'
+                });
+                
+
+        // with this, you can use $log('Message') same as $log.info('Message');
+        $provide.decorator('$log', ['$delegate',
+            function ($delegate) {
+                // create a new function to be returned below as the $log service (instead of the $delegate)
+                function logger() {
+                    // if $log fn is called directly, default to "info" message
+                    logger.info.apply(logger, arguments);
+                }
+
+                // add all the $log props into our new logger fn
+                angular.extend(logger, $delegate);
+                return logger;
+            }]);
+
+    }]);
+
+smartApp.run(['$rootScope', 'settings', function ($rootScope, settings) {
+        settings.currentLang = settings.languages[0]; // en
+    }]);

@@ -1,0 +1,24 @@
+CREATE DEFINER=`root`@`localhost` PROCEDURE `SP_TRX_MEDIA`(
+IN sMethod varchar(30),
+IN sCode varchar(20),
+IN sFileName varchar(100),
+OUT Result varchar(20)
+)
+BEGIN
+
+        IF sMethod = 'SUPPLIER' THEN
+
+                UPDATE stkm_suppliermaster SET sup_logofile = sFileName WHERE sup_code = sCode;
+
+                SELECT '00000' INTO Result;
+
+        END IF;
+
+        IF sMethod = 'STOCK' THEN
+
+                UPDATE stkm_stockmaster SET stk_mediafiles = sFileName WHERE stk_stockcode = sCode;
+
+                SELECT '00000' INTO Result;
+
+        END IF;
+END

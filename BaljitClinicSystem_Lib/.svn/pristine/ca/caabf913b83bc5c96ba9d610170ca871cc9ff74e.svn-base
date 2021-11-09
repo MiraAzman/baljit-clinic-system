@@ -1,0 +1,17 @@
+CREATE DEFINER=`root`@`localhost` PROCEDURE `SP_GET_SYSTEM_ENVIRONMENT_SETTINGS`(IN sMethod varchar(100))
+BEGIN
+
+        DECLARE _statement VARCHAR(8000);
+
+        IF sMethod = 'GET_SYSTEM_ENVIRONMENT_SETTINGS' THEN
+        
+        SET _statement = ' SELECT * FROM stkm_systemenvironment';
+
+        END IF;
+        
+        SET @statement = _statement;
+        PREPARE dynquery FROM @statement;
+        EXECUTE dynquery;
+        DEALLOCATE PREPARE dynquery;
+
+END

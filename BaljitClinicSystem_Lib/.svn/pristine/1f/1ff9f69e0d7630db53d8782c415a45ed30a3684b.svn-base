@@ -1,0 +1,56 @@
+package BusinessData;
+
+import java.sql.ResultSet;
+//import BusinessLogic.BLL_CorpProvider;
+import BusinessData.BaseDAL;
+import BusinessLogic.BLL_Common;
+import java.sql.CallableStatement;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.sql.Types;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Iterator;
+
+
+/**
+ *
+ * @author N3355
+ */
+public class DAL_Stock {
+    BaseDAL DAL = new BaseDAL();
+    
+    public BLL_Common.Common_Object DAL_GET_STOCKLIST(String SiteName, String[] sIn) {
+        return BaseDAL.Get_Multiple_QueryReturn("SP_GET_PRODUCT(?,?,?,?,?,"                  
+                    + "?,?,?,?,?,?)", sIn, new int[]{}, SiteName);
+    }   
+    
+     public BLL_Common.Common_Object DAL_ADDEDIT_PRODUCT(String SiteName, String[] sStringIn) {
+        return BaseDAL.Get_Multiple_QueryReturn_No_Commit("SP_TRX_PRODUCT(?,?,?,?,?,?,?,?,?,?," //10
+                + "?,?,?,?,?,?,?,?,?,?," //10
+                + "?,?,?,?,?,?,?,?,?,?," //10
+                + "?,?,?,?,?,?,?,?,?,?," //10
+                + "?,?,?,?,?)", sStringIn, new int[]{java.sql.Types.VARCHAR, java.sql.Types.VARCHAR}, SiteName);
+    }
+     
+       public BLL_Common.Common_Object DAL_PO_AUTOALLOCATION(String SiteName, String[] sIn) {
+        return BaseDAL.Get_Multiple_QueryReturn("SP_GET_STOCK(?,?,?,?,?,"                  
+                    + "?,?)", sIn, new int[]{}, SiteName);
+    }
+    
+       //pengkee 2016Jan02
+       public BLL_Common.Common_Object DAL_ADDEDIT_STOCKT_BALANCE(String SiteName, String[] sIn) {
+        return BaseDAL.Get_Multiple_QueryReturn("SP_TRX_STOCK_BALANCE(?,?,?,?,?,?,?,?,?,?)"                  
+                    , sIn, new int[]{java.sql.Types.VARCHAR, java.sql.Types.VARCHAR}, SiteName);
+    }
+    
+    //KR-PRD01 s
+    public BLL_Common.Common_Object DAL_GET_STOCKBALANCE(String SiteName, String[] sIn) {
+        return BaseDAL.Get_Multiple_QueryReturn("SP_GET_STOCK_BALANCE(?,?,?,?,?,?,?,?,?)", sIn, new int[]{}, SiteName);
+    } 
+    
+    public BLL_Common.Common_Object DAL_GET_STOCKMOVEMENT(String SiteName, String[] sIn) {
+        return BaseDAL.Get_Multiple_QueryReturn("SP_GET_STOCK_LEDGER(?,?,?,?,?,?,?,?,?,?,?,?,?)", sIn, new int[]{}, SiteName);
+    } 
+    //KR-PRD01 e
+}

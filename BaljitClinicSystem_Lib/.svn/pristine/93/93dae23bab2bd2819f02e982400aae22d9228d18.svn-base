@@ -1,0 +1,177 @@
+CREATE DEFINER=`root`@`localhost` PROCEDURE `SP_GET_STOCKREQ_RPT`(
+IN sMethod        varchar(30),
+IN sCompCode      varchar(20),
+IN sLocCode       varchar(20),
+IN sReqDTFrom     varchar(20),
+IN sReqDTto       varchar(20),
+IN sStkCodeFrom   varchar(20),
+IN sStkCodeTo     varchar(20),
+IN sStkGrpFrom    varchar(10),
+IN sStkGrpTo      varchar(10),
+IN sConsumable    varchar(6),
+IN sReqStatus     varchar(20),
+IN selReqStatus   varchar(50),
+IN sReqType       varchar(20),
+IN selReqType     varchar(20),
+IN sLimit     varchar(10)
+)
+BEGIN
+
+DECLARE _statement VARCHAR(8000);
+
+        IF (sMethod = 'GET_STKREQ_LIST_REPORT') THEN
+
+            SET _statement = ' SELECT DATE(dtl.createddt) AS ReqDate, hdr.rqhdr_companycode AS CompCode, hdr.rqhdr_locationcode AS LocCode, dtl.rqdtl_stockcode AS StkCode, stk.stk_desc AS StkDesc, stk.stk_groupcode AS StkGrp,
+
+                                     CASE
+                                           WHEN stk.stk_consumable=''0'' THEN ''Drug''
+                                           WHEN stk.stk_consumable=''1'' THEN ''Product''
+                                           WHEN stk.stk_consumable=''2'' THEN ''Consumable''
+                                      END AS StkCat,
+
+                                      dtl.rqdtl_uomcode AS UOMCode, TRUNCATE(dtl.rqdtl_requestqty,2) AS ReqQty,
+                                      (SELECT SUM(rqdtl_requestqty) FROM stkt_stockrequestdetail WHERE rqdtl_stockcode = dtl.rqdtl_stockcode GROUP BY rqdtl_stockcode) AS SUM_ReqQty,
+
+                                      TRUNCATE(dtl.rqdtl_approvedqty,2) AS AppQty, TRUNCATE(dtl.rqdtl_fulfilledqty,2) AS FulQty,
+
+                                      CASE
+                                           WHEN hdr.rqhdr_manualrequest =''M'' THEN ''Manual''
+                                           WHEN hdr.rqhdr_manualrequest =''A'' THEN ''Auto''
+                                      END AS ReqType,
+
+                                      CASE
+                                           WHEN dtl.rqdtl_requeststatuscode =''O'' THEN ''Open''
+                                           WHEN dtl.rqdtl_requeststatuscode =''R'' THEN ''Rejected''
+                                           WHEN dtl.rqdtl_requeststatuscode =''A'' THEN ''Approved''
+                                           WHEN dtl.rqdtl_requeststatuscode =''P'' THEN ''Partial Approved''
+                                      END AS ReqStatus, ';
+
+                               SET _statement = CONCAT(_statement,"'",sReqDTFrom,"'", ' AS selDateFrom, ' );
+
+                               SET _statement = CONCAT(_statement,"'",sReqDTto,"'", ' AS selDateTo, ' );
+
+                               SET _statement = CONCAT(_statement,"'",selReqStatus,"'", ' AS selReqStatus, ' );
+
+                               SET _statement = CONCAT(_statement,"'",selReqType,"'", ' AS selReqType ' );
+
+                               SET _statement = CONCAT(_statement,'
+
+                                      FROM stkt_stockrequestheader hdr
+                                      JOIN stkt_stockrequestdetail dtl ON hdr.rqhdr_requestidx = dtl.rqdtl_requestidx
+                                      JOIN stkm_stockmaster stk ON dtl.rqdtl_stockcode = stk.stk_stockcode
+                                      WHERE hdr.rqhdr_requestidx IS NOT NULL ' );
+
+            IF (sCompCode <> '') THEN
+                    SET _statement = CONCAT(_statement, ' AND hdr.rqhdr_companycode = ',"'",sCompCode,"'" );
+            END IF;
+
+            IF (sLocCode <> '') THEN
+                    SET _statement = CONCAT(_statement, ' AND hdr.rqhdr_locationcode = ',"'",sLocCode,"'" );
+            END IF;
+
+            IF (sReqDTFrom <> '') THEN
+                    SET _statement = CONCAT(_statement, ' AND hdr.rqhdr_requestdate >= ',"'",sReqDTFrom,"'" );
+            END IF;
+
+            IF (sReqDTto <> '') THEN
+                    SET _statement = CONCAT(_statement, ' AND hdr.rqhdr_requestdate <= ',"'",sReqDTto,' 23:59:59 ',"'" );
+            END IF;
+
+            IF (sStkCodeFrom <> '') THEN
+                    SET _statement = CONCAT(_statement, ' AND dtl.rqdtl_stockcode >= ',"'",sStkCodeFrom,"'" );
+                    
+            END IF;
+
+            IF (sStkCodeTo <> '') THEN
+                    SET _statement = CONCAT(_statement, ' AND dtl.rqdtl_stockcode <= ',"'",sStkCodeTo,"'" );
+                    
+            END IF;
+
+            IF  (sStkGrpFrom <> '') THEN
+                    SET _statement = CONCAT(_statement, ' AND stk.stk_groupcode >= ',"'", sStkGrpFrom,"'");
+            END IF;
+
+            IF  (sStkGrpTo <> '') THEN
+                    SET _statement = CONCAT(_statement, ' AND stk.stk_groupcode <= ',"'", sStkGrpTo,"'");
+            END IF;
+
+            IF (sConsumable <> '') THEN
+                    SET _statement = CONCAT(_statement, ' AND stk.stk_consumable = ',"'",sConsumable,"'" );
+            END IF;
+
+             IF (sReqStatus <> '') THEN
+                    SET _statement = CONCAT(_statement, ' AND dtl.rqdtl_requeststatuscode IN (',sReqStatus,') ');
+             END IF;
+
+             IF (sReqType <> '') THEN
+                    SET _statement = CONCAT(_statement, ' AND hdr.rqhdr_manualrequest IN (',sReqType,') ');
+             END IF;
+
+            SET _statement = CONCAT(_statement, ' ORDER BY StkCode, CompCode, LocCode, StkCat, StkGrp ' );
+
+      END IF;
+      
+ IF (sMethod = 'GET_STKREQ_REPORT_2') THEN
+
+  SET _statement = '
+   SELECT rqdtl_stockcode AS StkCode, SUM(rqdtl_requestqty) AS ReqQty, ';
+            
+  IF (sLimit <> '') THEN
+   SET _statement = CONCAT(_statement,"'",sLimit,"'", ' AS DisplayBy, ');
+  ELSE
+   SET _statement = CONCAT(_statement,' 10 AS DisplayBy, ');
+  END IF;
+        
+        SET _statement = CONCAT(_statement,
+   'DAY(',"'",sReqDTFrom,"'", ') AS DayFrom, 
+   MONTHNAME(',"'",sReqDTFrom,"'", ') AS MthFrom, 
+            YEAR(',"'",sReqDTFrom,"'", ') AS YrFrom, ',
+            
+   'DAY(',"'",sReqDTto,"'", ') AS DayTo, 
+   MONTHNAME(',"'",sReqDTto,"'", ') AS MthTo, 
+            YEAR(',"'",sReqDTto,"'", ') AS YrTo ');
+        
+        SET _statement = CONCAT(_statement,'
+   FROM stkt_stockrequestdetail 
+            LEFT JOIN stkt_stockrequestheader ON rqhdr_requestidx = rqdtl_requestidx
+            LEFT JOIN stkm_stockmaster ON stk_stockcode = rqdtl_stockcode
+            WHERE rqdtl_requestdetailidx IS NOT NULL ');
+      
+  IF (sCompCode <> '') THEN
+   SET _statement = CONCAT(_statement, ' AND rqhdr_companycode = ',"'",sCompCode,"'" );
+  END IF;
+
+  IF (sLocCode <> '') THEN
+   SET _statement = CONCAT(_statement, ' AND rqhdr_locationcode = ',"'",sLocCode,"'" );
+  END IF;
+      
+  IF (sReqDTFrom <> '') THEN
+   SET _statement = CONCAT(_statement, ' AND rqhdr_requestdate >= ',"'",sReqDTFrom,"'" );
+  END IF;
+
+  IF (sReqDTto <> '') THEN
+   SET _statement = CONCAT(_statement, ' AND rqhdr_requestdate <= ',"'",sReqDTto,' 23:59:59 ',"'" );
+  END IF;  
+        
+        IF (sStkCodeFrom <> '') THEN
+   SET _statement = CONCAT(_statement, ' AND rqdtl_stockcode >= ',"'",sStkCodeFrom,"'" );
+  END IF;
+
+  IF (sStkCodeTo <> '') THEN
+   SET _statement = CONCAT(_statement, ' AND rqdtl_stockcode <= ',"'",sStkCodeTo,"'" );
+  END IF;
+                        
+  SET _statement = CONCAT(_statement, ' GROUP BY rqdtl_stockcode ORDER BY ReqQty DESC ');
+            
+  IF (sLimit <> '') THEN
+   SET _statement = CONCAT(_statement, ' LIMIT ', sLimit);
+  END IF;
+    
+ END IF;
+
+SET @statement = _statement;
+PREPARE dynquery FROM @statement;
+EXECUTE dynquery;
+DEALLOCATE PREPARE dynquery;
+
+END

@@ -1,0 +1,256 @@
+<!--
+Modification ID     By      Date        Comment
+-----------------------------------------------------------------------------------
+dd01                Aaron   22Jan2019   add dropdown box for location
+export01            Aaron   01Feb2019   add export to excel function  
+-->
+<%@taglib prefix="jstl" uri="http://java.sun.com/jsp/jstl/core" %>
+<jsp:useBean id="DDL" scope="page" class="BusinessLogic.Servlet_PopulateData" />
+<style type="text/css">
+    .ui-jqgrid tr.jqgrow td {
+        word-wrap: break-word; /* IE 5.5+ CSS3 see http://www.w3.org/TR/css3-text/#text-wrap */
+        white-space: pre-wrap; /* CSS3 */
+        white-space: -moz-pre-wrap; /* Mozilla, since 1999 */
+        white-space: -pre-wrap; /* Opera 4-6 */
+        white-space: -o-pre-wrap; /* Opera 7 */
+        overflow: hidden;
+        height: auto;
+        vertical-align: middle;
+        padding-top: 3px;
+        padding-bottom: 3px
+    }    
+</style>
+
+<link rel="stylesheet" type="text/css" href="css/your_style.css" />
+<link rel="stylesheet" type="text/css" href="js/plugin/jqgrid/ui.multiselect.css" />
+
+<section id="widget-grid" class="">
+    <input type="hidden" id="lblCompCode" value="<%= session.getAttribute("CompCode")%>"  class="tboxreadonlyShort"/>
+    <input type="hidden" id="lblLocCode" value="<%= session.getAttribute("LocCode")%>"  class="tboxreadonlyShort"/>
+
+    <!--<input type="text" id="lblUserCode" value="<%= session.getAttribute("s_usercode")%>"  class="tboxreadonlyShort"/>-->
+    <div class="col-xs-12 col-sm-7 col-md-7 col-lg-4">
+        <h1 class="page-title txt-color-blueDark">
+            <!-- PAGE HEADER -->
+            <i class="fa-fw fa fa-file fa-2x"></i> 
+            Stock Status Report                                   
+        </h1>
+    </div>
+    <div class="row">
+        <form id='form_StkStatus_Report'>
+        <article class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+            <div class="jarviswidget jarviswidget-color-blueDark" id="wid-id-2"  data-widget-editbutton="false" data-widget-colorbutton="false" data-widget-fullscreenbutton="false" data-widget-custombutton="false" data-widget-deletebutton="false">
+                <header>
+                    <span class="widget-icon"> <i class="fa fa-search"></i></span>
+                    <span><h2>&nbsp;Generate Stock Status Report</h2></span>
+                </header>
+                <div class="no-padding">
+                    <div class="widget-body">
+                        <div id="selectCriTab" class="tab-content">
+                            <div class="tab-pane fade active in padding-5 no-padding-bottom" id="selectCriTab_s1">
+                                <!--<table id="tblSearch" border="0" cellpadding="0" cellspacing="0" width="80%">-->
+                                <table id="tblSearch" class="selection-criteria">                                  
+                                    <tr>
+                                        <td>Company:</td>
+                                        <td>                                            
+                                            <label id="selectCompany" class="searchbox">
+                                            <select class="form-control" id="ddlComp" name="ddlComp" rel="popover-hover" data-original-title="Company" data-content="Select Company." style="width:250px;">
+                                                <option value="">- Select Company -</option>
+                                                <jstl:forEach var="ddl_Comp" items="${DDL.ddlGet('GET_COMP', '', '', sessionScope.SiteName)}">
+                                                            <option value="${ddl_Comp.VALUE}">${ddl_Comp.VALUE}</option>
+                                                </jstl:forEach>     
+                                            </select>    
+                                            </label>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>Location:</td>
+                                        <td>                                            
+                                            <label id="selectLocation" class="searchbox">
+                                            <select class="form-control" id="ddlLoc" name="ddlLoc" rel="popover-hover" data-original-title="Location" data-content="Select Location." style="width:250px;cursor:default;">
+                                                <option value="">- Select Location -</option> 
+                                                <!--dd01-->
+                                                <jstl:forEach var="ddl_Loc" items="${DDL.ddlGet('GET_LOCATION', sessionScope.CompCode, sessionScope.LocCode, sessionScope.SiteName)}">
+                                                        <option value="${ddl_Loc.VALUE}">${ddl_Loc.VALUE}</option>
+                                                </jstl:forEach>
+                                            </select>    
+                                            </label>
+                                        </td>                                                                          
+                                    </tr> 
+                                    <tr>        
+                                        <th>Reorder Status</th>
+                                        <td colspan="4">
+                                            <div id="rdReorderStatus">       
+                                                <input type="radio" id="rdReorderStatus1" name="rdReorderStatus"  value="" checked="checked" /><label for="rdReorderStatus1" class="label-option btn">Both</label>
+                                                <input type="radio" id="rdReorderStatus2" name="rdReorderStatus" value="L"/><label for="rdReorderStatus2" class="label-option btn">Low</label>
+                                                <input type="radio" id="rdReorderStatus3" name="rdReorderStatus" value="S"/><label for="rdReorderStatus3" class="label-option btn">Sufficient</label>
+                                            </div>
+                                        </td>
+                                    </tr>  
+                                    <tr>    
+                                        <th>Product Category</th>
+                                        <td colspan="4">
+                                            <div id="rdPrdCat">       
+                                                <input type="radio" id="rdPrdCat1" name="rdPrdCat"  value="" checked="checked" /><label for="rdPrdCat1" class="label-option btn">All</label>
+                                                <input type="radio" id="rdPrdCat2" name="rdPrdCat" value="0"/><label for="rdPrdCat2" class="label-option btn">Drug</label>
+                                                <input type="radio" id="rdPrdCat3" name="rdPrdCat" value="1"/><label for="rdPrdCat3" class="label-option btn">Product</label>
+                                                <input type="radio" id="rdPrdCat4" name="rdPrdCat" value="2"/><label for="rdPrdCat4" class="label-option btn">Consumable</label>
+                                            </div>
+                                        </td>
+                                    </tr>                                                                                                  
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>                            
+        </article>
+        </form>                             
+    </div>
+    <div class="row" style="padding-left:20px;padding-bottom:20px;">
+        <div align="center" class="padding-5" >
+            <input type="button" class="btn btn-default bg-color-blueDark txt-color-white" id="btnPrintPrev" name="btnPrintPrev" onclick="LoadPrintPreview();" data-toggle='modal' data-target='#printPreview' value="Print Preview" style="margin-right:20px;"/>
+            <input type="button" class="btn btn-default bg-color-blueDark txt-color-white" id="btnExport" name="btnExport" onclick=" exportXLS();" value="Export" style="margin-right:20px;"/>
+            <input type="button" class="btn btn-default bg-color-blueDark txt-color-white" id="btnCancel" name="btnCancel" onclick="location.href = '#/dashboard'" value="Cancel" style="margin-right:20px"/>
+        </div>
+    </div>
+</section>
+  <jsp:include page="../../../includes/loading-no-status.jsp"/>  
+  <jsp:include page="../../../includes/PopUpInitPage.jsp"/>
+  <script src="js/buttonset.js"></script>
+<script type="text/javascript">
+   
+    pageSetUp();
+    $.get('${pageContext.request.contextPath}/Servlet_PopulateData', {SFC: 'GET_DLL', METHOD: 'GET_COMP', P1: '<%= session.getAttribute("CompCode")%>', P2: ''}, function (data) {
+            var arrData = data;
+            createOption($("#ddlComp"), arrData, '- Select Company -'); 
+             if ($("#lblCompCode").val() !== "")
+            {
+                if ($("#lblLocCode").val() === "")
+                { 
+                    $("#ddlComp").trigger("change");                
+                }
+                 
+            }
+        });
+
+    
+    function createOption(ddl, arrData, stext) {
+        ddl.html('');
+        if(arrData.length > 1){
+            
+        ddl.append($("<option>"). 
+        attr("value",'').
+        data("sel", 0).
+        text(stext));
+        }
+       
+        if(arrData.length > 0){
+            for(var i=0; i < arrData.length; i++){
+                ddl.append($("<option>"). 
+                attr("value",arrData[i].VALUE).
+                data("sel", 0).
+                text(arrData[i].TEXT));
+            }
+        }
+    }
+    
+    $('#rdPrdCat').buttonset();
+    $('#rdReorderStatus').buttonset();
+    
+    $().ready(function(){
+        
+        loadScript("js/buttonset.js", function () {
+            loadScript("js/excel-export.js", function () {
+            });
+        });
+    
+//        $("#ddlLoc").prop("disabled", true);    
+        
+        $("#ddlComp").change(function(){  
+            
+            $('#ddlLoc').empty();            
+            var sCompany = this.value;
+            if (sCompany !== "") {                
+                $.ajax({
+                    type: "GET",
+                    url: "${pageContext.request.contextPath}/Servlet_Stock?SFC=GET_REL_LOCATION",
+                    data: {
+                        COMPANY: sCompany
+                    },
+                    dataType: 'json',
+                    success: function(data) {
+                        $("select#ddlLoc").append( $("<option>").val("").html("- Select Location -")); 
+
+                        for (var a=0 ; a<data.object1.length ; a++) {                   
+                            var arrData = data.object1[a];                
+                            $("select#ddlLoc").append( $("<option>")
+                                .val(arrData.VALUE)
+                                .html(arrData.VALUE)
+                            ); 
+                        }
+                    }
+                });                                                           
+                $("#ddlLoc").prop("disabled", false); 
+            } else 
+                $("select#ddlLoc").append( $("<option>").val("").html("- Select Location -")); 
+        });
+    });
+
+    function LoadPrintPreview() {
+        loadScript("js/print-preview.js", function () {
+            var jObj = {              
+                1: "GET_STKSTATUS_LIST",
+                2: $('#ddlComp').val(),
+                3: $('#ddlLoc').val(),
+                4: $('input[name=rdReorderStatus]:checked').val(),
+                5: $('input[name=rdPrdCat]:checked').val()
+            }; 
+            
+            var param = {     
+                // PO_NO: sPoNo               
+            };           
+            //alert(JSON.stringify(jObj));               
+            var object = {};
+            object.procParam = jObj;
+            object.jasperName = 'Stk_Status_Report';
+            object.procString = 'SP_GET_STOCK_STATUS(?,?,?,?,?)';
+            object.fixParam = param;
+            object.format = 'pdf'; //indicate format to export
+            
+            printToPage(object);                                           
+        });      
+    };
+    
+    //export01
+    function exportXLS()
+    {
+        
+        loadScript("js/print-preview.js", function () {
+            var jObj = {              
+                1: "GET_STKSTATUS_LIST",
+                2: $('#ddlComp').val(),
+                3: $('#ddlLoc').val(),
+                4: $('input[name=rdReorderStatus]:checked').val(),
+                5: $('input[name=rdPrdCat]:checked').val()
+            }; 
+ 
+            var param = {};           
+            var object = {};
+            object.procParam = jObj;
+            object.jasperName = 'Stk_Status_Report';
+            object.procString = 'SP_GET_STOCK_STATUS(?,?,?,?,?)';
+            object.fixParam = param;
+            object.format = 'xlsx'; //indicate which format is being used
+            printToPage(object);     
+        }); 
+    };
+        
+//function searchCorp() {
+//        showProduct({width: 800, height: 600}).done(function (rowIn) {
+//            alert(JSON.stringify(rowIn));
+//            $("#txtPrdDesc").val(rowIn.stk_desc);
+//            $("#txtPrdCode").val(rowIn.stk_stockcode);
+//        });
+//    }
+</script>

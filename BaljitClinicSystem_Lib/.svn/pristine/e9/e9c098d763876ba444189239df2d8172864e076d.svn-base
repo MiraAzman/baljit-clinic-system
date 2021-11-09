@@ -1,0 +1,87 @@
+CREATE DEFINER=`root`@`localhost` PROCEDURE `SP_GET_ADMDASHBOARD`(
+IN sMethod          varchar(30),
+IN sCompCode        varchar(20),
+IN sCompName        varchar(100),
+IN sState           varchar(20),
+IN sSuppCode        varchar(20),
+IN sStkCode         varchar(20),
+IN sLocCode         varchar(20),
+IN sLocName         varchar(100),
+IN sDTFROM          varchar(20),
+IN sDTTo            varchar(20),
+IN sOrderBy varchar(30),
+IN sPage varchar(10),
+IN sPerPage varchar(10)
+)
+BEGIN
+
+
+
+
+ DECLARE _statement VARCHAR(8000);
+
+   IF sMethod = 'GET_TOP_REQUEST' THEN
+            SET _statement = 'Select RQH.rqhdr_companycode as CompCode, RQH.rqhdr_locationcode as LocCode, COUNT(RQH.rqhdr_locationcode) as ReqCount
+                              from stkt_stockrequestheader RQH
+                              Where RQH.rqhdr_locationcode IS NOT NULL
+                               ';
+
+           
+           
+           
+
+           
+           
+           
+
+                IF  (sDTFROM <> '' and sDTTo <> '') THEN
+                         SET _statement = CONCAT(_statement, ' AND date(RQH.rqhdr_requestdate) between',"'", sDTFROM ,"'", ' AND ' ,"'", sDTTo ,"'",' ');
+                END IF;
+
+
+
+              SET _statement = CONCAT(_statement, 'Group by  RQH.rqhdr_locationcode  Order by  COUNT(RQH.rqhdr_locationcode) desc');
+
+
+            SET _statement = CONCAT(_statement, ' LIMIT 0,10 ');
+
+   END IF;
+
+
+      IF sMethod = 'GET_TOP_REQUEST_DRILL' THEN
+            SET _statement = ' Select ReqH.rqhdr_locationcode as LocCode, ReqD.rqdtl_stockcode as stkCode, stkm.STK_DESC as stkName, Count(ReqD.rqdtl_stockcode) ReqCount, SUM(ReqD.rqdtl_requestqty) as ReqQty
+                               from stkt_stockrequestdetail ReqD
+                               Left outer join stkt_stockrequestheader ReqH on ReqH.rqhdr_requestidx = ReqD.rqdtl_requestidx
+                               Left outer join stkm_stockmaster stkm on stkm.stk_stockcode = ReqD.rqdtl_stockcode
+                               Where ReqD.rqdtl_stockcode IS NOT NULL
+                               ';
+
+             IF (sLocCode <> '') THEN
+                    SET _statement = CONCAT(_statement, ' AND ReqH.rqhdr_locationcode = ',"'",sLocCode ,"'", ' ');
+             END IF;
+
+             IF  (sDTFROM <> '' and sDTTo <> '') THEN
+                         SET _statement = CONCAT(_statement, ' AND date(ReqH.rqhdr_requestdate) between',"'", sDTFROM ,"'", ' AND ' ,"'", sDTTo ,"'",' ');
+             END IF;
+
+           
+           
+           
+
+
+
+              SET _statement = CONCAT(_statement, ' Group by ReqD.rqdtl_stockcode, ReqH.rqhdr_locationcode    Order by ReqH.rqhdr_locationcode,  SUM(ReqD.rqdtl_requestqty) desc');
+
+
+              
+
+   END IF;
+
+
+
+SET @statement = _statement;
+PREPARE dynquery FROM @statement;
+EXECUTE dynquery;
+DEALLOCATE PREPARE dynquery;
+
+END

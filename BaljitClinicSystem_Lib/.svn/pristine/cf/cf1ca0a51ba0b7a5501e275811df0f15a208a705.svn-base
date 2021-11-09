@@ -1,0 +1,90 @@
+CREATE DEFINER=`root`@`localhost` PROCEDURE `SP_TRX_USER`(
+IN sMethod         varchar(30),
+IN sUsrCode        varchar(20),
+IN sUsrName        varchar(100),
+IN sUsrPwd         varchar(50),
+IN sUsrComp        varchar(20),
+IN sUsrLoc         varchar(20),
+IN sUsrFirstName   varchar(50),
+IN sUsrLastName    varchar(50),
+IN sUsrContactNo   varchar(20),
+IN sUsrEmail       varchar(200),
+IN sUsrRole           varchar(20),
+IN sBy             varchar(10),
+IN sRecStatus      varchar(2),
+
+OUT Result         varchar(30)
+)
+BEGIN
+
+   IF sMethod = 'ADD_USER' THEN
+
+             IF NOT EXISTS(SELECT usr_code FROM  afc_user  WHERE usr_code = sUsrCode) THEN
+
+                   INSERT INTO afc_user (usr_code, usr_name, usr_pwd, usr_firstname, usr_lastname,
+
+                                         usr_contact, usr_email, usr_compcode, usr_loccode,
+
+                                         usr_role,
+
+                                         usr_recstatus, createby, createdate)
+
+
+                   VALUES (sUsrCode, sUsrName, sUsrPwd, sUsrFirstName, sUsrLastName,
+
+                           sUsrContactNo, sUsrEmail, sUsrComp, sUsrLoc,
+
+                           sUsrRole,
+
+                           sRecStatus, sBy, NOW());
+
+
+                   SELECT '00000' INTO Result;
+
+              ELSE
+
+                   SELECT 'DUPLICATE_USR_CODE' INTO Result;
+
+              END IF;
+
+    END IF;
+
+
+    IF sMethod = 'EDIT_USER_DETAIL' THEN
+
+                UPDATE afc_user
+
+                SET usr_code = sUsrCode,
+                    usr_name = sUsrName,
+                    usr_pwd = sUsrPwd,
+                    usr_firstname = sUsrFirstName,
+                    usr_lastname = sUsrLastName,
+                    usr_contact = sUsrContactNo,
+                    usr_email = sUsrEmail,
+                    usr_compcode = sUsrComp,
+                    usr_loccode = sUsrLoc,
+                    usr_role = sUsrRole,
+                    usr_recstatus = sRecStatus,
+                    modifyby = sBy,
+                    modifydate = NOW()
+
+                WHERE usr_code = sUsrCode;
+
+                SELECT '00000' INTO Result;
+
+     END IF;
+
+	IF sMethod = 'UPDATE_PASSWORD' THEN
+
+		UPDATE afc_user
+		SET usr_pwd = sUsrPwd,
+			modifyby = sBy,
+			modifydate = NOW()
+
+		WHERE usr_code = sUsrCode;
+
+		SELECT '00000' INTO Result;
+
+    END IF;
+
+END

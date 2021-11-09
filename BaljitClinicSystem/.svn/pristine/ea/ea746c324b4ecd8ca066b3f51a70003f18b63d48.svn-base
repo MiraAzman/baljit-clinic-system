@@ -1,0 +1,1480 @@
+<!--
+Modification ID     By          Date        Comment
+--------------------------------------------------------------------------------
+yesno01             Aaron       17Dec2018   include yes-no.jsp in the code
+c01                 Aaron       17Dec2018   add confirmation box and loading screen when user try to create a new product
+name01              Aaron       27Dec2018   change name for btnSave
+font01              Aaron       08Jan2019   change font style and color for mandatory fields
+len01               Aaron       08Jan2019   set maxlength for textbox
+link01              Aaron       08Jan2019   link changes of Brand Owner and textarea of Product API
+type01              Aaron       08Jan2019   remove numeric form control type to enable enter decimal place
+valid01             Aaron       08Jan2019   add validation for numbers
+validator01         Aaron       09Jan2019   add condition for validator to see it is CMS 
+-->
+<%@taglib prefix="jstl" uri="http://java.sun.com/jsp/jstl/core" %>
+<jsp:useBean id="DDL" scope="page" class="BusinessLogic.Servlet_PopulateData" />
+<style type="text/css">
+    .ui-jqgrid tr.jqgrow td {
+        word-wrap: break-word; /* IE 5.5+ CSS3 see http://www.w3.org/TR/css3-text/#text-wrap */
+        white-space: pre-wrap; /* CSS3 */
+        white-space: -moz-pre-wrap; /* Mozilla, since 1999 */
+        white-space: -pre-wrap; /* Opera 4-6 */
+        white-space: -o-pre-wrap; /* Opera 7 */
+        overflow: hidden;
+        height: auto;
+        vertical-align: middle;
+        padding-top: 3px;
+        padding-bottom: 3px 
+    }
+
+    .centered {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        margin-top: -50px;
+        margin-left: -200px;
+    }
+    div.errorContainer, div.errorContainer2{
+        display:none;
+        width:100%;
+    }
+    div.errorContainer, div.errorContainer2 ol li{
+        list-style-type:disc;
+        margin-left: 20px;
+    }
+    select:disabled{
+        background: #dddddd;
+    }
+    li{
+        list-style:none;
+    }
+    .disabledTab{
+        pointer-events: none;
+    }
+    input[type="text"].error { border: 1px solid #A94444; background-color:#FFF0F0; }
+    select.error { border: 1px solid #A94444; background-color:#FFF0F0; }
+    textarea.error { border: 1px solid #A94444; background-color:#FFF0F0; }
+</style>
+<link rel="stylesheet" type="text/css" href="css/your_style.css" />
+<link rel="stylesheet" type="text/css" href="js/plugin/jqgrid/ui.multiselect.css" />
+<section id="widget-grid" class="">
+    <!--<span>{{params}}</span>-->
+    <input type="hidden" value={{params}} id="hidHospCode">
+
+    <div class="col-xs-12 col-sm-7 col-md-7 col-lg-12">
+        <h1 class="page-title txt-color-blueDark">
+            <!-- PAGE HEADER -->
+            <i class="fa-fw fa fa-file fa-2x"></i> 
+            Product Master Setup                                         
+        </h1>
+    </div>
+    <div class="widget-body row">
+        <article class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+            <div class="row" style="padding-bottom:10px;padding-left:10px;padding-right:10px;">
+                <div class="errorContainer alert alert-danger alert-block">
+                    <h4 class="alert-heading">There were some field left out or invalid inputs like below:</h4>
+                    <ol>
+                    </ol>
+                </div>
+            </div>
+            <div class="row">
+                <form id="form_AddProduct" name="form_AddProduct">
+                    <article class="col-sm-12 col-md-12 col-lg-12">
+                        <div class="jarviswidget jarviswidget-color-blueDark" id="wid-id-1"  data-widget-editbutton="false" data-widget-custombutton="false"
+                             data-widget-deletebutton="false" data-widget-colorbutton="false" data-widget-fullscreenbutton="false" data-widget-togglebutton="false">
+                            <header>
+                                <span class="widget-icon"> <i class="fa fa-file"></i></span>
+                                <span><h2>&nbsp;Product Info</h2></span>
+                            </header>
+                            <div class="row">
+                                <div class="widget-body">
+
+                                    <table id="tbProductInfo" class="table table-bordered table-striped" style="clear:both;">
+                                        <tbody>
+                                            <tr>
+                                                <td width="12%"><font color="red">*</font> <b>Product Code</b></td> <!--font01-->
+                                                <td width="1%">:</td>
+                                                <td width="25%"> 
+                                                    <input type="text" id="txtPrdCode" name="txtPrdCode" required  class="form-control" rel="popover-hover" data-original-title="Product Code" data-content="A Product Code is a unique mixture of alphanumerical code with a maximum length of 16 characters." maxlength="16" /> <!--len01-->   
+                                                </td>
+                                                <td width="12%"><font color="red">*</font> <b>Product Description</b></td> <!--font01-->
+                                                <td width="1%">:</td>
+                                                <td width="75%">       
+                                                    <input type="text" id="txtPrdName" name="txtPrdName" required  class="form-control" rel="popover-hover" data-original-title="Product Description" data-content="A Product description is the Product description with a maximum length of 100 characters." maxlength="100" /> <!--len01-->    
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td width="12%">Short Name</td>
+                                                <td width="1%">:</td>
+                                                <td width="25%">     
+                                                    <input type="text" id="txtShortName" name="txtShortName" class="form-control" maxlength="50" /> <!--len01-->    
+                                                </td>
+                                                <td width="12%">BarCode</td>
+                                                <td width="1%">:</td>
+                                                <td width="75%">   
+                                                    <input type="text" id="txtBarCode" name="txtBarCode" class="form-control" maxlength="50" /> <!--len01-->   
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td width="12%"><font color="red">*</font> <b>Product Group</b></td> <!--font01-->
+                                                <td width="1%">:</td>
+                                                <td width="25%"> 
+                                                    <label id="selectPrdGrp" class="searchbox">
+                                                        <select class="form-control" id="ddlPrdGrp" required name="ddlPrdGrp" rel="popover-hover" data-original-title="Product Group" data-content="Select Product Group." style="width:250px;">
+                                                            <option value="">- Select Product Group -</option>                                           
+                                                        </select>    
+                                                    </label>   
+                                                </td>
+                                                <td width="12%"><font color="red">*</font> <b>Product Type</b></td> <!--font01-->
+                                                <td width="1%">:</td>
+                                                <td width="75%">
+                                                    <label id="selectPrdType" class="searchbox">
+                                                        <select class="form-control" id="ddlPrdType" name="ddlPrdType" rel="popover-hover" data-original-title="Product Type" data-content="Select Product Type." style="width:250px;">
+                                                            <option value="">- Select Product Type -</option>
+                                                        </select>    
+                                                    </label>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td width="12%"><font color="red">*</font> <b>Product Category</b></td> <!--font01-->
+                                                <td width="1%">:</td>
+                                                <td colspan="4"> 
+                                                    <div id="rdPrdCat">  
+                                                        <input type="radio" id="rdPrdCat2" name="rdPrdCat" value="0"/><label for="rdPrdCat2" class="label-option">Medication</label>
+                                                        <input type="radio" id="rdPrdCat3" name="rdPrdCat" value="1"/><label for="rdPrdCat3" class="label-option">Product</label>
+                                                        <input type="radio" id="rdPrdCat4" name="rdPrdCat" value="2"/><label for="rdPrdCat4" class="label-option">Consumable</label>
+                                                    </div>   
+                                                </td>
+
+                                            </tr>
+                                            <tr>
+                                                <td width="12%"><font color="red">*</font> <b>Default UOM</b></td> <!--font01-->
+                                                <td width="1%">:</td>
+                                                <td width="25%"> 
+                                                    <label id="selectPrdType" class="searchbox">
+                                                        <select class="form-control" id="ddlPrdUOM" required name="ddlPrdUOM" rel="popover-hover" onchange="SetBasedUOM(this.value)" data-original-title="Product UOM" data-content="Select Product UOM." style="width:250px;">
+                                                            <option value="">- Select Product UOM -</option>
+                                                        </select>    
+                                                    </label>   
+                                                </td>
+                                                <td>Default Unit Cost</td>
+                                                <td>:</td>
+                                                <td>
+                                                    <input type="text" id="txtUnitCost" name="txtUnitCost" class="form-control" style="width:220px;" value="0.00" onkeyup="calPharmacyUnitCost()"/>
+                                                </td>
+                                            </tr>
+                                            <tr id="trPharmacy">
+                                                <td><font color="red">*</font> <b>Pharmacy UOM</b></td> <!--font01-->
+                                                <td>:</td>
+                                                <td> 
+                                                    <label id="selectPrdType" class="searchbox">
+                                                        <select class="form-control" id="ddlPharmacyUOM" name="ddlPharmacyUOM" rel="popover-hover" onchange="calPharmacyUnitCost()" data-original-title="Pharmacy UOM" data-content="Select Pharmacy UOM." style="width:250px;">
+                                                            <option value="">- Select Pharmacy UOM -</option>
+                                                        </select>    
+                                                    </label>   
+                                                </td>
+                                                <td>Pharmacy Unit Cost</td>
+                                                <td>:</td>
+                                                <td>
+                                                    <input type="text" id="txtPharmacyUnitCost" name="txtPharmacyUnitCost" class="form-control" style="width:220px;" value="0.00" disabled/>
+                                                    <input type="hidden" id="hdnPharmacyUnitCost" name="hdnPharmacyUnitCost" class="form-control" value="0.00"/>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td width="12%"><font color="red">*</font> <b>Account Group</b></td> <!--font01-->
+                                                <td width="1%">:</td>
+                                                <td colspan="4"> 
+                                                    <label id="selectAccGrp" class="searchbox">
+                                                        <select class="form-control" id="ddlAccGrp" required name="ddlAccGrp" rel="popover-hover"  data-original-title="Account Group" data-content="Select Account Group." style="width:250px;">
+                                                            <option value="">- Select Account Group -</option>
+                                                        </select>    
+                                                    </label>   
+                                                </td>
+                                                 
+                                            </tr>
+                                            
+                                            <tr>
+                                                <td width="12%">Brand Owner</td>
+                                                <td width="1%">:</td>
+                                                <td width="25%"> 
+                                                    <select class="form-control" id="ddlBrandOwner" name="ddlBrandOwner" style="width:250px;">
+                                                        <option value="">- Select Brand Owner -</option>                                          
+                                                    </select>  
+                                                </td>
+                                                <td>Is Active</td>
+                                                <td>:</td>
+                                                <td>
+                                                    <input type="checkbox" id="chkIsActive" name="chkIsActive" value="N"/>   
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>Product API</td>
+                                                <td>:</td>
+                                                <td colspan="4">
+                                                    <!--len01--> 
+                                                    <textarea id="txtPrdAPI" rows="5" style="width:100%;" maxlength="20000" disabled>                                           
+                                                    </textarea>
+                                                </td>
+                                            </tr>                                            
+                                        </tbody>
+                                    </table>
+
+                                </div>
+                            </div>
+                        </div>
+                    </article>
+
+                    <article class="col-sm-12 col-md-12 col-lg-12">
+                        <div class="jarviswidget jarviswidget-color-blueDark" id="wid-id-2"  data-widget-editbutton="false" data-widget-custombutton="false"
+                             data-widget-deletebutton="false" data-widget-colorbutton="false" data-widget-fullscreenbutton="false" data-widget-togglebutton="false">
+                            <header>
+                                <span class="widget-icon"> <i class="fa fa-file"></i></span>
+                                <span><h2>&nbsp;Prescription Information</h2></span>
+                            </header>
+
+
+                            <div class="row">
+                                <div class="widget-body">
+
+                                    <table id="tbPrescriptionInfo" class="table table-bordered table-striped" style="clear:both;">
+                                        <tbody>
+                                            <tr>
+                                                <td width="12%">Dosage</td>
+                                                <td width="1%">:</td>
+                                                <td width="25%"> 
+                                                    <label id="selectDosage" class="searchbox">
+                                                        <select class="form-control" id="ddlDosage" name="ddlDosage" rel="popover-hover" data-original-title="Dosage" data-content="Select Dosage." style="width:250px;">
+                                                            <option value="">- Select Dosage -</option>                                     
+                                                        </select>    
+                                                    </label>   
+                                                </td>
+                                                <td width="12%">Frequency</td>
+                                                <td width="1%">:</td>
+                                                <td width="75%">       
+                                                    <label id="selectFreq" class="searchbox">
+                                                        <select class="form-control" id="ddlFreq" name="ddlFreq" rel="popover-hover" data-original-title="Frequency" data-content="Select Frequency." style="width:250px;">
+                                                            <option value="">- Select Frequency -</option>                                    
+                                                        </select>    
+                                                    </label>  
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td width="12%">Duration</td>
+                                                <td width="1%">:</td>
+                                                <td width="25%">     
+                                                    <label id="selectDuration" class="searchbox">
+                                                        <select class="form-control" id="ddlDuration" name="ddlDuration" rel="popover-hover" data-original-title="Duration" data-content="Select Duration." style="width:250px;">
+                                                            <option value="">- Select Duration -</option>                                         
+                                                        </select>    
+                                                    </label>  
+                                                </td>
+                                                <td width="12%">Precaution</td>
+                                                <td width="1%">:</td>
+                                                <td width="75%">   
+                                                    <label id="selectPrecaution" class="searchbox">
+                                                        <select class="form-control" id="ddlPrecaution" name="ddlPrecaution" rel="popover-hover" data-original-title="Precaution" data-content="Select Precaution." style="width:250px;">
+                                                            <option value="">- Select Precaution -</option>                                          
+                                                        </select>    
+                                                    </label> 
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td width="12%">Instruction</td>
+                                                <td width="1%">:</td>
+                                                <td width="25%"> 
+                                                    <label id="selectInstruction" class="searchbox">
+                                                        <select class="form-control" id="ddlInstruction" name="ddlInstruction" rel="popover-hover" data-original-title="Instruction" data-content="Select Instruction." style="width:250px;">
+                                                            <option value="">- Select Instruction -</option>                                         
+                                                        </select>    
+                                                    </label> 
+                                                </td>
+                                                <td width="12%">Indication</td>
+                                                <td width="1%">:</td>
+                                                <td width="25%"> 
+                                                    <label id="selectIndication" class="searchbox">
+                                                        <select class="form-control" id="ddlIndication" name="ddlIndication" rel="popover-hover" data-original-title="Indication" data-content="Select Indication." style="width:250px;">
+                                                            <option value="">- Select Indication -</option>                                          
+                                                        </select>    
+                                                    </label> 
+                                                </td>
+                                                </td>
+                                            </tr>
+
+
+                                        </tbody>
+                                    </table>
+
+                                </div>
+                            </div>
+                        </div>
+                    </article>
+
+                    <article class="col-sm-12 col-md-12 col-lg-12">
+                        <div class="jarviswidget jarviswidget-color-blueDark" id="wid-id-2"  data-widget-editbutton="false" data-widget-custombutton="false"
+                             data-widget-deletebutton="false" data-widget-colorbutton="false" data-widget-fullscreenbutton="false" data-widget-togglebutton="false">
+                            <header>
+                                <span class="widget-icon"> <i class="fa fa-file"></i></span>
+                                <span><h2>&nbsp;Goods Sales Tax (GST) Info</h2></span>
+                            </header>
+                            <div class="row">
+                                <div class="widget-body">
+                                    <table id="tbPrescriptionInfo" class="table table-bordered table-striped" style="clear:both;">
+                                        <tbody>
+                                            <tr>
+                                                <td width="12%">GST Tax Code (Purchase)</td>
+                                                <td width="1%">:</td>
+                                                <td width="20%">
+                                                    <label id="selectGSTPurCode" class="searchbox">
+                                                        <select class="form-control" id="ddlGSTPurCode" name="ddlGSTPurCode" style="width:200px;">
+                                                            <option value="">- Select GST Tax Code (Purchase) -</option>                                           
+                                                        </select>    
+                                                    </label>
+                                                </td>
+                                                <td width="12%">GST Tax Code (Medical Supply)</td>
+                                                <td width="1%">:</td>
+                                                <td width="20%"> 
+                                                    <label id="selectGSTMedSupCode" class="searchbox">
+                                                        <select class="form-control" id="ddlGSTMedSupCode" name="ddlGSTMedSupCode" style="width:200px;">
+                                                            <option value="">- Select GST Tax Code (Medical Supply) -</option>                                         
+                                                        </select>    
+                                                    </label>
+                                                </td>
+                                                <td width="12%">GST Tax Code (OTC Supply)</td>
+                                                <td width="1%">:</td>
+                                                <td width="20%"> 
+                                                    <label id="selectGSTOTCSupCode" class="searchbox">
+                                                        <select class="form-control" id="ddlGSTOTCSupCode" name="ddlGSTOTCSupCode" style="width:200px;">
+                                                            <option value="">- Select GST Tax Code (OTC Supply) -</option>                                        
+                                                        </select>    
+                                                    </label>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </article>
+                    
+                    <article class="col-sm-12 col-md-12 col-lg-12">
+                        <div class="jarviswidget jarviswidget-color-blueDark" id="wid-id-3"  data-widget-editbutton="false" data-widget-custombutton="false"
+                             data-widget-deletebutton="false" data-widget-colorbutton="false" data-widget-fullscreenbutton="false" data-widget-togglebutton="false">
+                            <header>
+                                <span class="widget-icon"> <i class="fa fa-file"></i></span>
+                                <span><h2>&nbsp;UOM Conversation</h2></span>
+                            </header>
+                            <div class="padding-10">
+                                <table  id="tbInfo" class="selection-criteria table-striped " >                                    
+                                    <tr>
+                                        <th>Base UOM</th>
+                                        <td>
+                                            <div class="dropdown">
+                                                <!--<input type="text" class="form-control searchbox-text" id="txtFromUOM" name="txtFromUOM"  placeholder="Base UOM" style="width: 220px"/>-->
+                                                <label id="selectUOMFrom" class="searchbox">
+                                                    <select class="form-control" id="ddlUOMFrom" name="ddlUOMFrom" rel="popover-hover" data-original-title="UOM From" data-content="Select UOM From." style="width:250px;">
+                                                        <option value="">- UOM From -</option>
+                                                    </select>    
+                                                </label>   
+                                            </div>
+                                        </td>
+                                        <th>Factor</th>
+                                        <td>
+                                            <!--type01-->
+                                            <input type="text" class="form-control" id="txtFactor" name="txtFactor" maxlength="100" placeholder="Factor" style="width: 220px"/>
+                                        </td>
+                                        <th>Convert to UOM</th>
+                                        <td>
+                                            <!--<input type="text" class="form-control searchbox-text"  id="txtToUOM" name="txtToUOM" placeholder="Convert To UOM" style="width: 220px"/>-->
+                                            <label id="selectUOMTo" class="searchbox">
+                                                <select class="form-control" id="ddlUOMTo" name="ddlUOMTo" rel="popover-hover" data-original-title="UOM Convert To" data-content="Convert UOM To." style="width:250px;">
+                                                    <option value="">- Convert UOM To -</option>
+                                                </select>    
+                                            </label> 
+
+
+                                        </td>
+                                        <td align="center">
+                                            <button onclick="add_UomConvert();" style="border:none;background:transparent;"><i class='fa fa-plus-square fa-2x'></i></button>
+                                        </td>                                    
+                                    </tr>
+                                </table>
+
+                                <div id="gridUOMSummary" class="">
+                                    <!--<div id="bar-chart" class="chart"></div>-->
+
+                                    <table  class="table table-striped" id="myTable" >
+                                        <thead>
+                                        <th>Action</th>
+                                        <th id="BASEUOM">Base UOM</th>
+                                        <th id="FACTOR">Factor</th>
+                                        <th id="CONVERTTOUOM">Convert To UOM</th>                                   
+                                        </thead>
+                                        <tbody id="UOMSummaryGrid" >
+
+                                        </tbody>
+                                    </table>
+                                    <div id="pjqgridpvSummary" class="addDrugTBody"></div>  
+                                </div>
+                            </div>
+                        </div>
+
+
+
+                    </article>
+
+                    <article class="col-sm-12 col-md-12 col-lg-12">
+                        <div class="jarviswidget jarviswidget-color-blueDark" id="wid-id-4"  data-widget-editbutton="false" data-widget-custombutton="false"
+                             data-widget-deletebutton="false" data-widget-colorbutton="false" data-widget-fullscreenbutton="false" data-widget-togglebutton="false">
+                            <header>
+                                <span class="widget-icon"> <i class="fa fa-file"></i></span>
+                                <span><h2>&nbsp;Pricing Table</h2></span>
+                            </header>
+                            <div class="padding-10">
+                                <table  id="tbPricingInfo" class="selection-criteria table-striped " >                                    
+                                    <tr>
+                                        <th>Quantity</th>
+                                        <td>
+                                            <div class="dropdown">
+                                                <input type="text" class="form-control numeric" id="txtQty" name="txtQty"  placeholder="Product Quanity" style="width: 220px" maxlength="6"/> <!--len01-->
+                                            </div>
+                                        </td>
+                                        <th>UOM</th>
+                                        <td>
+                                            <!--<input type="text" class="form-control" id="txtUOM" name="txtUOM" maxlength="100" placeholder="Product UOM" style="width: 220px"/>-->
+                                            <label id="selectUOMPrice" class="searchbox">
+                                                <select class="form-control" id="ddlUOMPrice" name="ddlUOMPrice" rel="popover-hover" data-original-title="UOM Pricing" data-content="UOM Pricing." style="width:250px;">
+                                                    <option value="">- Select UOM  -</option>
+                                                </select>    
+                                            </label> 
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>Price 1</th>
+                                        <td>
+                                            <!--type01-->
+                                            <input type="text" class="form-control"  id="txtPrice1" name="txtPrice1" placeholder="Product Price 1" style="width: 220px"/>
+                                        </td>
+                                        <th>Price 2</th>
+                                        <td>
+                                            <!--type01-->
+                                            <input type="text" class="form-control"  id="txtPrice2" name="txtPrice2" placeholder="Product Price 2" style="width: 220px"/>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>Price 3</th>
+                                        <td>
+                                            <!--type01-->
+                                            <input type="text" class="form-control"  id="txtPrice3" name="txtPrice3" placeholder="Product Price 3" style="width: 220px"/>
+                                        </td>
+                                        <th>Price 4</th>
+                                        <td>
+                                            <!--type01-->
+                                            <input type="text" class="form-control"  id="txtPrice4" name="txtPrice4" placeholder="Product Price 4" style="width: 220px"/>
+                                        </td>
+                                    </tr>
+                                    <tr>
+
+                                    </tr>
+                                    <td colspan="4" align="center">
+                                        <!--                                        <button onclick="add_Pricing();" style="border:none;background:transparent;"><i class='fa fa-plus-square fa-2x'></i></button>-->
+                                        <input type="button" Id="btnAddPricing" onclick="add_Pricing();"  class="btn btn-default bg-color-blueDark txt-color-white" value="Add New Pricing" />
+                                    </td>                                    
+                                    </tr>
+                                </table>
+
+                                <div id="gridPricingSummary" class="">
+                                    <!--<div id="bar-chart" class="chart"></div>-->
+
+                                    <table  class="table table-striped" id="tbPricing" >
+                                        <thead>
+                                        <th>Action</th>
+                                        <th id="QTY">QTY</th>
+                                        <th id="UOM">UOM</th>
+                                        <th id="PRICE1">Price 1</th>
+                                        <th id="PRICE2">Price 2</th>
+                                        <th id="PRICE3">Price 3</th>
+                                        <th id="PRICE4">Price 4</th>
+                                        </thead>
+                                        <tbody id="PricingSummaryGrid" >
+
+                                        </tbody>
+                                    </table>
+
+                                </div>
+                            </div>
+                        </div>
+
+
+
+                    </article>
+
+                    <div hidden>
+                        <input type="hidden" id="hidUOMConvert" name="hidUOMConvert"/>
+                        <input type="hidden" id="hidPricing" name="hidPricing"/>
+
+                    </div>
+
+                </form>
+            </div>
+
+        </article>
+        <div>
+            <div class="row">
+                <div class="col-sm-12">
+                    <div align="center" class="padding-5" >
+                        <input type="button" Id="btnSave"  class="btn btn-default bg-color-blueDark txt-color-white" value="Save"onclick ="confirm();" /> <!--name01-->
+                        <input type="button" Id="btnCancel"  class="btn btn-default bg-color-blueDark txt-color-white"  value="Cancel" onclick="location.href = '#/ProductMasterList'" />
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<jsp:include page="../../../includes/loading-no-status.jsp"/>
+<!--yesno01-->
+<jsp:include page="../../../includes/yes-no.jsp"/>
+<!--<script src="js/buttonset.js"></script>-->
+<script type="text/javascript">
+
+    getDLL("ddlPrdGrp", "GET_CODEDESC", "STKGRP", "");
+    getDLL("ddlPrdType", "GET_CODEDESC", "STKTYP", "");
+    getDLL("ddlPrdUOM", "GET_STOCKUOM", "", "");
+    getDLL("ddlAccGrp", "GET_CODEDESC", "ACCGRP", "");
+    getDLL("ddlBrandOwner", "GET_BRAND_OWNER", "", "");
+    getDLL("ddlDosage", "GET_CODEDESC", "DDOS", "");
+    getDLL("ddlFreq", "GET_CODEDESC", "DFRQ", "");
+    getDLL("ddlDuration", "GET_CODEDESC", "DDUR", "");
+    getDLL("ddlPrecaution", "GET_CODEDESC", "DCAU", "");
+    getDLL("ddlInstruction", "GET_CODEDESC", "DINS", "");
+    getDLL("ddlIndication", "GET_CODEDESC", "DIND", "");
+    getDLL("ddlGSTPurCode", "GET_ACTIVEGSTCODE", "PURCHASE", "");
+    getDLL("ddlGSTMedSupCode", "GET_ACTIVEGSTCODE", "SUPPLY", "");
+    getDLL("ddlGSTOTCSupCode", "GET_ACTIVEGSTCODE", "SUPPLY", "");
+    getDLL("ddlUOMFrom", "GET_STOCKUOM", "", "");
+    getDLL("ddlUOMTo", "GET_STOCKUOM", "", "");
+    getDLL("ddlUOMPrice", "GET_STOCKUOM", "", "");
+
+    function getDLL (ddl, method, param1, param2) {
+        $.get('${pageContext.request.contextPath}/Servlet_PopulateData', {SFC: 'GET_DLL', METHOD: method, P1: param1, P2: param2}, function (data) {
+            for(var i=0; i < data.length; i++){                                                          
+                $("#"+ddl).append($("<option>").val(data[i].VALUE).html(data[i].TEXT));
+            }     
+        });     
+    }
+    //link01
+    $("#ddlBrandOwner").change(function(){
+        var sBrandOwner = this.value;
+        if (sBrandOwner !== ""){
+            document.getElementById("txtPrdAPI").disabled = false;
+        }
+        else{
+            document.getElementById("txtPrdAPI").disabled = true;
+            document.getElementById("txtPrdAPI").value = "";
+        }  
+    });
+
+    $("#txtReOrder").spinner({
+        min: 1,
+        max: 2500,
+        step: 1,
+        start: 1000,
+        numberFormat: "n"
+    });
+
+    //pageSetUp();
+
+    $('#ddlUOMFrom').attr("disabled", "disabled");
+    
+    $('#ddlUOMPrice').attr("disabled", "disabled");
+    
+    $.get('${pageContext.request.contextPath}/Servlet_SitesDBInfor', {SFC: 'GET_INTEGRATION_TYPE'}, function (data) {
+        if ((data.IntegrationType !== "CMS") && (data.IntegrationType !== "SKIN")) {
+            $('#trPharmacy').hide();
+        }
+    });
+
+    var pagefunction = function () {
+        $().ready(function () {
+            var validator; //validator01
+            $(".numeric").numeric();
+            var container = $('div.errorContainer');
+            //$('#loadingModal').modal('show');
+            $.get('${pageContext.request.contextPath}/Servlet_SitesDBInfor', {SFC: 'GET_INTEGRATION_TYPE'}, function (data) {
+                if ((data.IntegrationType !== "CMS") && (data.IntegrationType !== "SKIN")) {  //validator01
+                validator = $("#form_AddProduct").validate({
+                    rules: {
+                        txtPrdCode: "required",
+                        txtPrdName: "required",
+                        ddlPrdGrp: "required",
+                        ddlPrdUOM: "required",
+                        ddlAccGrp: "required",
+                        ddlPrdType: "required",
+                        rdPrdCat: "required"
+
+
+                    },
+                    messages: {
+                        txtPrdCode: "Product Code cannot be blank.",
+                        txtPrdName: "Product Name cannot be blank.",
+                        ddlPrdGrp: "Product Group must be selected.",
+                        ddlPrdUOM: "Product UOM must be selected.",
+                        ddlAccGrp: "Account Group must be selected.",
+                        ddlPrdType: "Product Type must be selected.",
+                        rdPrdCat: "Product category must be selected."
+
+                    },
+                    errorContainer: container,
+                    errorLabelContainer: $("ol", container),
+                    wrapper: 'li'
+
+                });
+            }
+            else{
+                validator = $("#form_AddProduct").validate({
+                rules: {
+                    txtPrdCode: "required",
+                    txtPrdName: "required",
+                    ddlPrdGrp: "required",
+                    ddlPrdUOM: "required",
+                    ddlAccGrp: "required",
+                    ddlPharmacyUOM: "required",
+                    ddlPrdType: "required",
+                    rdPrdCat: "required"
+
+
+                },
+                messages: {
+                    txtPrdCode: "Product Code cannot be blank.",
+                    txtPrdName: "Product Name cannot be blank.",
+                    ddlPrdGrp: "Product Group must be selected.",
+                    ddlPrdUOM: "Product UOM must be selected.",
+                    ddlAccGrp: "Account Group must be selected.",
+                    ddlPharmacyUOM: "Pharmacy UOM must be selected.",
+                    ddlPrdType: "Product Type must be selected.",
+                    rdPrdCat: "Product category must be selected."
+
+                },
+                errorContainer: container,
+                errorLabelContainer: $("ol", container),
+                wrapper: 'li'
+
+            });
+            }
+        });
+            
+            $("#chkIsActive").click(function(){                
+                if ( $('#chkIsActive').is(":checked") ) { 
+                    $('#chkIsActive').val('Y');
+                } else if ( $('#chkIsActive').is(":unchecked") )
+                    $('#chkIsActive').val('N'); {
+                }
+            });
+        });
+
+    };
+    loadScript("js/jquery.numeric.js", pagefunction);
+
+    $("#ddlPrdUOM").change(function() {             
+        refresh_ddlPharmacyUOM();
+        
+        //check if uom exist in conversion      
+        var uom = this.value;
+        var bFound = false;
+        if ($('#myTable tr').length > 0) {
+
+            $('#myTable tr').each(function (row, th) {
+                var sBaseUOM = $(th).find('td:eq(1)').text();
+                var sToUOM = $(th).find('td:eq(3)').text();
+
+                if ((uom === sBaseUOM)||(uom === sToUOM)) {
+                    bFound = true;
+                    return false;
+                }                   
+            });   
+            if (bFound) {
+                calPharmacyUnitCost();
+            }
+        } else {
+            calPharmacyUnitCost();
+        }       
+    });
+    
+    function calPharmacyUnitCost() {
+        var sPharmacyUOM = $("#ddlPharmacyUOM").val();
+        var sDefaultUOM = $("#ddlPrdUOM").val();
+        var dUnitCost = $("#txtUnitCost").val();
+        
+        if (sPharmacyUOM !== "") {
+
+            if (sPharmacyUOM === sDefaultUOM) {
+                $("#txtPharmacyUnitCost, #hdnPharmacyUnitCost").val(dUnitCost);
+            } else {                   
+                var tempCurUOM = "", tempUnitCost = 0;
+                $('#myTable tr').each(function (row, th) {
+                    var sBaseUOM = $(th).find('td:eq(1)').text(); 
+                    var iFactor = $(th).find('td:eq(2)').text();
+                    var sToUOM = $(th).find('td:eq(3)').text();
+
+                    if (sBaseUOM === sDefaultUOM) { 
+                        tempCurUOM = sToUOM;
+                        tempUnitCost = dUnitCost / iFactor; 
+                        return false;
+                    }
+                });  
+
+                var iCount = 0;
+                while ((tempCurUOM !== sPharmacyUOM) && (iCount < 10)) {                   
+                    $('#myTable tr').each(function (row, th) { 
+                        var sBaseUOM = $(th).find('td:eq(1)').text();
+                        var iFactor = $(th).find('td:eq(2)').text();
+                        var sToUOM = $(th).find('td:eq(3)').text();
+
+                        if (sBaseUOM === tempCurUOM) {
+                            tempCurUOM = sToUOM; 
+                            tempUnitCost = tempUnitCost / iFactor; 
+                            return false;
+                        }
+                    });  
+                    iCount++;
+                }
+                if (tempCurUOM === sPharmacyUOM) {
+                    $("#txtPharmacyUnitCost, #hdnPharmacyUnitCost").val(tempUnitCost.toFixed(2));
+                } else {
+                    $("#txtPharmacyUnitCost, #hdnPharmacyUnitCost").val("0.00");
+                }
+            }
+        } else {
+            $("#txtPharmacyUnitCost, #hdnPharmacyUnitCost").val("0.00");
+        }
+    }
+
+    function SetBasedUOM(value) {
+        $('#ddlUOMFrom').val(value);
+        $('#ddlUOMPrice').val(value);
+        // $('#txtFactor').val(1);
+        //  $('#ddlUOMTo').val(value);
+       // add_UomConvert();
+    }
+
+    function add_UomConvert() {
+        //alert('aaa');
+        var booleanValue = true;
+        //valid01
+        var $validFactor = twoDeci($("#txtFactor").val());
+        
+        if ($('#ddlUOMFrom').val() === "" || $('#txtFactor').val() === "" || $('#ddlUOMTo').val() === "") {
+            alert("Please Enter data to Add Row");
+            return false;
+        }
+        
+        //valid01
+        if ($validFactor === false){
+            $.bigBoxFail({
+                title: "Invalid Factor.",
+                content: "Please enter a factor and try again...",
+                timeout: 6000
+            });
+            return false;
+        }
+        var rowCount = $('#myTable tr').length;
+
+        //alert(rowCount);
+        if (rowCount > 1) {
+            booleanValue = Check_UomConvert($('#ddlUOMFrom').val(), $('#ddlUOMTo').val(), $('#txtFactor').val());
+        } else {
+            booleanValue = true;
+        }
+        if (booleanValue === true) {
+            var $table = $(this).closest('table'),
+                    FromUOM = $('#ddlUOMFrom').val(),
+                    Factor = $('#txtFactor').val(),
+                    ToUOM = $('#ddlUOMTo').val();
+
+            $("#myTable tbody").append("<tr>" +
+                    "<td>" +
+                    "<button type='button' class='editSummaryGrid' onclick='summaryEdit(this);'><span class='glyphicon glyphicon-pencil'></span>Edit</button>&nbsp;\n\
+                                         <button type='button' class='editSummaryGrid' onclick='summaryDelete(this);'>Delete</button>\n\
+                                         <button  class='btnSummaryGrid' onclick='saveSummaryChanges(this);'><span class='glyphicon glyphicon-save'></span>Save</button>&nbsp;\n\
+                                         <button  class='btnSummaryGrid' onclick='summaryCancel(this);'>Cancel</button>\n\
+                                    </td>" +
+                    "<td><label class='labelFromUOM'>" + FromUOM + "</label><input type='text' id='editConvFromUOM' class='modalFromUOM' readonly disabled='disabled' value=" + FromUOM + "  style='display:none;width:200px;border:none;background:#FFFFFF;' /></td>" +
+                    "<td><label class='labelFactor'>" + Factor + "</label><input type='text' class='modalFactor'  value=" + Factor + "  style='display:none;width:200px;border:none;background:#FFFFFF;' /></td>" +
+                    "<td><label class='labelToUOM'>" + ToUOM + "</label><input type='text' id='editConvToUOM' class='modalToUOM' readonly disabled='disabled' value=" + ToUOM + "  style='display:none;width:200px;border:none;background:#FFFFFF;' /></td>"
+                    + "</tr>");
+
+
+        } else {
+            $.bigBoxFail({
+                title: "Create UOM Conversation Fail.",
+                content: "Create UOM Conversation Fail.",
+                timeout: 6000
+            });
+        }
+        $(".editSummaryGrid").show();
+        $(".btnSummaryGrid").hide();
+        $('#ddlUOMFrom').val('');
+        $('#txtFactor').val('');
+        $('#ddlUOMTo').val('');
+       // $('#ddlUOMFrom').attr("", "");
+         $('#ddlUOMFrom').prop('disabled', false);
+         
+        //refresh pharmacy uom
+        refresh_ddlPharmacyUOM();
+    }
+    
+    function refresh_ddlPharmacyUOM() {
+        
+        var sDefaultUOM = $('#ddlPrdUOM').val();
+        var conversionRow = $('#myTable tr').length;
+        
+        //if option is not default uom & no longer in conversion, remove
+        $('#ddlPharmacyUOM option').each(function(){
+            var curUOM = this.value;
+            if (conversionRow > 0) {
+                
+                var bFoundCurUOM = false;
+                $('#myTable tr').each(function (row, th) {
+                    var sBaseUOM = $(th).find('td:eq(1)').text();
+                    var sToUOM = $(th).find('td:eq(3)').text();
+
+                    if ((curUOM === sBaseUOM)||(curUOM === sToUOM)||(curUOM === sDefaultUOM)) {
+                        bFoundCurUOM = true;
+                    }                   
+                });   
+                if (!bFoundCurUOM) {
+                    $("#ddlPharmacyUOM option[value='" + curUOM + "']").remove();                   
+                }
+            } else {
+                if (this.value !== sDefaultUOM) {
+                    $("#ddlPharmacyUOM option[value='" + curUOM + "']").remove();
+                } 
+            }
+        });
+        
+        //if default uom not yet in list, insert
+        var bFoundDefaultUOM = false;
+        $('#ddlPharmacyUOM option').each(function(){
+            if (this.value === sDefaultUOM) {
+                bFoundDefaultUOM = true;
+            }                   
+        });
+        if (!bFoundDefaultUOM) {
+            $('#ddlPharmacyUOM').append($('<option></option>').val(sDefaultUOM).html(sDefaultUOM));
+        }
+        
+        //if uom conversion not yet in list, insert
+        $('#myTable tr').each(function (row, th) {
+            if (row !== 0) {    
+                var sBaseUOM = $(th).find('td:eq(1)').text();
+                var sToUOM = $(th).find('td:eq(3)').text();
+                               
+                var bFoundBaseUOM = false, bFoundToUOM = false;
+                $('#ddlPharmacyUOM option').each(function(){
+                    if (this.value === sBaseUOM) {
+                        bFoundBaseUOM = true;
+                    }                   
+                    if (this.value === sToUOM) {
+                        bFoundToUOM = true;
+                    }
+                });
+                
+                if (!bFoundBaseUOM) {
+                    $('#ddlPharmacyUOM').append($('<option></option>').val(sBaseUOM).html(sBaseUOM));
+                }
+                if (!bFoundToUOM) {
+                    $('#ddlPharmacyUOM').append($('<option></option>').val(sToUOM).html(sToUOM));
+                }
+            }                             
+        });      
+        
+        if ($('#ddlPharmacyUOM').val() === "") {
+            $('#txtPharmacyUnitCost, #hdnPharmacyUnitCost').val('0.00');
+        }
+    }
+
+    function add_Pricing() {
+
+//        if ($('#txtPrice1').val() === "" || $('#txtQty').val() === "" || $('#ddlUOMPrice').val() === "") {
+//            alert("Please Enter data to Add Row");
+//            return false;
+//        }
+        //valid01
+        var $validPrice1 = doubleNum($("#txtPrice1").val());
+        var $validPrice2 = doubleNum($("#txtPrice2").val());
+        var $validPrice3 = doubleNum($("#txtPrice3").val());
+        var $validPrice4 = doubleNum($("#txtPrice4").val());
+        var $validQuantity = intNum($("#txtQty").val());
+        
+        var booleanValue = true;
+        if ($('#ddlUOMPrice').val() === "" || $('#txtQty').val() === "" || $('#txtPrice1').val() === "") {
+            //alert("Please Enter data to Add Row");
+            //return false;
+            $.bigBoxFail({
+                title: "Create Pricing Fail.",
+                content: "Create Pricing Fail.",
+                timeout: 6000
+            });
+            return false;
+        }
+        //valid01
+        if ($validPrice1 === false || $validPrice2 === false || $validPrice3 === false || $validPrice4 === false){
+            $.bigBoxFail({
+                title: "Invalid inputs.",
+                content: "Please check the input for:<br>1. Price 1<br>2. Price 2<br>3. Price 3<br>4. Price 4",
+                timeout: 6000
+            });
+            return false;
+        }
+
+        //valid01
+        if ($validQuantity === false){
+            $.bigBoxFail({
+                title: "Invalid Quantity.",
+                content: "Please enter a valid amount of quantity and try again...",
+                timeout: 6000
+            });
+            return false;
+        }
+        if ($('#txtPrice1').val() === "") {
+            $('#txtPrice1').val('0');
+        }
+        if ($('#txtPrice2').val() === "") {
+            $('#txtPrice2').val('0');
+        }
+        if ($('#txtPrice3').val() === "") {
+            $('#txtPrice3').val('0');
+        }
+        if ($('#txtPrice4').val() === "") {
+            $('#txtPrice4').val('0');
+        }
+
+        var rowCount = $('#tbPricing tr').length;
+
+        if (rowCount > 1) {
+            //booleanValue = Check_UomPrice($('#ddlUOMPrice').val(), $('#txtQty').val());
+            booleanValue = true;
+        } else {
+            booleanValue = true;
+        }
+
+        if (booleanValue === true) {
+            var $table = $(this).closest('table'),
+                    QTY = $('#txtQty').val(),
+                    UOM = $('#ddlUOMPrice').val(),
+                    PRICE1 = $('#txtPrice1').val(),
+                    PRICE2 = $('#txtPrice2').val(),
+                    PRICE3 = $('#txtPrice3').val(),
+                    PRICE4 = $('#txtPrice4').val()
+                    ;
+            $("#tbPricing tbody").append("<tr>" +
+                    "<td width='160px'>" +
+                    "<button type='button' class='editSummaryGrid' onclick='summaryEdit(this);'><span class='glyphicon glyphicon-pencil'></span>Edit</button>\n\
+                                         <button type='button' class='editSummaryGrid' onclick='summaryDelete(this);'>Delete</button>\n\
+                                         <button  class='btnSummaryGrid' onclick='savePricingChanges(this);'><span class='glyphicon glyphicon-save'></span>Save</button>\n\
+                                         <button  class='btnSummaryGrid' onclick='summaryCancel(this);'>Cancel</button>\n\
+                </td>" +
+                    "<td><label class='labelQty'>" + QTY + "</label><input type='text' class='modalQty' disabled='disabled' value=" + QTY + "  style='display:none;width:80px;border:none;background:#FFFFFF;' /></td>" +
+                    "<td><label class='labelUOM'>" + UOM + "</label><input type='text' id='editPriceUOM' class='modalUOM' readonly    value=" + UOM + "  style='display:none;width:80px;border:none;background:#FFFFFF;' /></td>" +
+                    "<td><label class='labelPrice1'>" + PRICE1 + "</label><input type='text' class='modalPrice1' disabled='disabled' value=" + PRICE1 + "  style='display:none;width:80px;border:none;background:#FFFFFF;' /></td>" +
+                    "<td><label class='labelPrice2'>" + PRICE2 + "</label><input type='text' class='modalPrice2' disabled='disabled' value=" + PRICE2 + "  style='display:none;width:80px;border:none;background:#FFFFFF;' /></td>" +
+                    "<td><label class='labelPrice3'>" + PRICE3 + "</label><input type='text' class='modalPrice3' disabled='disabled' value=" + PRICE3 + "  style='display:none;width:80px;border:none;background:#FFFFFF;' /></td>" +
+                    "<td><label class='labelPrice4'>" + PRICE4 + "</label><input type='text' class='modalPrice4' disabled='disabled' value=" + PRICE4 + "  style='display:none;width:80px;border:none;background:#FFFFFF;' /></td>" +
+                    "</tr>"
+                    );
+
+        } else {
+            $.bigBoxFail({
+                title: "Create Price Fail.",
+                content: "Create Price Fail.",
+                timeout: 6000
+            });
+        }
+        $(".editSummaryGrid").show();
+        $(".btnSummaryGrid").hide();
+        $('#txtQty').val('');
+        $('#ddlUOMPrice').val('');
+        $('#txtPrice1').val('');
+        $('#txtPrice2').val('');
+        $('#txtPrice3').val('');
+        $('#txtPrice4').val('');
+        $('#ddlUOMPrice').prop('disabled', false);
+
+    }
+
+    function summaryEdit(e) {
+
+        var $this = $(e),
+                $td = $this.closest('td'),
+                $tr = $this.closest('tr');
+        $tr.find('td').each(function () {
+            $(this).find('label').hide();
+            $(this).find('input').show();
+        });
+        var btnSummaryGrid = $td.find('button.btnSummaryGrid'),
+                editSummaryGrid = $td.find('button.editSummaryGrid'),
+                $closestTR = $this.closest('tr'),
+                modalFactor = $closestTR.find('input.modalFactor').val();
+
+        editmodalFactor = $closestTR.find('input.modalFactor').val();
+        // editModalTotalPrice = $closestTR.find('input.modalItemPrice').val();
+
+        //summaryGridModalTbody
+        $closestTR.find('input').prop('disabled', false);
+        // $closestTR.find('input').css('class', 'form-control searchbox-text');
+        $closestTR.find('input').css('border', '1px solid #ccc');
+
+        $closestTR.find('input#editPriceUOM').prop('disabled', false);
+        $closestTR.find('input#editPriceUOM').css('border', '1px solid #fff');
+
+        $closestTR.find('input#editConvFromUOM').prop('disabled', false);
+        $closestTR.find('input#editConvFromUOM').css('border', '1px solid #fff');
+
+        $closestTR.find('input#editConvToUOM').prop('disabled', false);
+        $closestTR.find('input#editConvToUOM').css('border', '1px solid #fff');
+
+        btnSummaryGrid.show();
+        editSummaryGrid.hide();
+    }
+
+    function summaryCancel(e) {
+        $(".editSummaryGrid").show();
+        $(".btnSummaryGrid").hide();
+        $(e).closest('tr').find('input').prop('disabled', true);
+        $(e).closest('tr').find('input').css('border', 'none');
+        $(e).closest('tr').find('td').each(function () {
+            $(this).find('label').show();
+            $(this).find('input').hide();
+        });
+    }
+
+    function saveSummaryChanges(e) {
+        //alert(e);
+        var closestTR = $(e).closest('tr'),
+                modalFromUOM = closestTR.find('input.modalFromUOM').val(),
+                modalFactor = closestTR.find('input.modalFactor').val(),
+                modalToUOM = closestTR.find('input.modalToUOM').val();
+        //valid01
+        var $validFactor = twoDeci(modalFactor);
+        //valid01
+        if ($validFactor === false){
+            $.bigBoxFail({
+                title: "Invalid Factor.",
+                content: "Please enter a factor and try again...",
+                timeout: 6000
+            });
+        }
+        else{
+        closestTR.find('label.labelFromUOM').html(modalFromUOM);
+        closestTR.find('label.labelFactor').html(modalFactor);
+        closestTR.find('label.labelToUOM').html(modalToUOM);
+
+
+        $(".editSummaryGrid").show();
+        $(".btnSummaryGrid").hide();
+        $(e).closest('tr').find('input').prop('disabled', true);
+        $(e).closest('tr').find('input').css('border', 'none');
+        $(e).closest('tr').find('td').each(function () {
+            $(this).find('label').show();
+            $(this).find('input').hide();
+        });
+
+        calPharmacyUnitCost();
+    }
+
+    }
+
+    function summaryDelete(e) {
+
+        $(e).closest('tr').remove();
+        // GetTotal(valueType);
+        
+        refresh_ddlPharmacyUOM();
+    }
+
+    function savePricingChanges(e) {
+        //alert(e);
+
+        var closestTR = $(e).closest('tr'),
+                modalQty = closestTR.find('input.modalQty').val(),
+                modalUOM = closestTR.find('input.modalUOM').val(),
+                modalPrice1 = closestTR.find('input.modalPrice1').val(),
+                modalPrice2 = closestTR.find('input.modalPrice2').val(),
+                modalPrice3 = closestTR.find('input.modalPrice3').val(),
+                modalPrice4 = closestTR.find('input.modalPrice4').val();
+        //valid01
+        var $validQty = intNum(modalQty);
+        var $validPrice1 = doubleNum(modalPrice1);
+        var $validPrice2 = doubleNum(modalPrice2);
+        var $validPrice3 = doubleNum(modalPrice3);
+        var $validPrice4 = doubleNum(modalPrice4);
+        //valid01
+        if ($validQty === false){
+            $.bigBoxFail({
+                title: "Invalid Quantity.",
+                content: "Please enter a valid amount of quantity and try again...",
+                timeout: 6000
+            });
+        }
+        //valid01
+        else if ($validPrice1 === false || $validPrice2 === false || $validPrice3 === false || $validPrice4 === false){
+            $.bigBoxFail({
+                title: "Invalid inputs.",
+                content: "Please check the input for:<br>1. Price 1<br>2. Price 2<br>3. Price 3<br>4. Price 4",
+                timeout: 6000
+            });
+        }
+        else{
+        closestTR.find('label.labelQty').html(modalQty);
+        closestTR.find('label.labelUOM').html(modalUOM);
+        closestTR.find('label.labelPrice1').html(modalPrice1);
+        closestTR.find('label.labelPrice2').html(modalPrice2);
+        closestTR.find('label.labelPrice3').html(modalPrice3);
+        closestTR.find('label.labelPrice4').html(modalPrice4);
+
+
+        $(".editSummaryGrid").show();
+        $(".btnSummaryGrid").hide();
+        $(e).closest('tr').find('input').prop('disabled', true);
+        $(e).closest('tr').find('input').css('border', 'none');
+        $(e).closest('tr').find('td').each(function () {
+            $(this).find('label').show();
+            $(this).find('input').hide();
+        });
+        }
+
+
+
+
+    }
+
+    function Check_UomConvert(sUomFrom, sUomTo, sFactor) {
+
+        if (sUomFrom !== sUomTo) {
+
+            var MyRows = $('#myTable').find('tbody').find('tr');
+            var srecstatus = null;
+            //alert(MyRows.length);
+            for (var i = 0; i < MyRows.length; i++) {
+                var BaseUOM = $(MyRows[i]).find('td:eq(1)').text();
+                var ConvUOM = $(MyRows[i]).find('td:eq(3)').text();
+                var Factor = $(MyRows[i]).find('td:eq(2)').text();
+
+                // alert(sFactor + Factor);
+
+                if (((sUomFrom === BaseUOM) || (sUomFrom === ConvUOM))) {
+
+                    if (((sUomTo === BaseUOM) || (sUomTo === ConvUOM)) && ((parseFloat(sFactor) === parseFloat(Factor)))) {
+                        // alert("1");
+                        srecstatus = false;
+                        break;
+                    } else {
+                        srecstatus = true;
+                    }
+                }
+                else if (((sUomTo === BaseUOM) || (sUomTo === ConvUOM))) {
+                    if (((sUomFrom === BaseUOM) || (sUomFrom === ConvUOM)) && ((parseFloat(sFactor) === parseFloat(Factor)))) {
+                        // alert("2");
+                        srecstatus = false;
+                        break;
+                    } else {
+                        srecstatus = true;
+                    }
+                }
+
+
+            }
+
+        }
+        return srecstatus;
+
+    }
+
+    function Check_UomPrice(sPriceUOM, sFactor) {
+        // alert(sPriceUOM);
+        // alert(sFactor);
+        var MyRows = $('#myTable').find('tbody').find('tr');
+        var MyPrice = $('#tbPricing').find('tbody').find('tr');
+        var sStatus = null;
+        // alert(MyPrice.length);
+        //alert(MyRows.length);
+        for (var i = 0; i < MyRows.length; i++) {
+            var BaseUOM = $(MyRows[i]).find('td:eq(1)').text();
+            var ConvUOM = $(MyRows[i]).find('td:eq(3)').text();
+
+            if ((sPriceUOM === BaseUOM) || (sPriceUOM === ConvUOM)) {
+                for (var x = 0; x < MyPrice.length; x++) {
+                    //alert(MyPrice.length);
+                    var PriceUOM = $(MyPrice[x]).find('td:eq(2)').text();
+                    var PriceFactor = $(MyPrice[x]).find('td:eq(1)').text();
+                    // alert( x + " sPriceUOM-->" + sPriceUOM + " PriceUOM-->" + PriceUOM + " sFactor-->" + parseFloat(sFactor) + " PriceFactor-->" + parseFloat(PriceFactor));
+                    //alert();
+                    //alert("PriceUOM-->" +  PriceUOM);
+                    // alert("PriceUOM-->" +  PriceUOM);
+                    //alert("sFactor-->" + parseFloat(sFactor).toFixed(2) + " PriceFactor-->" + parseFloat(PriceFactor).toFixed(2));
+
+                    if (sPriceUOM === PriceUOM) {
+                        if ((sPriceUOM === PriceUOM) && (parseFloat(sFactor) === parseFloat(PriceFactor))) {
+                            sStatus = false;
+                            break;
+                        } else {
+                            if ((sPriceUOM === PriceUOM) && (parseFloat(sFactor) !== parseFloat(PriceFactor))) {
+
+                                sStatus = true;
+
+                            }
+                        }
+                    } else {
+                        sStatus = true;
+                    }
+
+                }//end price loop
+            }
+        }
+        return sStatus;
+    }
+
+
+    //c01
+    //Aaron
+    function confirm(){
+        var $this = $(this);
+        var bMandateOK = true;
+        var sMsg = "";
+        if ($("#txtPrdCode").val().toString() === '')
+        {
+            sMsg = "Product Code cannot be blank." + "\n\r";
+            bMandateOK = false;
+        }
+        if ($("#txtPrdName").val().toString() === '')
+        {
+            sMsg = sMsg + "Product Name cannot be blank." + "\n\r";
+            bMandateOK = false;
+        }
+        if ($("#ddlPrdGrp").val().toString() === '')
+        {
+            sMsg = sMsg + "Product Group must be selected." + "\n\r";
+            bMandateOK = false;
+        }
+        if ($("#ddlPrdUOM").val().toString() === '')
+        {
+            sMsg = sMsg + "Product UOM must be selected." + "\n\r";
+            bMandateOK = false;
+        }
+        if ($("#ddlAccGrp").val().toString() === '')
+        {
+            sMsg = sMsg + "Account Group must be selected." + "\n\r";
+            bMandateOK = false;
+        }
+        if (!bMandateOK)
+        {
+            $.bigBoxFail({
+                        title: "Create Product FAIL.",
+                        content: sMsg,
+                        timeout: 3000
+                    });
+        }
+        
+        if ($("#ddlPharmacyUOM").val().toString() === '') {
+            $("#ddlPharmacyUOM").val($("#ddlPrdUOM").val());
+            $("#hdnPharmacyUnitCost").val($("#txtUnitCost").val());
+        }
+        
+        var UOMConvertData = new Array();
+        $('#myTable tr').each(function (row, th) {
+ 
+            if (row === 0){               
+//                UOMConvertData[row] = {
+//                  "FUNCTION": "INSERT"
+//                , "IDX": ""
+//                , "BASEDUOM": $('#ddlPrdUOM').val()
+//                , "FACTOR": "1"
+//                , "TOUOM": $('#ddlPrdUOM').val()
+//                , "STOCKCODE": $('#txtPrdCode').val()
+//                };
+            }       
+            else{               
+                UOMConvertData[row] = {
+                  "FUNCTION": "INSERT"
+                , "IDX": ""
+                , "BASEDUOM": $(th).find('td:eq(1)').text()
+                , "FACTOR": $(th).find('td:eq(2)').text()
+                , "TOUOM": $(th).find('td:eq(3)').text()
+                , "STOCKCODE": $('#txtPrdCode').val()
+
+            };
+            }           
+        });
+       
+        if (UOMConvertData.length > 1){
+            UOMConvertData.splice(0, 1);
+        }
+     
+
+        var ItemToSend = JSON.stringify(UOMConvertData);
+        $('#hidUOMConvert').load().val(ItemToSend).valid();
+        // alert($('#hidUOMConvert').val());
+
+        var PrdPriceData = new Array();
+        $('#tbPricing tr').each(function (row, th) {
+            PrdPriceData[row] = {
+                "FUNCTION": "INSERT"
+                , "IDX": ""
+                , "STOCKCODE": $('#txtPrdCode').val()
+                , "FACTOR": $(th).find('td:eq(1)').text()
+                , "UOM": $(th).find('td:eq(2)').text()
+                , "PRICE1": $(th).find('td:eq(3)').text()
+                , "PRICE2": $(th).find('td:eq(4)').text()
+                , "PRICE3": $(th).find('td:eq(5)').text()
+                , "PRICE4": $(th).find('td:eq(6)').text()
+            };
+        });
+        PrdPriceData.splice(0, 1);
+
+        var ItemPrice = JSON.stringify(PrdPriceData);
+        $('#hidPricing').load().val(ItemPrice).valid();
+         //alert(JSON.stringify($('#form_AddProduct').serializeArray()));
+
+        var $validProduct = $("#form_AddProduct").valid();
+        //valid01
+        var $validUnitCost = doubleNum($("#txtUnitCost").val());
+        var $validPharCost = doubleNum($("#txtPharmacyUnitCost").val());
+
+        //valid01
+        if ($validProduct === true && $validUnitCost === true && $validPharCost === true) {
+            document.getElementById("btnSave").disabled = true;
+            showYesNo({
+                title: "Confirmation needed",
+                width: 420,
+                noClose: true,
+                isModal: true,
+                body: [
+                   "<br><h4>Please confirm all the details entered.<h4><br>"
+                ],
+                show: function(){},
+                Yes: {
+                    text: "Yes",
+                    opt: function(){
+                       createNew();
+                       hideYesNo();
+                   }
+               },
+               No:{
+                   text: "No",
+                   opt: function(){
+                       document.getElementById("btnSave").disabled = false;
+                       hideYesNo();
+                   }
+               }
+            });
+        }
+        //valid01
+        else if ($validUnitCost === false){
+            $.bigBoxFail({
+                title: "Invalid Unit Cost.",
+                content: "Please enter a valid unit cost and try again...",
+                timeout: 6000
+            });
+        }
+        //valid01
+        else if ($validPharCost === false){
+            $.bigBoxFail({
+                title: "Invalid Pharmacy Unit Cost.",
+                content: "Please enter a valid pharmacy unit cost and try again...",
+                timeout: 6000
+            });
+        }
+        
+    }
+    
+    //c01
+    //Aaron
+    function createNew(){
+        var $this = $(this);
+        $.ajax({
+            type: "POST",
+            url: "${pageContext.request.contextPath}/Servlet_Stock?SFC=INSERT_PRODUCT",
+            data: {
+                ADDPROD: JSON.stringify($('#form_AddProduct').serializeArray()),
+                UOMCONV: $('#hidUOMConvert').val(),
+                PRDPRICE: $('#hidPricing').val(),
+                ISACTIVE: $('#chkIsActive').val(),
+                PRD_API: $('#txtPrdAPI').val()
+            },
+            dataType: 'json',
+            beforeSend: function (xhr) {
+                $.showLoadingNoStatus();
+            },
+            success: function(response, status, xhr) {
+                if (response.bool === true) {
+                    $.bigBoxSuccess({
+                        title: "Create Product SUCCESS.",
+                        content: "Product creation SUCCESS.",
+                        timeout: 6000
+                    });
+                }
+                else{
+                    $.bigBoxFail({
+                        title: "Create Product FAIL.",
+                        content: "There is some error during product creation.<br> Please try again...",
+                        timeout: 6000
+                    });
+                }
+            },
+            error: function (xhr, status, error) {
+                $.bigBoxFail({
+                    title: "Transaction ERROR",
+                    content: "There is some error occur during data transfer. Please try again later",
+                    timeout: 6000
+                });
+            },
+            complete: function (xhr, status) {
+                if (xhr.status === 200) {
+                    $.hideLoadingNoStatus(function () {
+                       window.location.href = "#/ProductDetail/" + $('#txtPrdCode').val();
+                    }, 500);
+                } else {
+                    $.hideLoadingNoStatus(function () {
+                    }, 0);
+                }
+            }
+        });
+    }
+    //c01
+    //Aaron
+
+    //valid01
+    function intNum(num){
+        var reg = /^[0-9]+$/;
+        if (num === ""){
+            return true;
+        }
+        else{
+            return reg.test(num);
+        }
+    }
+    
+    //valid01
+    function doubleNum(num){
+        var reg = /^[0-9]+(\.[0-9][0-9]?[0-9]?)?$/;
+        if (num === ""){
+            return true;
+        }
+        else{
+            return reg.test(num);
+        }
+    }
+    //valid01
+    function twoDeci(num){
+        var reg = /^[0-9]+(\.[0-9][0-9]?)?$/;
+        if (num === ""){
+            return true;
+                    }
+        else{
+            return reg.test(num);
+                }
+        }
+
+    pagefunction();
+
+</script>

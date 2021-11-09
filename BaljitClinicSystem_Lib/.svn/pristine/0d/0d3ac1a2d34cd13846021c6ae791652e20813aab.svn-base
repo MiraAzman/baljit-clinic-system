@@ -1,0 +1,28 @@
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package BusinessData;
+
+
+/*----------------------------------------
+2016-3-21 CPK   ADDED LoadEnvironmentSetting into session variables.
+------------------------------------------*/
+import BusinessData.BaseDAL;
+import BusinessLogic.BLL_Common;
+
+public class DAL_ApplicationSetting {
+    BaseDAL DAL = new BaseDAL();
+    
+    public BLL_Common.Common_Object DAL_GET_APPLICATION_SETTINGS(String SiteName, String[] sIn)
+    {
+        return BaseDAL.Get_Multiple_QueryReturn("SP_GET_APPLICATION_SETTING(?)", sIn, new int[]{}, SiteName);
+    }
+    
+    public BLL_Common.Common_Object DAL_GET_LOCATION(String SiteName, String[] sIn) {       
+       return BaseDAL.Get_Multiple_QueryReturn("SP_GET_LOCATION(?,?,?,?,?,?,?"
+           + ")", sIn, new int[]{}, SiteName); 
+    }
+
+}

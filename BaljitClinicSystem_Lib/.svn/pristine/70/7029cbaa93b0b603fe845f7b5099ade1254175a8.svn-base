@@ -1,0 +1,63 @@
+CREATE DEFINER=`root`@`localhost` PROCEDURE `SP_GET_STOCK_REORDER`(
+IN sMethod         varchar(30),
+IN sStockCode      varchar(16),
+IN sUOMCode        varchar(6),
+IN sOrderBy        varchar(30),
+IN sPage           varchar(10),
+IN sPerPage        varchar(10)
+)
+BEGIN
+
+
+
+
+
+
+        DECLARE _statement VARCHAR(8000);
+
+
+        IF sMethod = 'GET_STOCKREORDER_LIST' THEN
+
+                SET _statement = ' SELECT CONCAT(rord_companycode,"'" - "'",comp_name) AS rord_companycode,
+                                   CONCAT(rord_locationcode,"'" - "'",Loc_Name) AS rord_locationcode,
+                                   TRUNCATE(rord_reorderlevel,2) AS rord_reorderlevel, TRUNCATE(rord_reorderqty,2) AS rord_reorderqty
+
+                                   FROM stkm_stockreorderlevel
+                                   LEFT JOIN stkm_company ON rord_companycode = comp_code
+                                   LEFT JOIN stkm_location ON rord_locationcode = loc_code';
+
+                IF (sStockCode <> '') THEN
+                        SET _statement = CONCAT(_statement, ' WHERE rord_stockcode = ',"'",sStockCode ,"'", ' ');
+                END IF;
+
+
+                IF (sUOMCode <> '') THEN
+                        SET _statement = CONCAT(_statement, ' AND rord_uomcode = ',"'",sUOMCode ,"'", ' ');
+                END IF;
+
+
+        END IF;
+
+
+        IF sMethod = 'COUNT_STOCKREORDER_LIST' THEN
+
+                SET _statement =  'SELECT COUNT(rord_stockcode) AS Total
+                                   FROM stkm_stockreorderlevel';
+
+                IF (sStockCode <> '') THEN
+                        SET _statement = CONCAT(_statement, ' WHERE rord_stockcode = ',"'",sStockCode ,"'", ' ');
+                END IF;
+
+
+                IF (sUOMCode <> '') THEN
+                        SET _statement = CONCAT(_statement, ' AND rord_uomcode = ',"'",sUOMCode ,"'", ' ');
+                END IF;
+
+        END IF;
+
+        SET @statement = _statement;
+        PREPARE dynquery FROM @statement;
+        EXECUTE dynquery;
+        DEALLOCATE PREPARE dynquery;
+
+END

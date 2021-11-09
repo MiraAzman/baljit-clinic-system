@@ -1,0 +1,108 @@
+CREATE DEFINER=`root`@`localhost` PROCEDURE `SP_GET_REPORT_HIS`(
+IN sMethod         varchar(30),
+IN sDateFrom       varchar(20),
+IN sDateTo         varchar(20),
+IN sItemCodeFrom   varchar(20),
+IN sItemCodeTo     varchar(20),
+IN sCompCode       varchar(20),
+IN sLocCode        varchar(20),
+IN sStkTypeFrom    varchar(10),
+IN sStkTypeTo      varchar(10),
+IN sCHGGrpFrom     varchar(10),
+IN sCHGGrpTo       varchar(10),
+IN sCategory       varchar(30),
+IN sSubtotalBy     varchar(20)
+)
+BEGIN
+
+ DECLARE _statement         VARCHAR(8000);
+
+        IF (sMethod = 'GET_SALES_REPORT_HIS') THEN
+
+            SET _statement = ' SELECT DATE(bls_visitdate) AS DocDate, bls_billno AS DocNo, bld_chgcode AS ItemCode, bld_chgdesc AS CHGDesc, bld_stocktype AS StkType,
+
+                                      bld_chggrp AS CHGGrp, bld_company AS CompCode, bld_branch AS LocCode, bld_uom AS UOM,
+
+                                      TRUNCATE(bld_unitprice,2) AS UnitPrice, TRUNCATE(bld_qty,2) AS Qty, TRUNCATE(bld_gsttaxrates,2) AS GSTTaxRates,
+
+                                      TRUNCATE(bld_gstamt,2) AS GSTAmt, TRUNCATE(bld_discountamt,2) AS DiscAmt, TRUNCATE(bld_grosstotal,2) AS GrossTotal,
+
+                                      TRUNCATE(bld_totalprice,2) AS SubTotalAmt, ';
+
+            IF (sCategory <> '') THEN
+                    SET _statement = CONCAT(_statement, ' bld_category AS Category, ct_typedesc AS CategoryDesc, ');
+            END IF;
+
+            SET _statement = CONCAT(_statement,"'",sDateFrom,"'", ' AS selDateFrom, ' );
+
+            SET _statement = CONCAT(_statement,"'",sDateTo,"'", ' AS selDateTo ' );
+
+            SET _statement = CONCAT(_statement,'
+                FROM his_billsummary
+                JOIN his_billdetail ON bls_qidx = bld_qidx
+                JOIN stkc_codetype ON ct_cdtypecode = bld_category
+                WHERE bls_idx IS NOT NULL ' );
+
+            IF (sCategory <> '') THEN
+                    SET _statement = CONCAT(_statement, ' AND bld_category IN (',sCategory,') ');
+            ELSE
+                    SET _statement = CONCAT(_statement, ' AND bld_category = ''DRUG'' ' );
+            END IF;
+
+            IF (sDateFrom <> '') THEN
+                    SET _statement = CONCAT(_statement, ' AND bls_visitdate >= ',"'",sDateFrom,"'" );
+            END IF;
+
+            IF (sDateTo <> '') THEN
+                    SET _statement = CONCAT(_statement, ' AND bls_visitdate <= ',"'",sDateTo,"'" );
+            END IF;
+
+            IF (sCompCode <> '') THEN
+                    SET _statement = CONCAT(_statement, ' AND bld_company = ',"'",sCompCode,"'" );
+            END IF;
+
+            IF (sLocCode <> '') THEN
+                    SET _statement = CONCAT(_statement, ' AND bld_branch = ',"'",sLocCode,"'" );
+            END IF;
+
+            IF (sItemCodeFrom <> '') THEN
+                    SET _statement = CONCAT(_statement, ' AND bld_chgcode >= ',"'",sItemCodeFrom,"'" );
+            END IF;
+
+            IF (sItemCodeTo <> '') THEN
+                    SET _statement = CONCAT(_statement, ' AND bld_chgcode <= ',"'",sItemCodeTo,"'" );
+            END IF;
+
+            IF  (sCHGGrpFrom <> '') THEN
+                    SET _statement = CONCAT(_statement, ' AND bld_chggrp >= ',"'", sCHGGrpFrom,"'");
+            END IF;
+
+            IF  (sCHGGrpTo <> '') THEN
+                    SET _statement = CONCAT(_statement, ' AND bld_chggrp <= ',"'", sCHGGrpTo,"'");
+            END IF;
+
+            IF  (sSubtotalBy <> '') THEN
+                 IF  (sSubtotalBy = 'CATEGORY') THEN
+                    SET _statement = CONCAT(_statement, ' ORDER BY Category, CompCode, LocCode, DocDate ' );
+                 END IF;
+
+                 IF (sSubtotalBy = 'CHGGROUP') THEN
+                    SET _statement = CONCAT(_statement, ' ORDER BY CHGGrp, CompCode, LocCode, DocDate ' );
+                 END IF;
+
+                 IF (sSubtotalBy = 'ALL') THEN
+                    SET _statement = CONCAT(_statement, ' ORDER BY Category, CHGGrp, CompCode, LocCode, DocDate ' );
+                 END IF;
+            ELSE
+                 SET _statement = CONCAT(_statement, ' ORDER BY CompCode, LocCode, DocDate ' );
+            END IF;
+
+            SET @statement = _statement;
+            PREPARE dynquery FROM @statement;
+            EXECUTE dynquery;
+            DEALLOCATE PREPARE dynquery;
+
+      END IF;
+
+
+END

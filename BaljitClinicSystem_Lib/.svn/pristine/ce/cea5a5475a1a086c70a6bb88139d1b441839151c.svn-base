@@ -1,0 +1,52 @@
+CREATE DEFINER=`root`@`localhost` PROCEDURE `SP_TRX_SYSTEM_ENVIRONMENT_SETTINGS`(
+IN sMethod         varchar(100),
+IN sSYS_OrgName VARCHAR(100),
+IN sSYS_OrgAdd1 VARCHAR(50),
+IN sSYS_OrgAdd2 VARCHAR(50),
+IN sSYS_OrgAdd3 VARCHAR(50),
+IN sSYS_OrgPostcode VARCHAR(10),
+IN sSYS_OrgTelephone VARCHAR(20),
+IN sSYS_OrgFax VARCHAR(20),
+IN sSYS_OrgCountry  VARCHAR(50),
+IN sSYS_OrgState  VARCHAR(50),
+IN sSYS_OrgRemarks VARCHAR(100),
+IN sSYS_OrgContactPerson VARCHAR(200),
+IN sSYS_OrgBusinessRegNo VARCHAR(20),
+IN sSYS_OrgBusinessGSTNo VARCHAR(20),
+IN sBy             varchar(20),
+IN sRecStatus VARCHAR(4),
+OUT Result         varchar(30)
+)
+BEGIN
+
+ DECLARE _statement VARCHAR(8000);
+
+        IF sMethod = 'EDIT_SYSTEM_ENVIRONMENT_SETTINGS' THEN
+
+                UPDATE stkm_systemenvironment
+
+                SET
+                    sys_orgname = sSYS_OrgName,
+                    sys_orgadd1 = sSYS_OrgAdd1,
+                    sys_orgadd2 = sSYS_OrgAdd2,
+                    sys_orgadd3 = sSYS_OrgAdd3,
+                    sys_orgpostcode = sSYS_OrgPostcode,
+                    sys_orgtelephone = sSYS_OrgTelephone,
+                    sys_orgfax = sSYS_OrgFax,
+                    sys_orgcountry  = sSYS_OrgCountry ,
+                    sys_orgstate  = sSYS_OrgState ,
+                    sys_orgremarks = sSYS_OrgRemarks,
+                    sys_orgcontactperson = sSYS_OrgContactPerson,
+                    sys_orgbusinessregno = sSYS_OrgBusinessRegNo,
+                    sys_orgbusinessgstno = sSYS_OrgBusinessGSTNo,
+
+                    recstatus = sRecStatus,
+                    modifiedby = sBy,
+                    modifieddt = NOW() ;
+
+                SELECT '00000' INTO Result;
+
+        END IF;
+
+
+END

@@ -1,0 +1,70 @@
+CREATE DEFINER=`root`@`localhost` PROCEDURE `SP_GET_MENU`(
+IN sMethod        varchar(30),
+IN sMnuCode       varchar(20),
+IN sMnuType       varchar(10),
+IN sMnuName       varchar(100),
+IN sMnuParent     varchar(20),
+IN sRecStatus     varchar(5),
+IN sRoleCode      varchar(20),
+IN sOrderBy       varchar(30),
+IN sPage          varchar(10),
+IN sPerPage       varchar(10)
+)
+BEGIN
+
+
+
+
+
+
+
+DECLARE _statement VARCHAR(8000);
+
+IF sMethod = 'ALL_MENU' THEN
+
+         SET _statement =  ' Select mnu_menucode as MnuCode, mnu_type as MnuType, mnu_desc as MnuDesc, mnu_recstatus as MnuRecStatus, mnu_seq as MnuSeq,
+                             mnu_has_view as HasView, mnu_has_add as HasAdd, mnu_has_edit as HasEdit, mnu_has_del as HasDel, mnu_has_verify as HasVerify, mnu_has_approve as HasApprove
+                             From afc_menu
+                             Where  mnu_recstatus = ''1''
+                             Order by  mnu_seq ';
+
+        
+        
+        
+
+
+END IF;
+
+
+IF sMethod = 'MENU_BYROLE' THEN
+          SET _statement =  ' Select MNU.mnu_menucode as MnuCode, MNU.mnu_type as MnuType, MNU.mnu_desc as MnuDesc, MNU.mnu_recstatus as MnuRecStatus,
+                              MNU.mnu_seq as MnuSeq, MNU.mnu_has_view as HasView, MNU.mnu_has_add as HasAdd, MNU.mnu_has_edit as HasEdit,
+                              MNU.mnu_has_del as HasDel, MNU.mnu_has_verify as HasVerify, MNU.mnu_has_approve as HasApprove, ' ;
+          SET _statement = CONCAT(_statement, ' (coalesce((Select RF.rfc_view FROM afc_rolefunction RF WHERE MNU.mnu_menucode = RF.rfc_menucode AND RF.rfc_rolecode = ', "'", sRoleCode, "'", '),null,0)) as AllowView,');
+          SET _statement = CONCAT(_statement, ' (coalesce((Select RF.rfc_add FROM afc_rolefunction RF WHERE MNU.mnu_menucode = RF.rfc_menucode AND RF.rfc_rolecode = ', "'", sRoleCode, "'", '),null,0)) as AllowAdd,');
+          SET _statement = CONCAT(_statement, ' (coalesce((Select RF.rfc_edit FROM afc_rolefunction RF WHERE MNU.mnu_menucode = RF.rfc_menucode AND RF.rfc_rolecode = ', "'", sRoleCode, "'", '),null,0)) as AllowEdit,');
+          SET _statement = CONCAT(_statement, ' (coalesce((Select RF.ref_del FROM afc_rolefunction RF WHERE MNU.mnu_menucode = RF.rfc_menucode AND RF.rfc_rolecode = ', "'", sRoleCode, "'", '),null,0)) as AllowDel,');
+          SET _statement = CONCAT(_statement, ' (coalesce((Select RF.ref_verify FROM afc_rolefunction RF WHERE MNU.mnu_menucode = RF.rfc_menucode AND RF.rfc_rolecode = ', "'", sRoleCode, "'", '),null,0)) as AllowVerify,');
+          SET _statement = CONCAT(_statement, ' (coalesce((Select RF.ref_approve FROM afc_rolefunction RF WHERE MNU.mnu_menucode = RF.rfc_menucode AND RF.rfc_rolecode = ', "'", sRoleCode, "'", '),null,0)) as AllowApprove');
+          SET _statement = CONCAT(_statement, '  From afc_menu MNU Where  MNU.mnu_recstatus = ''1''');
+
+
+
+                              IF (sMnuCode <> '') THEN
+                                   SET _statement = CONCAT(_statement, ' AND MNU.mnu_menucode =', "'", sMnuCode, "'");
+                              END IF;
+
+                              SET _statement = CONCAT(_statement, ' Order by MNU.mnu_seq ');
+
+
+END IF;
+
+
+SET @statement = _statement;
+PREPARE dynquery FROM @statement;
+EXECUTE dynquery;
+DEALLOCATE PREPARE dynquery;
+
+
+
+END

@@ -1,0 +1,95 @@
+CREATE DEFINER=`root`@`localhost` PROCEDURE `SP_GET_CODETYPE`(
+IN sMethod     varchar(20),
+IN sType       varchar(20),
+IN sCode       varchar(20),
+In sDesc       varchar(50),
+IN sRecStatus  varchar(10),
+IN sOrderBy    varchar(30),
+IN sPage       varchar(10),
+IN sPerPage    varchar(10))
+BEGIN
+
+
+
+
+
+
+
+        DECLARE _statement VARCHAR(8000);
+
+         
+
+
+        IF sMethod = 'GET_CODETYPE_LIST' THEN
+
+                SET _statement = ' SELECT cd_cdcode, cd_cddesc, recstatus, cd_cdtype
+                                   FROM stkc_codedesc
+                                   WHERE cd_cdcode IS NOT NULL ';
+
+                IF (sType <> '') THEN
+                        SET _statement = CONCAT(_statement, ' AND cd_cdtype LIKE ',"'%",sType ,"%'", ' ');
+                END IF;
+
+
+                IF (sCode <> '') THEN
+                        SET _statement = CONCAT(_statement, ' AND cd_cdcode LIKE ',"'%",sCode ,"%'", ' ');
+                END IF;
+
+
+                IF (sDesc <> '') THEN
+                        SET _statement = CONCAT(_statement, ' AND cd_cddesc LIKE ',"'%",sDesc ,"%'", ' ');
+                END IF;
+
+
+                IF (sOrderBy <> '')  THEN
+                        SET _statement = CONCAT(_statement, ' ORDER BY ', sOrderBy);
+                ELSE
+                        SET _statement = CONCAT(_statement, ' ORDER BY cd_cdcode');
+                END IF;
+
+
+                SET _statement = CONCAT(_statement, ' LIMIT ',  (sPage - 1) * sPerPage, ",", sPerPage );
+
+        END IF;
+
+        IF sMethod = 'COUNT_CODETYPE_LIST' THEN
+
+                SET _statement = ' SELECT Count(cd_cdcode) as Total
+                                   FROM stkc_codedesc
+                                   WHERE cd_cdcode IS NOT NULL ';
+
+
+                IF (sType <> '') THEN
+                        SET _statement = CONCAT(_statement, ' AND cd_cdtype LIKE ',"'%",sType ,"%'", ' ');
+                END IF;
+
+
+                IF (sCode <> '') THEN
+                        SET _statement = CONCAT(_statement, ' AND cd_cdcode LIKE ',"'%",sCode ,"%'", ' ');
+                END IF;
+
+
+                IF (sDesc <> '') THEN
+                        SET _statement = CONCAT(_statement, ' AND cd_cddesc LIKE ',"'%",sDesc ,"%'", ' ');
+                END IF;
+
+        END IF;
+
+         IF sMethod = 'CODETYPE_DETAIL' THEN
+
+                SET _statement = ' SELECT cd_cdcode, cd_cddesc, recstatus
+                                   FROM stkc_codedesc';
+
+                IF (sCode <> '') THEN
+                        SET _statement = CONCAT(_statement, ' WHERE cd_cdcode = ', "'",sCode, "'");
+                END IF;
+
+                SET _statement = CONCAT(_statement, ' AND cd_cdtype = ', "'",sType, "'");
+
+        END IF;
+
+        SET @statement = _statement;
+        PREPARE dynquery FROM @statement;
+        EXECUTE dynquery;
+        DEALLOCATE PREPARE dynquery;
+END

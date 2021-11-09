@@ -1,0 +1,1484 @@
+<!--
+Modification ID     By      Date        Comment
+-------------------------------------------------------------------------------
+new01               Aaron   15Feb2019   New jsp for stock request detail 
+-->
+
+<%@taglib prefix="jstl" uri="http://java.sun.com/jsp/jstl/core" %>
+<jsp:useBean id="DDL" scope="page" class="BusinessLogic.Servlet_PopulateData" />
+<%  
+ String s_CompCode = (String) session.getAttribute("CompCode");   
+%>    
+<style type="text/css">
+    .ui-jqgrid tr.jqgrow td {
+        word-wrap: break-word; /* IE 5.5+ CSS3 see http://www.w3.org/TR/css3-text/#text-wrap */
+        white-space: pre-wrap; /* CSS3 */
+        white-space: -moz-pre-wrap; /* Mozilla, since 1999 */
+        white-space: -pre-wrap; /* Opera 4-6 */
+        white-space: -o-pre-wrap; /* Opera 7 */
+        overflow: hidden;
+        height: auto;
+        vertical-align: middle;
+        padding-top: 3px;
+        padding-bottom: 3px 
+    }
+    
+    .ui-jqgrid .ui-jqgrid-bdiv {
+        position: relative; 
+        margin: 0em; 
+        padding:0; 
+        /*overflow: auto;*/ 
+        overflow-x:hidden; 
+        overflow-y:auto; 
+        text-align:left;
+      }
+
+    .centered {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        margin-top: -50px;
+        margin-left: -200px;
+    }
+    div.errorContainer, div.errorContainer2{
+        display:none;
+        width:100%;
+    }
+    div.errorContainer, div.errorContainer2 ol li{
+        list-style-type:disc;
+        margin-left: 20px;
+    }
+    select:disabled{
+        background: #dddddd;
+    }
+    li{
+        list-style:none;
+    }
+    .disabledTab{
+        pointer-events: none;
+    }
+    input[type="text"].error { border: 1px solid #A94444; background-color:#FFF0F0; }
+    select.error { border: 1px solid #A94444; background-color:#FFF0F0; }
+    textarea.error { border: 1px solid #A94444; background-color:#FFF0F0; }
+    
+    input[type="text"]:read-only {box-shadow: none;}
+    textarea:read-only {box-shadow: none;}
+    
+    .selectedRow { 
+        color: #000000;
+        background-color: #00FFFF;
+        border-color: #00FFFF;
+    }
+</style>
+<link rel="stylesheet" type="text/css" href="css/your_style.css" />
+<link rel="stylesheet" type="text/css" href="js/plugin/jqgrid/ui.multiselect.css" />
+<section id="widget-grid" class="">
+
+<input type="hidden" id="lblCompCode" value="<%= session.getAttribute("CompCode")%>"  class="tboxreadonlyShort"/>
+    <input type="hidden" id="lblLocCode" value="<%= session.getAttribute("LocCode")%>"  class="tboxreadonlyShort"/>
+    <div class="col-xs-12 col-sm-7 col-md-7 col-lg-12">
+        <h1 class="page-title txt-color-blueDark">
+            <!-- PAGE HEADER -->
+            <i class="fa fa-lg fa-fw fa-arrows-h"></i> 
+            Stock Request Detail                                     
+        </h1>
+    </div>
+    <div class="widget-body row">
+        <article class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+            <div class="row" style="padding-bottom:10px;padding-left:10px;padding-right:10px;">
+                <div class="errorContainer alert alert-danger alert-block">
+                    <h4 class="alert-heading">There were some field left out or invalid inputs. Please brief through the form and reenter necessarily.</h4>
+                    <ol>
+                    </ol>
+                </div>
+            </div>
+            <div class="row">
+                <form id="form_ReqDetl" name="form_ReqDetl">
+                    <article class="col-sm-12 col-md-12 col-lg-12">
+                        <div class="jarviswidget jarviswidget-color-blueDark" id="wid-id-1"  data-widget-editbutton="false" data-widget-custombutton="false"
+                             data-widget-deletebutton="false" data-widget-colorbutton="false" data-widget-fullscreenbutton="false" data-widget-togglebutton="false">
+                            <header>
+                                <span class="widget-icon"> <i class="fa fa-file"></i></span>
+                                <span><h2>&nbsp;Stock Request Info</h2></span>
+                            </header>
+                            <div class="row">
+                                <div class="widget-body">
+
+                                    <table id="tbProductInfo" class="table table-bordered table-striped" style="clear:both;">
+                                        <tbody>
+                                            <tr>
+                                                <td width="12%">Request No</td>
+                                                <td width="1%">:</td>
+                                                <td width="25%"> 
+                                                    <input type="text" id="lblReqNo" name="lblReqNo" readonly class="tboxreadonly"/>
+        
+                                                </td>
+                                                <td width="12%">Request Date</td>
+                                                <td width="1%">:</td>
+                                                <td width="75%">       
+                                                    <input type="text" id="lblReqDate" name="lblReqDate" readonly class="tboxreadonly"/>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td width="12%">Company</td>
+                                                <td width="1%">:</td>
+                                                <td width="25%">     
+                                                    <input type="text" id="lblComp" name="lblComp" readonly class="tboxreadonly"/>
+                                                    <input type="hidden" id="hidComp" name="hidComp"/>
+                                                </td>
+                                                <td width="12%">Request Type</td>
+                                                <td width="1%">:</td>
+                                                <td width="75%">   
+                                                    <input type="text" id="lblType" name="lblType" readonly class="tboxreadonly"/>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td width="12%">Location</td>
+                                                <td width="1%">:</td>
+                                                <td width="25%">
+                                                    <input type="text" id="lblLoc" name="lblLoc" readonly class="tboxreadonly"/>
+                                                    <input type="hidden" id="hidLoc" name="hidLoc"/>
+                                                </td>
+                                                <td width="12%">Request Status</td>
+                                                <td width="1%">:</td>
+                                                <td width="75%">   
+                                                    <input type="text" id="lblStatus" name="lblStatus" readonly class="tboxreadonly"/>    
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+
+                                </div>
+                            </div>
+                        </div>
+                    </article>
+
+
+
+                    <article class="col-sm-12 col-md-12 col-lg-12">
+                        <div class="jarviswidget jarviswidget-color-blueDark" id="wid-id-3"  data-widget-editbutton="false" data-widget-custombutton="false"
+                             data-widget-deletebutton="false" data-widget-colorbutton="false" data-widget-fullscreenbutton="false" data-widget-togglebutton="false">
+                            <header>
+                                <span class="widget-icon"> <i class="fa fa-file"></i></span>
+                                <span><h2>&nbsp;Request Item</h2></span>
+                            </header>
+                            
+                            <div class="widget-body">
+                            <!--                        <input type="button" href="#myModal" data-toggle="modal" value="Print Reports" class="btn btn-default bg-color-blueDark txt-color-white" />&nbsp;
+                                                    <input type="button" id="btnMemExport" name="btnCorpExport" onclick='ExportData()' value="Export"  class="btn btn-default bg-color-blueDark txt-color-white"  style="margin-right:20px;"/>-->
+
+                            <div class="table-responsive">
+                                <div id="cjqgridReq"></div>
+                                <table id="jqgridReq" class="table table-striped table-bordered"  ></table>
+                                <div id="pjqgridReq"></div>
+                            </div>
+                            <div style=" display: none;">
+                                <table id="ExportjqgridReq" class="table table-striped table-bordered"   ></table>
+                            </div>
+                        </div>
+                        </div>
+
+
+
+                    </article>
+
+                </form>
+            </div>
+
+        </article>
+        <div>
+            <div class="row">
+                <div class="col-sm-12">
+                    <div align="center" class="padding-5" >
+                        <input type="button" Id="btnBack"  class="btn btn-default bg-color-blueDark txt-color-white"  value="Go Back" onclick="location.href = '#/StockRequestList'" />
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+    
+    <div class="modal fade" id="RejReq" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+        
+     <form id="form_RejReq" name="form_RejReq">
+     <div class="modal-dialog" style="width: 91%;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">
+                    &times;
+                </button>
+                <h4 class="modal-title" id="RejReqLabel">Reject Request</h4>
+            </div>
+          
+            
+            <div class="modal-body">
+                 <div class="row" style="padding-bottom:10px;padding-left:10px;padding-right:10px;">
+                        <div class="errorContainer2 alert alert-danger alert-block">
+                            <h4 class="alert-heading">Please Fill Up All The Required Fields.</h4>
+                            <ol>
+                            </ol>
+                        </div>
+                    </div>
+                <!--<div class="widget-body">-->
+                <div class="modal-body">
+                    <div class="jarviswidget jarviswidget-color-blueDark" id="wid-id-5" data-widget-editbutton="false" data-widget-deletebutton="false" data-widget-colorbutton="false" data-widget-fullscreenbutton="false" data-widget-togglebutton="false">
+                        <header>
+                            <h2>Reject Request</h2>
+                        </header>
+                     <table id="tbRejHeader" class="table table-bordered table-striped" style="clear:both;">
+                                        <tbody>
+                                            <tr>
+                                                <td width="12%">Request No</td>
+                                                <td width="1%">:</td>
+                                                <td width="25%"> 
+                                                    <input type="text" id="lblReqNo" name="lblReqNo" class="tboxreadonly" readonly/>
+                                                    <input type="text" id="lblDetailIDX" name="lblDetailIDX" class="tboxreadonly" readonly/>
+                                                    <input type="text" id="lblHIDX" name="lblHIDX" class="tboxreadonly" readonly/>
+                                                    
+                                                </td>
+                                                <td width="12%">Request Date</td>
+                                                <td width="1%">:</td>
+                                                <td width="75%">
+                                                    <input type="text" id="lblReqDate" name="lblReqDate" class="tboxreadonly" readonly/>
+                                                    
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td width="12%">Company</td>
+                                                <td width="1%">:</td>
+                                                <td width="25%"> 
+                                                    <input type="text" id="lblComp" name="lblComp" class="tboxreadonly" readonly/>
+                                                    
+                                                    
+                                                </td>
+                                                <td width="12%">Location</td>
+                                                <td width="1%">:</td>
+                                                <td width="75%">
+                                                    <input type="text" id="lblLoc" name="lblLoc" class="tboxreadonly" readonly/>
+                                                                                                     
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td width="12%">Stock</td>
+                                                <td width="1%">:</td>
+                                                <td width="25%"> 
+                                                    <input type="text" id="lblRejStock" name="lblRejStock" class="tboxreadonly" readonly/>                                                   
+                                                </td>
+                                                <td width="12%"></td>
+                                                <td width="1%"></td>
+                                                <td width="75%">                                                                           
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td width="12%">Reject Reason</td>
+                                                <td width="1%">:</td>
+                                                <td width="25%"> 
+<!--                                                    <input type="text" id="lblSuppName" name="lblSuppName" class="tboxreadonly" readonly/>-->
+                                                <label id="selectReject" class="searchbox">
+                                                        <select class="form-control" id="ddlRej" required name="ddlRej" rel="popover-hover" data-original-title="Reject Reason" data-content="Reject Reason." style="width:250px;"  >
+                                                            <option value="">- Select Reject Reason -</option>                                          
+                                                        </select>    
+                                                    </label>                                                   
+                                                </td>
+                                                <td width="12%">Reject Remarks</td>
+                                                <td width="1%">:</td>
+                                                <td width="75%">
+                                                    <textarea rows="4" cols="50" id="txtRemarks" name="txtRemarks" ></textarea>   
+                                                <!--<input type="text" id="txtRefNo" name="txtRefNo" required   class="form-control numeric" rel="popover-hover" data-original-title="Reference No" data-content="Purchase Order Reference No."   />-->
+                                                </td>
+                                            </tr>                                           
+                                        </tbody>
+                                    </table>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-sm-12">
+                        <div align="center" class="padding-5" >
+                            <input type="submit" Id="btnRejectReq"  class="btn btn-default bg-color-blueDark txt-color-white" value="Reject Request" style=" width: 120px;" />
+                            <input type="button" Id="btnClose"  class="btn btn-default bg-color-blueDark txt-color-white" value="Close" style=" width: 120px;" data-dismiss="modal" />
+
+                        </div>
+                    </div>
+                </div>
+            </div>     
+
+    </div>
+    </div>
+            
+    </form>
+       
+</div> 
+                                                
+<div class="modal fade" id="ModStkBal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog" style="width: 90%;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="myModalLabel">Current Stock Balance</h4>
+            </div>
+            <div class="modal-body">
+                <div class="jarviswidget jarviswidget-color-blueDark" id="wid-id-3"  data-widget-editbutton="false" data-widget-custombutton="false"
+                 data-widget-deletebutton="false" data-widget-colorbutton="false" data-widget-fullscreenbutton="false" data-widget-togglebutton="false">
+                    <header>
+                        <span><h2>&nbsp;Stock Balance Details</h2></span>
+                    </header>                    
+                    <div class="padding-10">
+                        <table id="tblSource" class="selection-criteria">
+                            <tr>
+                                <td width="12%">Stock Code :</td>
+                                <td width="31%">                                            
+                                    <label style="text-align:left;" id="txtStkBal_StkCode" class="searchbox"></label>                           
+                                </td>
+                                <td width="12%">Stock Name :</td>
+                                <td width="45%">                                            
+                                    <label style="text-align:left;" id="txtStkBal_StkName" class="searchbox"></label>                           
+                                </td>
+                            </tr> 
+                        </table>
+                        <input type="hidden" id="hidComp" name="hidComp"/>
+                        
+                        <div class="container" width="100%" id="dvStkBalGrid">
+                            <div class="table-responsive">
+                                <div id="cjqgridStkBal" class="jqgrid-table-nopadding">
+                                    <table id="jqgridStkBal" class="table table-bordered"></table>
+                                    <div id="pjqgridStkBal"></div>
+                                </div>
+                            </div>
+                            
+                            <div align="center" class="padding-5">          
+                                <input type="button" Id="btnClosePopup" class="btn btn-default bg-color-blueDark txt-color-white" value="Close" style=" width:80px;" data-dismiss="modal" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<jsp:include page="../../../includes/loading-no-status.jsp"/>
+<jsp:include page="../../../includes/PopUpInitPage.jsp"/>
+<jsp:include page="../../../includes/yes-no.jsp"/>
+<script src="js/buttonset.js"></script>
+<script src="js/jquery.confirm.min.js"></script>
+<!--<script src="js/buttonset.js"></script>-->
+<script type="text/javascript">
+pageSetUp();
+
+var rid = "";
+var rdvalue="LocCode";
+ 
+ var uniques=[];
+ var stringify={};
+ var mydata = [];//new Array();//[];
+ var arrData = [];
+
+    function getDLL (ddl, method, param1, param2) {
+        $.get('${pageContext.request.contextPath}/Servlet_PopulateData', {SFC: 'GET_DLL', METHOD: method, P1: param1, P2: param2}, function (data) {
+            for(var i=0; i < data.length; i++){                                                          
+                $("#"+ddl).append($("<option>").val(data[i].VALUE).html(data[i].TEXT));
+            }     
+        });     
+    }     
+    function bindData(sParam) {
+        
+        $(document).ready(function() {
+            
+            $.get('${pageContext.request.contextPath}/Servlet_Role', {SFC: 'GET_MENU_BY_ROLE', MNUCODE: "MNU000013", ROLECODE:'<%= session.getAttribute("UsrRole")%>' }, function (data) {
+            arrData = JSON.parse(data);
+            // console.log(JSON.stringify(arrData.rows));
+             
+            if (arrData.rows[0].AllowAdd === '0'){                 
+                  $("#btnAddNew").css("display", "none");
+            }
+            
+            if (arrData.rows[0].AllowEdit === '0'){                 
+                  $("#btnUpdate").css("display", "none");
+            }
+            
+            if (arrData.rows[0].AllowDel === '0'){              
+                  $("#btnVoid").css("display", "none");
+            }
+            
+
+        });
+        
+        
+
+            $.ajaxSetup({ error: AjaxError });
+            var headerID = sParam.HeaderID;
+            $("#hidDESPHDRIDX").val(headerID);
+   
+            
+            $.ajax({
+                type:'POST',
+                url:"${pageContext.request.contextPath}/Servlet_StockRequest",
+                data:  {
+                    SFC: 'GET_REQ_HEADER', 
+                 
+                    IDX: headerID
+                    
+                    
+                },
+                dataType: 'json',
+                success: function(data) {               
+                             
+                            
+                        var arrItemData = data.object1[0];  
+                        //console.log(arrItemData);
+                         
+                        $("#lblReqNo").val(arrItemData.ReqNo);
+                        $("#lblComp").val(arrItemData.CompName);
+                        $("#lblLoc").val(arrItemData.LocName);
+                        $("#lblReqDate").val(arrItemData.ReqDate);
+                        $("#lblType").val(arrItemData.ReqType);
+                        $("#lblStatus").val(arrItemData.ReqHdrStatusDesc);
+        
+                }     
+            });
+
+            loadScript("js/plugin/jqgrid/ui.multiselect.js", function () {
+            loadScript("js/plugin/jqgrid/grid.locale-en.min.js", function () {
+                loadScript("js/plugin/jqgrid/jquery.jqGrid.min.js", function () {
+                    loadScript("js/column-chooser.js", function () {
+                        run_jqgrid_function(headerID);
+                    });
+                });
+            });
+        });
+                     
+        }); 
+    }
+    
+    function AjaxError(x, e) {
+      if (x.status === 0) {
+        alert(' Check Your Network.');
+      } else if (x.status === 404) {
+        alert('Requested URL not found.');
+      } else if (x.status === 500) {
+        alert('Internal Server Error.');
+      }  else {
+         alert('Unknown Error.\n' + x.responseText);
+      }
+    }
+    
+    
+    function run_jqgrid_function(IDX){
+        
+         function getDLL (ddl, method, param1, param2) { 
+                $.get('${pageContext.request.contextPath}/Servlet_PopulateData', {SFC: 'GET_DLL', METHOD: method, P1: param1, P2: param2}, function (data) {
+                    for(var i=0; i < data.length; i++){                                                          
+                        $("#"+ddl).append($("<option>").val(data[i].VALUE).html(data[i].TEXT)); 
+                    }     
+                });     
+            }         
+        var grid = $("#jqgridReq"),
+                gridPager = "#p" + grid.selector.toString().substring(1),
+                conDiv = $("#c" + grid.selector.toString().substring(1)),
+                defaultColName = ['Action','View balance', 'Prev Req Date', 'ReqNo', 'ReqDate','Company','Loction', 'DetailIDX', 'HeaderIDX', 'Status', 'StockCode', 'Stock Name', 'Category', 'UOM', 'Stock Status', 'Bal Qty', 'Req Qty', 'VerifiedQty', 'ApprovedQty', 'Rej Desc', 'Rej Remarks'],
+                defaultColMol = [
+                                    {name: 'StatusCodedesc', index: 'StatusCodedesc', width: 90, formatter: ShowActionByReq},
+                                    {name: 'StkBalance', index: 'StkBalance', width: 50, formatter: ShowBalance},
+                                    {name: 'previous_Date', index: 'previous_Date',  sortable: true, search: false, width: 50, resizable: false},
+                                    {name: 'ReqNo', index: 'ReqNo', hidden:true, sortable: true, search: false, width: 20, resizable: false},
+                                    {name: 'ReqDate', index: 'ReqDate', hidden:true, sortable: true, search: false, width: 20, resizable: false},
+                                    {name: 'CompName', index: 'CompName', hidden:true, sortable: true, search: false, width: 20, resizable: false},
+                                    {name: 'LocName', index: 'LocName', hidden:true, sortable: true, search: false, width: 20, resizable: false},
+                                    {name: 'DetailIDX', index: 'DetailIDX', hidden: true,  search: false, sortable: false, width: 60, resizable: false, align: 'center', must: true, hidedlg: true},
+                                    {name: 'HIDX', index: 'HIDX', hidden: true, search: false, sortable: false, width: 60, resizable: false, align: 'center', must: true, hidedlg: true},
+                                    {name: 'ReqStatus', index: 'ReqStatus', hidden: true, must: true, hidedlg: true, sortable: true, search: false, width: 120, resizable: false},
+                                    {name: 'StkCode', index: 'StkCode', hidden:true, sortable: true, search: false, width: 20, resizable: false},
+                                    {name: 'StkName', index: 'StkName',  sortable: true, search: false, resizable: false, width: 120},
+                                    {name: 'Consumable', index: 'Consumable', sortable: true, search: false, resizable: false, width: 60},
+                                    {name: 'UOMCODE', index: 'UOMCODE', sortable: true, search: false, resizable: false, width: 60},
+                                    {name: 'StkStatus', index: 'StkStatus', sortable: true, search: false, resizable: false, width: 60},
+                                    {name: 'BalQty', index: 'BalQty', sortable: true, search: false, resizable: false, width: 60},                                
+                                    {name: 'ReqQty', index: 'ReqQty', sortable: true, search: false, width: 60, resizable: false},
+                                    {name: 'VerifiedQty', index: 'VerifiedQty', sortable: true, search: false, width: 60, resizable: false, formatter: function (cellValue, option, rowObject) {
+                                        if (rowObject.ReqStatus ==='O' || rowObject.ReqStatus ==='V' ){
+                                        return '<input type="text" disabled style="width:60px;"  name="txtverified_' + option.rowId +'" id="txtverified_' + option.rowId +
+                                        '" value="' + cellValue +'"/>';}
+                                        else{
+                                            return cellValue;}
+                                            
+                                        }
+                                        },
+                                {name: 'ApprovedQty', index: 'ApprovedQty', sortable: true, search: false, width: 60, resizable: false,  formatter: function (cellValue, option, rowObject) {
+                                        if (rowObject.ReqStatus ==='V' || rowObject.ReqStatus ==='O'){
+                                        return '<input type="text" disabled  style="width:60px;"  name="txtApprove_' + option.rowId +'" id="txtApprove_' + option.rowId +
+                                        '" value="' + cellValue +'"/>';}
+                                        else{
+                                            return cellValue;}
+                                            
+                                        }
+                                 },
+                                 {name: 'ReasonDesc', index: 'ReasonDesc', sortable: true, search: false, width: 100, resizable: false,  hidden:false, formatter: function (cellValue, option, rowObject) {
+                                        if (rowObject.ReqStatus ==='V' || rowObject.ReqStatus ==='O'){
+                                        return '<select class="form-control" disabled id="ddlRejByReq_' + option.rowId + '" required name="ddlRejByReq_' + option.rowId +
+                                                '"  rel="popover-hover" data-original-title="Reject Reason" data-content="Reject Reason." style="width:120px;">"' +
+                                                '"  <option value="">- Select Reject Reason -</option> "' +                                        
+                                               getDLL("ddlRejByReq_"+option.rowId, "GET_CODEDESC", "REJREQ", "") +
+                                                '" </select> ';
+                                        }
+                                        else{
+                                            return "";}                           
+                                        }
+                                        },
+                                 {name: 'ReasonRemarks', index: 'ReasonRemarks', sortable: true, resizable: false, search: false, width: 100,  hidden:false,  formatter: function (cellValue, option, rowObject) {
+                                        if (rowObject.ReqStatus ==='V' || rowObject.ReqStatus ==='O'){
+                                        return ' <textarea rows="4" cols="15" disabled  name="txtRemarkByReq_' + option.rowId +'" id="txtRemarkByReq_' + option.rowId +
+                                               '" value="' + cellValue +'"/>';}
+                                  
+                                        else{
+                                           return "";}
+                                        
+                                            
+                                        }
+                                 
+                                 }
+                                ],
+                                mainGridName = grid.selector.toString().substring(1),
+                                temp = readSettings({settingArray: "admin", defaultColName: defaultColName, defaultColMol: defaultColMol, settingName: mainGridName}),
+                                currentColName = temp[0],
+                                currentColMol = temp[1];
+                        
+                        
+                        grid.jqGrid({
+                            url: '${pageContext.request.contextPath}/Servlet_StockRequest',
+                            postData: {
+                                SFC: 'GET_REQ_DETAIL',
+                                IDX: IDX
+                            },
+                            datatype: "json",
+                            mtype: 'POST',
+                            colNames: currentColName,
+                            colModel: currentColMol,
+                            gridview: true,
+                            rownumbers: true,
+                            rownumWidth: 30,
+                            pager: gridPager,
+                            rowNum: 20,
+                            rowList: [10, 20, 25, 30, 50, 100],
+                            viewrecords: true,
+                            height: 'auto',
+                            shrinkToFit: true,
+                            autowidth: true,
+                            loadonce: false,
+                            sortname: "ReqQty",
+                            sortorder: 'desc',
+                            multiselect: true,
+                            beforeSelectRow: function (rowid, e) {                           
+                            },
+                            onSelectRow: function(row, isSelected) {
+                                var i = $("#jqgridReq").jqGrid('getInd',row); //get row number
+                                
+                                var DetailIDX = $("#jqgridReq").jqGrid ('getCell', row, 'DetailIDX');
+
+                                if (isSelected) {  
+                                    
+                                    $("#ddlActionByReq_"+i).prop('selectedIndex', 1);
+
+                                    var selAction = $("#ddlActionByReq_"+i).val();
+                                    if ((selAction === "V") || (selAction === "A")) {
+                                        ActionSelectByReq(selAction,"","",DetailIDX,"#jqgridReq");
+                                        $("#btnAutoAllocation").click();
+                                    }                                                                                              
+                                } else {
+                                    $("#ddlActionByReq_"+i).prop('selectedIndex', 0);                
+                                    ActionSelectByReq("","","",DetailIDX,"#jqgridReq");                               
+                                }
+                            },
+                            onSelectAll: function(row, isSelected) {  
+                                for (var i = 0; i < row.length; i++) {                                
+                                    var id = $(this).jqGrid('getInd',row[i]); //get row number
+                                    var DetailIDX = $("#jqgridReq").jqGrid ('getCell', row[i], 'DetailIDX');
+
+                                    if (isSelected) {                                
+                                        $("#ddlActionByReq_"+id).prop('selectedIndex', 1);
+
+                                        var selAction = $("#ddlActionByReq_"+id).val();
+                                        if ((selAction === "V") || (selAction === "A")) {
+                                            ActionSelectByReq(selAction,"","",DetailIDX,"#jqgridReq");
+                                            $("#btnAutoAllocation").click();
+                                        }                                                                                              
+                                    } else {
+                                        $("#ddlActionByReq_"+id).prop('selectedIndex', 0); 
+                                        ActionSelectByReq("","","",DetailIDX,"#jqgridReq"); 
+                                    }
+                                }                                              
+                            },
+                            sortable: {
+                                update: function (relativeColumnOrder) {
+                                    sortColumn({settingArray: "admin", order: relativeColumnOrder, grid: grid, defaultColMol: defaultColMol, settingName: mainGridName});
+                                }
+                            },        
+                            loadComplete: function () {
+                                var iLastPage = parseInt($(this).getGridParam('lastpage'));
+                                $(".ui-jqgrid .ui-pg-input").keydown(function (e) {
+                                    this.value = this.value.replace(/\D/g, '');
+                                    var code = e.keyCode || e.which;
+                                    if (code === 13) {
+                                        if (this.value > iLastPage) {
+                                            this.value = iLastPage;
+                                        } else if (this.value <= 0) {
+                                            this.value = 1;
+                                        }
+                                    }
+                                });
+                                var arrItemData;
+                                $.ajax({
+                                    type:'POST',
+                                    url:"${pageContext.request.contextPath}/Servlet_StockRequest",
+                                    data:  {
+                                        SFC: 'GET_REQ_HEADER', 
+
+                                        IDX: IDX
+                                    },
+                                    dataType: 'json',
+                                    success: function(data) {               
+                                            arrItemData = data.object1[0]; 
+                                            //console.log(arrItemData);
+                                            if (arrItemData.StatusCode === "A" || arrItemData.StatusCode === "R" || arrItemData.StatusCode === "C"){
+                                                document.getElementById("btnAutoAllocation").style.visibility = 'hidden';
+                                                document.getElementById("btnProceed").style.visibility = 'hidden';
+                                            }
+                                    }
+                                    
+                                });
+                            }
+                            
+                        });
+                         var sActionByReq="";
+                        $("#jqgridReq").navGrid(gridPager,{edit:false,add:false,del:false,search:false,refresh:false});
+                            if ($('#lblUsrRole').val() !== 'USR'){
+                                
+                                $("#jqgridReq").navButtonAdd(gridPager,{
+                                       caption:"Auto Allocation", 
+                                       buttonicon:"", 
+                                       onClickButton:  function(){ 
+                                         //  alert(row_id);
+                                        var rowIDs = $("#jqgridReq").getDataIDs();   //Get all grid row IDs 
+                                            for (var i = 0; i < rowIDs.length; i++) {     //enumerate rows in the grid
+                                                var rowData = $("#jqgridReq").jqGrid('getRowData', rowIDs[i]);  
+                                                 sActionByReq = jQuery('#ddlActionByReq_'+ (i+1)).val();
+                                               // console.log(JSON.stringify(rowData));
+                                                if (sActionByReq === 'V'){
+                                                   $('#txtverified_' + (i+1)).val(rowData["ReqQty"]);
+                                                   $('#btnVerify').val(sActionByReq);
+                                                }else if (sActionByReq === 'A'){
+                                                   if ($('#txtverified_' + (i+1)).val() > 0){
+                                                    //$('#txtApprove_' + (i+1)).val(rowData["ReqQty"]); 
+                                                        $('#txtApprove_' + (i+1)).val($('#txtverified_' + (i+1)).val()); 
+                                                        $('#btnVerify').val(sActionByReq);
+                                                    }else {
+                                                        $('#txtApprove_' + (i+1)).val(rowData["ReqQty"]);
+                                                        $('#btnVerify').val(sActionByReq);
+                                                       // $('#txtApprove_' + (i+1)).val(rowData["ReqQty"]); 
+                                                    }
+                                                }                           
+                                            }                                        
+                                       }, 
+                                       position:"last",
+                                       title:"btnAutoAllocation", 
+                                       cursor: "pointer",
+                                       id: "btnAutoAllocation"
+                                    })     
+                                    .navButtonAdd(gridPager,{
+                                       caption:"Proceed", 
+                                       buttonicon:"", 
+                                       onClickButton: function(){
+                                           $.confirm({
+                                                text: "Are you sure you want to proceed?",
+                                                title: "Confirmation required",
+                                                dialogClass: "modal-dialog modal-sm",
+                                                confirm: function() {                                                    
+                                                     //var rowIDs = $("#" + subgridTableId).getDataIDs();
+                                                    // alert(row_id);
+                                                    // var fullData = jQuery("#" + subgridTableId).jqGrid('getRowData');
+                                                    // alert(JSON.stringify(fullData));
+                                                    var jsonVerifiedItems = [];
+                                                    var bFoundInactiveStk = false;
+                                                    
+                                                    var rowIDs = $("#jqgridReq").getDataIDs();   //Get all grid row IDs 
+                                                    for (var i = 0; i < rowIDs.length; i++) {     //enumerate rows in the grid
+
+                                                        var rowData = $("#jqgridReq").jqGrid('getRowData', rowIDs[i]);                                                        
+                                                        sActionByReq = $('#ddlActionByReq_'+ (i+1)).val();                                                      
+
+                                                        if (sActionByReq !== ""){
+                                                            if (sActionByReq ==='V'){
+                                                                $.showLoadingNoStatus();  //load01
+                                                                if (jQuery('#txtverified_' + (i+1)).val() > 0){
+                                                                    var jsonObj = {"DetailIDX": String(rowData["DetailIDX"]), "HIDX": String(rowData["HIDX"]), "StkCode": String(rowData["StkCode"]), "ReqQty": parseFloat(rowData["ReqQty"]), "VerifiedQty": jQuery('#txtverified_' + (i+1)).val(), "ApprovedQty":jQuery('#txtApprove_' + (i+1)).val(), "ReqNo": String(rowData["ReqNo"]), "ReqStatus": sActionByReq, "RejCode": jQuery('#ddlRejByReq_' + (i+1)).val(), "RejRemarks": jQuery('#txtRemarkByReq_' + (i+1)).val()};
+                                                                    jsonVerifiedItems.push(jsonObj); 
+                                                                    $.hideLoadingNoStatus(); //load01
+                                                                }
+                                                                else{
+                                                                    //$.hideLoadingNoStatus(); //load01
+                                                                   $.hideLoadingNoStatus(); //load01
+                                                                    $.bigBoxFail({
+                                                                        title: "Quantity Needed.",
+                                                                        content: "Verify Qty is needed.",
+                                                                        timeout: 6000
+                                                                    }); 
+                                                                }
+                                                            }
+                                                            else if (sActionByReq ==='A'){
+                                                                $.showLoadingNoStatus();   //load01
+                                                                if ($('#txtApprove_' + (i+1)).val() > 0){
+                                                                    var jsonObj = {"DetailIDX": String(rowData["DetailIDX"]), "HIDX": String(rowData["HIDX"]), "StkCode": String(rowData["StkCode"]), "ReqQty": parseFloat(rowData["ReqQty"]), "VerifiedQty": jQuery('#txtverified_' + (i+1)).val(), "ApprovedQty":jQuery('#txtApprove_' + (i+1)).val(), "ReqNo": String(rowData["ReqNo"]), "ReqStatus": sActionByReq, "RejCode": jQuery('#ddlRejByReq_' + (i+1)).val(), "RejRemarks": jQuery('#txtRemarkByReq_' + (i+1)).val()};
+                                                                    jsonVerifiedItems.push(jsonObj); 
+                                                                    $.hideLoadingNoStatus();  //load01
+                                                                }
+                                                                else{
+                                                                    $.hideLoadingNoStatus();   //load01
+                                                                    $.bigBoxFail({
+                                                                        title: "Quantity Needed.",
+                                                                        content: "Approve Qty is needed.",
+                                                                        timeout: 6000
+                                                                    });
+                                                                } 
+                                                            }
+                                                            else if (sActionByReq ==='R'){
+                                                                $.showLoadingNoStatus();     //load01
+                                                                if ($('#ddlRejByReq_' + (i+1)).val() !== ""){
+                                                                    var jsonObj = {"DetailIDX": String(rowData["DetailIDX"]), "HIDX": String(rowData["HIDX"]), "StkCode": String(rowData["StkCode"]), "ReqQty": parseFloat(rowData["ReqQty"]), "VerifiedQty": jQuery('#txtverified_' + (i+1)).val(), "ApprovedQty":jQuery('#txtApprove_' + (i+1)).val(), "ReqNo": String(rowData["ReqNo"]), "ReqStatus": sActionByReq, "RejCode": jQuery('#ddlRejByReq_' + (i+1)).val(), "RejRemarks": jQuery('#txtRemarkByReq_' + (i+1)).val()};
+                                                                    jsonVerifiedItems.push(jsonObj); 
+                                                                    $.hideLoadingNoStatus();   //load01
+                                                                }else{
+                                                                    $.hideLoadingNoStatus();   //load01
+                                                                    $.bigBoxFail({
+                                                                        title: "Reject Reason Needed.",
+                                                                        content: "Reject Reason is needed.",
+                                                                        timeout: 6000
+                                                                    });
+                                                                }
+                                                            }
+                                                            
+                                                            if (rowData["StkStatus"] === "Inactive") {
+                                                                bFoundInactiveStk = true;
+                                                            }
+                                                        }    
+                                                    }
+                                                    
+                                                    if (bFoundInactiveStk) { 
+                                                        
+                                                        $.SmartMessageBox({
+                                                            title : "<i class='fa fa-warning'></i> The request contains inactive stock(s)",
+                                                            content : "Do you wish to proceed?",
+                                                            buttons : '[No][Yes]'
+                                                        }, function(ButtonPressed) {
+                                                            if (ButtonPressed === "Yes") { 
+                                                                var ItemList = "";
+                                                                $.ajax({
+                                                                    type: "get",
+                                                                    //async: true,
+                                                                    url: "${pageContext.request.contextPath}/Servlet_StockRequest?SFC=VERIFICATION_PROCESS",
+                                                                    data: {REQITEM: JSON.stringify(jsonVerifiedItems)},
+                                                                    contentType: "application/json; charset=utf-8",
+                                                                    dataType: "json",
+                                                                    success: function (data) {
+                                                                        var arrReturn = data;              
+                                                                          //alert(arrItemData);
+                                                                        if (arrReturn.bool === true) {
+                                                                            $.bigBoxSuccess({
+                                                                                title: "Request Review.",
+                                                                                content: "Request Success Reviews.",
+                                                                                timeout: 6000
+                                                                            });
+                                                                            
+
+                                                                            $("#jqgridReq").jqGrid('setGridParam', {
+                                                                                postData: {
+                                                                                    SFC: 'GET_REQ_DETAIL',
+                                                                                    IDX:IDX              
+                                                                                }                                                                          
+                                                                            }).trigger("reloadGrid", [{page: 1}]);
+                                                                            
+                                                                            $.ajax({
+                                                                                type:'POST',
+                                                                                url:"${pageContext.request.contextPath}/Servlet_StockRequest",
+                                                                                data:  {
+                                                                                    SFC: 'GET_REQ_HEADER', 
+
+                                                                                    IDX: IDX
+
+
+                                                                                },
+                                                                                dataType: 'json',
+                                                                                success: function(data) {               
+
+
+                                                                                        var arrItemData = data.object1[0];  
+                                                                                        //console.log(arrItemData);
+
+                                                                                        $("#lblStatus").val(arrItemData.ReqHdrStatusDesc);
+
+                                                                                }     
+                                                                            });
+                                                                        }
+                                                                    },
+                                                                    error: function (jqXHR, textStatus, errorThrown) {
+                                                                        alert("get session failed " + errorThrown);
+                                                                    }
+                                                                });
+                                                            }
+                                                        });
+                                                    } else {
+                                                        var ItemList = "";
+                                                        $.ajax({
+                                                            type: "get",
+                                                            //async: true,
+                                                            url: "${pageContext.request.contextPath}/Servlet_StockRequest?SFC=VERIFICATION_PROCESS",
+                                                            data: {REQITEM: JSON.stringify(jsonVerifiedItems)},
+                                                            contentType: "application/json; charset=utf-8",
+                                                            dataType: "json",
+                                                            success: function (data) {
+                                                                var arrReturn = data;              
+                                                                  //alert(arrItemData);
+                                                                if (arrReturn.bool === true) {
+                                                                    $.bigBoxSuccess({
+                                                                        title: "Request Review.",
+                                                                        content: "Request Success Reviews.",
+                                                                        timeout: 6000
+                                                                    });
+                                                                    $("#jqgridReq").jqGrid('setGridParam', {
+                                                                        postData: {
+                                                                            SFC: 'GET_REQ_DETAIL',
+                                                                            IDX:IDX           
+                                                                        }
+                                                                    }).trigger("reloadGrid", [{page: 1}]);
+                                                                    
+                                                                    $.ajax({
+                                                                                type:'POST',
+                                                                                url:"${pageContext.request.contextPath}/Servlet_StockRequest",
+                                                                                data:  {
+                                                                                    SFC: 'GET_REQ_HEADER', 
+
+                                                                                    IDX: IDX
+
+
+                                                                                },
+                                                                                dataType: 'json',
+                                                                                success: function(data) {               
+
+
+                                                                                        var arrItemData = data.object1[0];  
+                                                                                        //console.log(arrItemData);
+                                                                                        $("#lblStatus").val(arrItemData.ReqHdrStatusDesc);
+
+                                                                                }     
+                                                                            });
+                                                                }
+                                                            },
+                                                            error: function (jqXHR, textStatus, errorThrown) {
+                                                                alert("get session failed " + errorThrown);
+                                                            }
+                                                        });
+                                                    }
+                                                      //alert(JSON.stringify(jsonVerifiedItems));
+                                                },
+                                                cancel: function() {
+                                                    // nothing to do
+                                                }
+                                            });               
+                                        }, 
+                                       position:"last",
+                                       title:"btnVerify", 
+                                       cursor: "pointer",
+                                       id: "btnProceed"
+                                       
+                                    });
+                            }
+                        
+                        function ShowBalance(cellvalue, options, rowObject) {
+                            return "<a class='btn btn-default bg-color-blueDark txt-color-white' onclick='StkBalancePopup(\"" + 
+                                    rowObject["StkCode"] + "\",\"" + rowObject["StkName"] + "\",\"" + rowObject["CompCode"] + "\",\"" + rowObject["LocCode"] + "\")';>View<br>Balance</a>";
+                        }
+                        
+                        
+                        
+                        function ShowActionByReq(cellvalue, options, rowObject) {  
+                            if (arrData.rows[0].AllowVerify === '1' && arrData.rows[0].AllowApprove === '1'){
+                                 $("#jqgridReq").showCol("StatusCodedesc");
+                                $("#jqgridReq").showCol("ReasonDesc");
+                                $("#jqgridReq").showCol("ReasonRemarks");
+
+                                resizeWidth({grid: $("#jqgridReq"), gridDiv: $("#jqgridReq")});
+                                    $("#jqgridReq").closest('div.ui-jqgrid-bdiv').css("max-height", "300px").css("max-width", grid.width() + "px");
+                                    $("#jqgridReq").closest('div.ui-jqgrid-hdiv.ui-corner-top').css("max-width", grid.width() + "px");
+                                    $("#jqgridReq").closest('div.ui-jqgrid-pager.ui-corner-bottom').css("max-width", grid.width() + "px");
+                                    
+                                    $(window).on('resize', function () {
+                                        grid.jqGrid('setGridWidth', conDiv.width());
+                                    });
+                                    grid.on('myRefresh', function () {
+                                        resizeWidth({grid: grid, gridDiv: conDiv});
+                                    });
+
+                                    grid.jqGrid('setGridWidth', conDiv.width());  
+
+                                        if (rowObject.ReqStatus === 'O'){
+                                            return "<label id='selectAction' class='searchbox'>" +
+                                            "<select class='form-control' id='ddlActionByReq_" + options.rowId +"' name='ddlActionByReq_'"+ options.rowId +"' rel='popover-hover' data-original-title='Select Action' data-content='Action Taken.' style='width:100px;' onchange='ActionSelectByReq(this.value,\"" + options.rowId  + "\",\"" + rowObject.ReqNo +  "\",\"" + rowObject.DetailIDX + "\",\"" + "#jqgridReq"  + "\"  )'>" +
+                                            "<option value=''>No Action</option>" +
+                                            "<option value='V'>Verify</option>" +
+                                            "<option value='A'>Approve</option>" +
+                                            "<option value='R'>Reject</option>" +
+                                            "</select></label> ";                                             
+                                        }
+                                        else if (rowObject.ReqStatus === 'V'){
+                                              // return"<a style='cursor: pointer;' title='Verified' href='#/MemberDetail/" + rowObject.MEM_ID + "/" + rowObject.MEM_CorpCode + "'>Approve</a>";
+                                            return "<label id='selectAction' class='searchbox'>" +
+                                            "<select class='form-control' id='ddlActionByReq_" + options.rowId +"' name='ddlActionByReq_'"+ options.rowId +"' rel='popover-hover' data-original-title='Select Action' data-content='Action Taken.' style='width:100px;' onchange='ActionSelectByReq(this.value,\"" + options.rowId  + "\",\"" + rowObject.ReqNo +  "\",\"" + rowObject.DetailIDX + "\",\"" + "#jqgridReq"  + "\"  )'>" +
+                                            "<option value=''>No Action</option>" +                                       
+                                            "<option value='A'>Approve</option>" +
+                                            "<option value='R'>Reject</option>" +
+                                            "</select></label> "; 
+                                        }else if (rowObject.ReqStatus === 'R'){
+                                            return cellvalue;
+                                        }else if (rowObject.ReqStatus === 'A'){
+                                                return cellvalue;
+                                        }
+                                        else if (rowObject.ReqStatus === 'C'){   //include condition for Closed Request //Aaron
+                                            return cellvalue;
+                                        }
+
+                            }
+                            else{
+                             if (arrData.rows[0].AllowVerify === '0'){ 
+                                $("#jqgridReq").hideCol("StatusCodedesc");
+                                $("#jqgridReq").hideCol("ReasonDesc");
+                                $("#jqgridReq").hideCol("ReasonRemarks");
+
+                                 resizeWidth({grid: $("#jqgridReq"), gridDiv: $("#jqgridReq")});
+                                    $("#jqgridReq").closest('div.ui-jqgrid-bdiv').css("max-height", "300px").css("max-width", grid.width() + "px");
+                                    $("#jqgridReq").closest('div.ui-jqgrid-hdiv.ui-corner-top').css("max-width", grid.width() + "px");
+                                    $("#jqgridReq").closest('div.ui-jqgrid-pager.ui-corner-bottom').css("max-width", grid.width() + "px");
+
+                                    $(window).on('resize', function () {
+                                        grid.jqGrid('setGridWidth', conDiv.width());
+                                    });
+                                    grid.on('myRefresh', function () {
+                                        resizeWidth({grid: grid, gridDiv: conDiv});
+                                    });
+
+                                    grid.jqGrid('setGridWidth', conDiv.width());                
+
+                            }else if (arrData.rows[0].AllowVerify === '1'){
+                                    $("#jqgridReq").showCol("StatusCodedesc");
+                                    $("#jqgridReq").showCol("ReasonDesc");
+                                    $("#jqgridReq").showCol("ReasonRemarks");
+
+                                    resizeWidth({grid: $("#jqgridReq"), gridDiv: $("#jqgridReq")});
+                                    $("#jqgridReq").closest('div.ui-jqgrid-bdiv').css("max-height", "300px").css("max-width", grid.width() + "px");
+                                    $("#jqgridReq").closest('div.ui-jqgrid-hdiv.ui-corner-top').css("max-width", grid.width() + "px");
+                                    $("#jqgridReq").closest('div.ui-jqgrid-pager.ui-corner-bottom').css("max-width", grid.width() + "px");
+
+                                    $(window).on('resize', function () {
+                                        grid.jqGrid('setGridWidth', conDiv.width());
+                                    });
+                                    grid.on('myRefresh', function () {
+                                        resizeWidth({grid: grid, gridDiv: conDiv});
+                                    });
+
+                                    grid.jqGrid('setGridWidth', conDiv.width()); 
+
+                                if (rowObject.ReqStatus === 'O'){                                
+                                                return "<label id='selectAction' class='searchbox'>" +
+                                                       "<select class='form-control' id='ddlActionByReq_" + options.rowId +"' name='ddlActionByReq_'"+ options.rowId +"' rel='popover-hover' data-original-title='Select Action' data-content='Action Taken.' style='width:100px;' onchange='ActionSelectByReq(this.value,\"" + options.rowId  + "\",\"" + rowObject.ReqNo +  "\",\"" + rowObject.DetailIDX + "\",\"" + "#jqgridReq"  + "\"  )'>" +
+                                                       "<option value=''>No Action</option>" +
+                                                       "<option value='V'>Verify</option>" +                                      
+                                                       "<option value='R'>Reject</option>" +
+                                                       "</select></label> ";                                       
+                                }else if (rowObject.ReqStatus === 'V'){
+                                   // return"<a style='cursor: pointer;' title='Verified' href='#/MemberDetail/" + rowObject.MEM_ID + "/" + rowObject.MEM_CorpCode + "'>Approve</a>";
+                                   return "<label id='selectAction' class='searchbox'>" +
+                                                       "<select class='form-control' id='ddlActionByReq_" + options.rowId +"' name='ddlActionByReq_'"+ options.rowId +"' rel='popover-hover' data-original-title='Select Action' data-content='Action Taken.' style='width:100px;' onchange='ActionSelectByReq(this.value,\"" + options.rowId  + "\",\"" + rowObject.ReqNo +  "\",\"" + rowObject.DetailIDX + "\",\"" + "#jqgridReq"  + "\"  )'>" +
+                                                       "<option value=''>No Action</option>" +                                   
+                                                       "<option value='R'>Reject</option>" +
+                                                       "</select></label> "; 
+                                }else if (rowObject.ReqStatus === 'R'){
+                                   return cellvalue;//                 
+                                }else if (rowObject.ReqStatus === 'A'){
+                                     return cellvalue;
+                                }
+                                else if (rowObject.ReqStatus === 'C'){  //include condition for Closed Request //Aaron
+                                    return cellvalue;
+                                }
+
+                            }
+
+                             if (arrData.rows[0].AllowApprove === '0'){ 
+                                $("#jqgridReq").hideCol("StatusCodedesc");
+                                $("#jqgridReq").hideCol("ReasonDesc");
+                                $("#jqgridReq").hideCol("ReasonRemarks");
+
+                                 resizeWidth({grid: $("#jqgridReq"), gridDiv: $("#jqgridReq")});
+                                    $("#jqgridReq").closest('div.ui-jqgrid-bdiv').css("max-height", "300px").css("max-width", grid.width() + "px");
+                                    $("#jqgridReq").closest('div.ui-jqgrid-hdiv.ui-corner-top').css("max-width", grid.width() + "px");
+                                    $("#jqgridReq").closest('div.ui-jqgrid-pager.ui-corner-bottom').css("max-width", grid.width() + "px");
+
+                                    $(window).on('resize', function () {
+                                        grid.jqGrid('setGridWidth', conDiv.width());
+                                    });
+                                    grid.on('myRefresh', function () {
+                                        resizeWidth({grid: grid, gridDiv: conDiv});
+                                    });
+
+                                    grid.jqGrid('setGridWidth', conDiv.width());    
+                            }else if(arrData.rows[0].AllowApprove === '1'){
+                                $("#jqgridReq").showCol("StatusCodedesc");
+                                $("#jqgridReq").showCol("ReasonDesc");
+                                $("#jqgridReq").showCol("ReasonRemarks");
+
+                                resizeWidth({grid: $("#jqgridReq"), gridDiv: $("#jqgridReq")});
+                                    $("#jqgridReq").closest('div.ui-jqgrid-bdiv').css("max-height", "300px").css("max-width", grid.width() + "px");
+                                    $("#jqgridReq").closest('div.ui-jqgrid-hdiv.ui-corner-top').css("max-width", grid.width() + "px");
+                                    $("#jqgridReq").closest('div.ui-jqgrid-pager.ui-corner-bottom').css("max-width", grid.width() + "px");
+
+                                    $(window).on('resize', function () {
+                                        grid.jqGrid('setGridWidth', conDiv.width());
+                                    });
+                                    grid.on('myRefresh', function () {
+                                        resizeWidth({grid: grid, gridDiv: conDiv});
+                                    });
+
+                                    grid.jqGrid('setGridWidth', conDiv.width());  
+
+                                        if (rowObject.ReqStatus === 'O'){
+                                            return "<label id='selectAction' class='searchbox'>" +
+                                            "<select class='form-control' id='ddlActionByReq_" + options.rowId +"' name='ddlActionByReq_'"+ options.rowId +"' rel='popover-hover' data-original-title='Select Action' data-content='Action Taken.' style='width:100px;' onchange='ActionSelectByReq(this.value,\"" + options.rowId  + "\",\"" + rowObject.ReqNo +  "\",\"" + rowObject.DetailIDX + "\",\"" + "#jqgridReq"  + "\"  )'>" +
+                                            "<option value=''>No Action</option>" +
+                                            "<option value='V'>Verify</option>" +
+                                            "<option value='A'>Approve</option>" +
+                                            "<option value='R'>Reject</option>" +
+                                            "</select></label> ";                                             
+                                        }
+                                        else if (rowObject.ReqStatus === 'V'){
+                                              // return"<a style='cursor: pointer;' title='Verified' href='#/MemberDetail/" + rowObject.MEM_ID + "/" + rowObject.MEM_CorpCode + "'>Approve</a>";
+                                            return "<label id='selectAction' class='searchbox'>" +
+                                            "<select class='form-control' id='ddlActionByReq_" + options.rowId +"' name='ddlActionByReq_'"+ options.rowId +"' rel='popover-hover' data-original-title='Select Action' data-content='Action Taken.' style='width:100px;' onchange='ActionSelectByReq(this.value,\"" + options.rowId  + "\",\"" + rowObject.ReqNo +  "\",\"" + rowObject.DetailIDX + "\",\"" + "#jqgridReq"  + "\"  )'>" +
+                                            "<option value=''>No Action</option>" +                                       
+                                            "<option value='A'>Approve</option>" +
+                                            "<option value='R'>Reject</option>" +
+                                            "</select></label> "; 
+                                        }else if (rowObject.ReqStatus === 'R'){
+                                            return cellvalue;
+                                        }else if (rowObject.ReqStatus === 'A'){
+                                                return cellvalue;
+                                        }
+                                        else if (rowObject.ReqStatus === 'C'){ //include condition for Closed Request //Aaron
+                                            return cellvalue;
+                                        }
+                            }
+                        }
+                        }
+                        
+
+                        
+                        
+                    $(".ui-jqgrid-htable").addClass("table table-bordered table-hover");
+                    $(".ui-jqgrid-btable").addClass("table table-bordered table-striped");
+                    $(this).removeClass(".ui-jqgrid .ui-jqgrid-bdiv").addClass(".ui-jqgrid .ui-jqgrid-bdiv-nested");
+                    // remove classes
+                    $(".ui-jqgrid").removeClass("ui-widget ui-widget-content");
+                    $(".ui-jqgrid-view").children().removeClass("ui-widget-header ui-state-default");
+                    $(".ui-jqgrid-labels, .ui-search-toolbar").children().removeClass("ui-state-default ui-th-column ui-th-ltr");
+                    $(".ui-jqgrid-pager").removeClass("ui-state-default");
+                    $(".ui-jqgrid").removeClass("ui-widget-content");
+                    // add classes
+                    $(".ui-jqgrid-htable").addClass("table table-bordered table-hover");
+                    $(".ui-jqgrid-btable").addClass("table table-bordered table-striped");
+                    $(".ui-pg-div").removeClass().addClass("btn btn-sm btn-primary");
+                    $(".ui-icon.ui-icon-plus").removeClass().addClass("fa fa-plus");
+                    $(".ui-icon.ui-icon-pencil").removeClass().addClass("fa fa-pencil");
+                    $(".ui-icon.ui-icon-trash").removeClass().addClass("fa fa-trash-o");
+                    $(".ui-icon.ui-icon-search").removeClass().addClass("fa fa-search");
+                    $(".ui-icon.ui-icon-refresh").removeClass().addClass("fa fa-refresh");
+                    $(".ui-icon.ui-icon-disk").removeClass().addClass("fa fa-save").parent(".btn-primary").removeClass("btn-primary").addClass("btn-success");
+                    $(".ui-icon.ui-icon-cancel").removeClass().addClass("fa fa-times").parent(".btn-primary").removeClass("btn-primary").addClass("btn-danger");
+                    $(".ui-icon.ui-icon-seek-prev").wrap("<div class='btn btn-sm btn-default'></div>");
+                    $(".ui-icon.ui-icon-seek-prev").removeClass().addClass("fa fa-backward");
+                    $(".ui-icon.ui-icon-seek-first").wrap("<div class='btn btn-sm btn-default'></div>");
+                    $(".ui-icon.ui-icon-seek-first").removeClass().addClass("fa fa-fast-backward");
+                    $(".ui-icon.ui-icon-seek-next").wrap("<div class='btn btn-sm btn-default'></div>");
+                    $(".ui-icon.ui-icon-seek-next").removeClass().addClass("fa fa-forward");
+                    $(".ui-icon.ui-icon-seek-end").wrap("<div class='btn btn-sm btn-default'></div>");
+                    $(".ui-icon.ui-icon-seek-end").removeClass().addClass("fa fa-fast-forward");
+                    $(".ui-pg-input").addClass("pg-input");
+                    resizeWidth({grid: $("#jqgridReq"), gridDiv: $("#jqgridReq")});
+                    $("#jqgridReq").closest('div.ui-jqgrid-bdiv').css("max-height", "300px").css("max-width", grid.width() + "px");
+                    $("#jqgridReq").closest('div.ui-jqgrid-hdiv.ui-corner-top').css("max-width", grid.width() + "px");
+                    $("#jqgridReq").closest('div.ui-jqgrid-pager.ui-corner-bottom').css("max-width", grid.width() + "px");
+                    
+                    $(window).on('resize', function () {
+                        grid.jqGrid('setGridWidth', conDiv.width());
+                    });
+                    grid.on('myRefresh', function () {
+                        resizeWidth({grid: grid, gridDiv: conDiv});
+                    });
+                   
+                    grid.jqGrid('setGridWidth', conDiv.width());
+                            
+                      
+        
+            //STOCK BALANCE JQGRID - START
+        CurrentStkCode = "";
+        var gridPO = $("#jqgridStkBal"),
+            gridPagerPO = "#p" + gridPO.selector.toString().substring(1),
+            //conDivPO = $("#c" + gridPO.selector.toString().substring(1)),
+            defaultColNamePO =  [ 'Company','Stock Balance'],
+            defaultColMolPO = [
+                {name: 'bal_companycode', index: 'bal_companycode', sortable: true, must: true, hidedlg: true, key:true},
+                {name: 'SumBalance', index: 'SumBalance', must: true, hidedlg: true}
+            ];
+        gridPO.jqGrid({
+            url: '${pageContext.request.contextPath}/Servlet_StockRequest',
+            postData: {
+                SFC: 'GET_STK_BALANCE',
+                COMPCODE: '',
+                STKCODE: CurrentStkCode                    
+            },
+            datatype: "json",
+            mtype: 'POST',
+            colNames: defaultColNamePO,
+            colModel: defaultColMolPO,
+           // rownumbers: true,
+            gridview: true,
+            rownumWidth: 40,
+            rowNum: 20,
+            rowList: [10, 20, 25, 30, 50, 100],
+            pager: gridPagerPO,
+            sortname: '',
+            viewrecords: true,
+            sortorder: 'asc',
+            toolbarfilter: true,
+            autowidth: true,
+            shrinkToFit: true,
+            loadonce: false,
+            height: 'auto',
+            scrollerbar: false,  
+//            multiselect:true,
+            subGrid: true,       
+            onSelectRow: function(rowId, isSelected){  
+                $('#'+rowId).removeClass("ui-widget-content");
+                $('#'+rowId).removeClass("ui-state-hover");
+                $('#'+rowId).removeClass("ui-state-highlight");
+                $('#'+rowId).addClass("selectedRow");
+            },
+            subGridRowExpanded: function (subgrid_id, row_id) {
+
+                //alert(subgrid_id);
+                var defaultSubColName = ['Location','Stock Balance'],
+                    defaultSubColMol = [                                                
+                        {name: 'bal_location', index: 'bal_location', sortable: true, search: false, width: 10, resizable: true, key:true},
+                        {name: 'SumBalance', index: 'SumBalance', search: false, width: 10, resizable: true}          
+                    ],
+                    subGridWidth = $("#jqgridStkBal").width(),
+                    subGridName = "StockBalanceDetail";
+                //alert(currentSubColMol);
+                scrollToRow(this, row_id);
+                var subgridTableId = "table_" + subgrid_id,
+                    pagerID = "p" + subgrid_id,
+                    HeaderIDX = $(this).jqGrid('getCell', row_id, 'bal_companycode');
+                 //alert(pagerID);
+                 $("#" + subgrid_id).html("<table id='" + subgridTableId + "'></table>" +
+                    "<div id='" + pagerID + "'></div>");
+
+                $("#" + subgridTableId).jqGrid({
+                    url: '${pageContext.request.contextPath}/Servlet_StockRequest',
+                    postData: {
+                        SFC: 'GET_STK_BALANCE',
+                        COMPCODE: HeaderIDX,
+                        STKCODE: CurrentStkCode
+                    },
+                    datatype: "json",
+                    mtype: 'POST',
+                    colNames: defaultSubColName,//currentSubColName,
+                    colModel: defaultSubColMol,//currentSubColMol,
+                    //rownumbers: true,
+                    //rownumWidth: 40,
+                    pager: "#" + pagerID,
+                    height: 'auto',
+                    shrinkToFit: true,
+                    //forceFit:true,
+                    autowidth: true,
+                    loadonce: false,
+                    rowNum: 20,
+                    rowList: [10, 20, 25, 30, 50, 100],
+                    sortname: '',
+                    sortorder: '',
+                    //idPrefix: subgridTableId + "_Row_",
+                    gridComplete: function () { 
+                        if ((CurrentLocCode !== "") && (CurrentCompCode !== "")) {
+                            $("#table_jqgridStkBal_"+CurrentCompCode).jqGrid('setSelection',CurrentLocCode);
+                        }
+                    },
+                    loadComplete: function () {                           
+                        if (rid !==''){
+                            if (rid !== row_id){
+                                //alert(rid !== row_id);
+                                $("#jqgridStkBal").jqGrid ('collapseSubGridRow', rid); 
+                            }
+                        }
+                        rid = row_id;
+                    },
+                    onSelectRow: function(rowId, isSelected){     
+                        $('#'+rowId).removeClass("ui-widget-content");
+                        $('#'+rowId).removeClass("ui-state-hover");
+                        $('#'+rowId).removeClass("ui-state-highlight");
+                        $('#'+rowId).addClass("selectedRow");
+                    }
+                });                                                     
+
+                $(".ui-jqgrid-htable").addClass("table table-bordered "); //table-hover
+                $(".ui-jqgrid-btable").addClass("table table-bordered"); //table-striped
+                $(this).removeClass(".ui-jqgrid .ui-jqgrid-bdiv").addClass(".ui-jqgrid .ui-jqgrid-bdiv-nested");
+                // remove classes
+                $(".ui-jqgrid").removeClass("ui-widget ui-widget-content");
+                $(".ui-jqgrid-view").children().removeClass("ui-widget-header ui-state-default");
+                $(".ui-jqgrid-labels, .ui-search-toolbar").children().removeClass("ui-state-default ui-th-column ui-th-ltr");
+                $(".ui-jqgrid-pager").removeClass("ui-state-default");
+                $(".ui-jqgrid").removeClass("ui-widget-content");
+                // add classes
+                $(".ui-jqgrid-htable").addClass("table table-bordered "); //table-hover
+                $(".ui-jqgrid-btable").addClass("table table-bordered "); //table-striped
+                $(".ui-pg-div").removeClass().addClass("btn btn-sm btn-primary");
+                $(".ui-icon.ui-icon-plus").removeClass().addClass("fa fa-plus");
+                $(".ui-icon.ui-icon-pencil").removeClass().addClass("fa fa-pencil");
+                $(".ui-icon.ui-icon-trash").removeClass().addClass("fa fa-trash-o");
+                $(".ui-icon.ui-icon-search").removeClass().addClass("fa fa-search");
+                $(".ui-icon.ui-icon-refresh").removeClass().addClass("fa fa-refresh");
+                $(".ui-icon.ui-icon-disk").removeClass().addClass("fa fa-save").parent(".btn-primary").removeClass("btn-primary").addClass("btn-success");
+                $(".ui-icon.ui-icon-cancel").removeClass().addClass("fa fa-times").parent(".btn-primary").removeClass("btn-primary").addClass("btn-danger");
+                $(".ui-icon.ui-icon-seek-prev").wrap("<div class='btn btn-sm btn-default'></div>");
+                $(".ui-icon.ui-icon-seek-prev").removeClass().addClass("fa fa-backward");
+                $(".ui-icon.ui-icon-seek-first").wrap("<div class='btn btn-sm btn-default'></div>");
+                $(".ui-icon.ui-icon-seek-first").removeClass().addClass("fa fa-fast-backward");
+                $(".ui-icon.ui-icon-seek-next").wrap("<div class='btn btn-sm btn-default'></div>");
+                $(".ui-icon.ui-icon-seek-next").removeClass().addClass("fa fa-forward");
+                $(".ui-icon.ui-icon-seek-end").wrap("<div class='btn btn-sm btn-default'></div>");
+                $(".ui-icon.ui-icon-seek-end").removeClass().addClass("fa fa-fast-forward");
+                $(".ui-pg-input").addClass("pg-input");
+                resizeWidth({grid: $("#" + subgridTableId), gridDiv: $("#" + subgrid_id)});
+                $("#" + subgridTableId).closest('div.ui-jqgrid-bdiv').css("max-height", "300px").css("max-width", subGridWidth + "px");
+                //$("#" + subgridTableId).closest('div.ui-jqgrid-hdiv.ui-corner-top').addClass('hello');
+                $("#" + subgridTableId).closest('div.ui-jqgrid-hdiv.ui-corner-top').css("max-width", subGridWidth + "px");
+                $("#" + subgridTableId).closest('div.ui-jqgrid-pager.ui-corner-bottom').css("max-width", subGridWidth + "px");
+
+//                $(window).on('resize', function () {
+//                    grid.jqGrid('setGridWidth', $('#dvStkBalGrid').width());
+//                });
+//                grid.on('myRefresh', function () {
+//                    resizeWidth({grid: grid, gridDiv: conDiv});
+//                });                  
+//                grid.jqGrid('setGridWidth', conDiv.width());                    
+            }   
+        });
+        
+        // resize
+        $(window).on('resize', function () {
+            $('#jqgridStkBal').jqGrid('setGridWidth', $('#dvStkBalGrid').width());
+        });
+                           
+    }
+    
+    function ActionSelectByReq(mainRowValue, id, sReqNo, sDetailIDX, gridname) {
+    
+       //alert(sDetailIDX);
+        var selectedrow = $(gridname).getDataIDs();
+              //alert(JSON.stringify(selectedrow));
+       
+         for (var i = 0; i < selectedrow.length; i++) {   
+              var rowData = $(gridname).jqGrid('getRowData', selectedrow[i]); 
+              
+              if (sDetailIDX === String(rowData["DetailIDX"])){
+                  
+                    if (mainRowValue ==='R'){
+                         
+                        // $("#RejReq").modal("show"); 
+                     //  alert($(gridname).width());
+                      $('#txtverified_' + (i+1)).prop('disabled', true);
+                      $('#txtApprove_' + (i+1)).prop('disabled', true);
+                      $('#ddlRejByReq_' + (i+1)).prop('disabled', false);
+                      $('#txtRemarkByReq_' + (i+1)).prop('disabled', false);
+                      if (String(rowData["ReqStatus"]) !=='V'){
+                          $('#txtverified_' + (i+1)).val('0.00');
+                       }
+                       
+                       $('#txtApprove_' + (i+1)).val('0.00'); 
+                       $('#ddlRejByReq_' + (i+1)).prop('selectedIndex',0);
+                       $('#txtRemarkByReq_' + (i+1)).val(''); 
+                    //   $(gridname).showCol("ReasonDesc");
+                     //  $(gridname).showCol("ReasonRemarks");
+                      
+                      //scrollToRow($(gridname), id);
+//                        $("#lblReqNo").val(String(rowData["ReqNo"]));
+//                        $("#lblReqDate").val(String(rowData["ReqDate"]));
+//                        $("#lblComp").val(String(rowData["CompName"]));
+//                        $("#lblLoc").val(String(rowData["LocName"]));
+//                        $("#lblDetailIDX").val(String(rowData["DetailIDX"]));
+//                        $("#lblHIDX").val(String(rowData["HIDX"]));  
+//                        $("#lblRejStock").val(String(rowData["StkName"]));  
+                        
+                       //
+                   }else if (mainRowValue ==='V'){
+                      // $(gridname).hideCol("ReasonDesc");
+                      // $(gridname).hideCol("ReasonRemarks");
+//                       $(gridname).showCol("VerifiedQty");
+//                       $(gridname).hideCol("ApprovedQty");
+                       $('#txtverified_' + (i+1)).prop('disabled', false);
+                       $('#txtApprove_' + (i+1)).prop('disabled', true);
+                       $('#ddlRejByReq_' + (i+1)).prop('disabled', true);
+                       $('#txtRemarkByReq_' + (i+1)).prop('disabled', true);
+                       $('#txtverified_' + (i+1)).val('0.00');
+                       $('#txtApprove_' + (i+1)).val('0.00');
+                       $('#ddlRejByReq_' + (i+1)).prop('selectedIndex',0);
+                       $('#txtRemarkByReq_' + (i+1)).val('');
+                      
+                       
+                    }
+                    else if (mainRowValue ==='A'){
+                      // $(gridname).hideCol("ReasonDesc");
+                      // $(gridname).hideCol("ReasonRemarks");
+//                       $(gridname).showCol("VerifiedQty");
+//                       $(gridname).showCol("ApprovedQty");
+                        $('#txtverified_' + (i+1)).prop('disabled', true);
+                        $('#txtApprove_' + (i+1)).prop('disabled', false);
+                        $('#ddlRejByReq_' + (i+1)).prop('disabled', true);
+                        $('#txtRemarkByReq_' + (i+1)).prop('disabled', true);
+                        //$("#btnVerify span").text(mainRowValue);
+                         if (String(rowData["ReqStatus"]) !=='V'){
+                          $('#txtverified_' + (i+1)).val('0.00');
+                       }
+                       $('#txtApprove_' + (i+1)).val('0.00');
+                       $('#ddlRejByReq_' + (i+1)).prop('selectedIndex',0);
+                       $('#txtRemarkByReq_' + (i+1)).val('');
+                      
+                    }else{
+                       $('#txtverified_' + (i+1)).prop('disabled', true);
+                       $('#txtApprove_' + (i+1)).prop('disabled', true);
+                       $('#ddlRejByReq_' + (i+1)).prop('disabled', true);
+                       $('#txtRemarkByReq_' + (i+1)).prop('disabled', true);
+                        $('#txtverified_' + (i+1)).val('0.00');
+                       $('#txtApprove_' + (i+1)).val('0.00'); 
+                       $('#ddlRejByReq_' + (i+1)).prop('selectedIndex',0);
+                        $('#txtRemarkByReq_' + (i+1)).val('');
+                }
+                }              
+        }  
+    }
+    
+    var CurrentCompCode = "";
+    var CurrentLocCode = "";
+    function StkBalancePopup(cellvalue1, cellvalue2, CompCode, LocCode) {   
+        CurrentStkCode = cellvalue1;
+        CurrentStkName = cellvalue2;
+        CurrentCompCode = CompCode;
+        CurrentLocCode = LocCode;
+
+        $("#txtStkBal_StkCode").text(CurrentStkCode);
+        $("#txtStkBal_StkName").text(CurrentStkName);
+
+        $("#jqgridStkBal").jqGrid('clearGridData');
+        $("#jqgridStkBal").setGridParam({
+            postData: {
+                SFC: 'GET_STK_BALANCE',
+                COMPCODE: '',
+                STKCODE: CurrentStkCode
+            },
+            gridComplete: function () {  
+                $("#jqgridStkBal").jqGrid('setSelection',CompCode);                
+                //$('#jqgridStkBal').find('.ui-state-highlight').css('background', 'yellow');
+            }  
+        }).trigger("reloadGrid", [{page: 1}]); 
+        $("#jqgridStkBal").removeClass('table-striped');
+
+        $("#ModStkBal").modal("show");                 
+    }
+    
+    $("#ModStkBal").on('shown.bs.modal', function () {
+        if (CurrentCompCode !== '') {
+            $("#jqgridStkBal").expandSubGridRow(CurrentCompCode);
+        }
+    });     
+
+    $("#btnClosePopup").click(function() {
+        CurrentCompCode = "";
+        CurrentLocCode = ""; 
+    });
+    
+ 
+    function getGridRowHeight(targetGrid) {
+        var height = null; // Default
+        try {
+            height = $(targetGrid).find('tbody').find('tr:eq(2)').outerHeight();
+        }
+        catch (e) {
+            height = 23;
+        }
+        return height;
+    }
+
+
+    function scrollToRow(targetGrid, id) {
+        var rowHeight = getGridRowHeight(targetGrid); // Default height
+        var index = $(targetGrid).getInd(id - 1);
+        $(targetGrid).closest(".ui-jqgrid-bdiv").animate({scrollTop: rowHeight * index}, '250', 'swing', function () {
+
+        });
+    }
+    
+    function CallServices() {
+       
+       $.ajax({
+            type: "GET",
+            async: false,
+            url: "http://localhost:8080/InventoryCtrl_Service/webresources/IVC_Service/GetStockRequest",
+            //data: {GSTCODE: sGstCode, GSTTYPE:'PURCHASE'},
+            contentType: "application/json;",
+            dataType: "json",
+            success: function (msg) {
+                 var arrGstData = msg;             
+                // alert(JSON.stringify(arrGstData));
+                  $("#hdnJsonString").val(JSON.stringify(arrGstData));
+                 
+                
+            },
+            error: function (jqXHR, textStatus, errorThrown) {
+                alert("get session failed " + errorThrown);
+            }
+        });
+       
+    }
+    
+    function CallServicesNo(){
+           
+           $.ajax({
+            type: "GET",
+            async: false,
+            url: "http://localhost:8080/InventoryCtrl_Service/webresources/IVC_Service/GetNextNumber",
+            //data: {GSTCODE: sGstCode, GSTTYPE:'PURCHASE'},
+            contentType: "text/html;",
+           // dataType: "json",
+            success: function (msg) {
+                 var arrGstData = msg;             
+                // alert(arrGstData);
+                 //paramList = parseFloat(arrGstData.gst_taxrate /100); 
+            },
+            error: function (jqXHR, textStatus, errorThrown) {
+                alert("get session failed " + errorThrown);
+            }
+        });
+           
+        }
+        
+        
+        
+       
+        
+        
+        
+    
+                                            
+
+</script>

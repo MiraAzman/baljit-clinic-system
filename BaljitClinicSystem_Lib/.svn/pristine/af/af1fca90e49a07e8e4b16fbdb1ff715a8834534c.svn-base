@@ -1,0 +1,133 @@
+CREATE DEFINER=`root`@`localhost` PROCEDURE `SP_TRX_ROLE`(
+IN sMethod         varchar(30),
+IN sRoleCode       varchar(20),
+IN sRoleName       varchar(100),
+IN sRoleBiz        varchar(50),
+IN sRoleDesc       varchar(20),
+IN sAllowMulti     varchar(2),
+IN sBy             varchar(10),
+IN sRecStatus      varchar(2),
+IN sView           varchar(2),
+IN sAdd            varchar(2),
+IN sEdit           varchar(2),
+IN sDel            varchar(2),
+IN sVerify         varchar(2),
+IN sApprove        varchar(2),
+IN sSEQ            varchar(10),
+IN sMnuCode        varchar(20),
+OUT Result         varchar(30),
+OUT Message varchar(30)
+
+)
+BEGIN
+
+
+
+
+
+
+
+         IF sMethod = 'ADD_ROLE' THEN
+
+                  IF NOT EXISTS(SELECT rol_code FROM  afc_role  WHERE rol_code = sRoleCode) THEN
+                     INSERT INTO afc_role (rol_code, rol_businessapp, rol_name, rol_desc, rol_recstatus,
+                                           createby, createdate, rol_allowmultisession)
+                                   VALUES (sRoleCode, sRoleBiz, sRoleName, sRoleDesc, sRecStatus,
+                                          sBy, NOW(), sAllowMulti);
+
+
+                   SELECT '00000' INTO Result;
+                   SELECT  'Success created' INTO Message;
+
+              ELSE
+
+                   SELECT 'DUPLICATE ROLE CODE' INTO Result;
+
+              END IF;
+
+
+         END IF;
+
+          IF sMethod = 'UPDATE_ROLE' THEN
+
+
+                  UPDATE  afc_role
+                  SET   rol_recstatus =  sRecStatus,
+                        rol_businessapp = sRoleBiz,
+                        modifyby = sBy,
+                        modifydate = NOW()
+                        WHERE rol_code =  sRoleCode ;
+
+
+
+                   SELECT '00000' INTO Result;
+                   SELECT  'Success Update' INTO Message;
+
+
+         END IF;
+
+
+           IF sMethod = 'ADD_ROLEFC' THEN
+
+                   IF NOT EXISTS(SELECT rfc_rolecode FROM  afc_rolefunction  WHERE rfc_rolecode = sRoleCode and rfc_businessapp = sRoleBiz and  rfc_menucode = sMnuCode) THEN
+
+                     INSERT INTO afc_rolefunction (rfc_rolecode, rfc_businessapp, rfc_menucode, rfc_view, rfc_add,
+                                                   rfc_edit, ref_verify, ref_approve, ref_del, rfc_recstatus, rfc_sequence,
+                                                   createby, createdate)
+                                            VALUES (sRoleCode, sRoleBiz, sMnuCode, sView, sAdd,
+                                                    sEdit, sVerify, sApprove, sDel, sRecStatus, sSEQ,
+                                                    sBy, NOW());
+
+
+                   SELECT '00000' INTO Result;
+                   SELECT 'Function Success created' INTO Message;
+
+               ELSE
+
+                  SELECT 'DUPLICATE ROLE Function' INTO Result;
+
+              END IF;
+
+
+         END IF;
+
+         IF sMethod = 'UPDATE_ROLEFC' THEN
+
+                IF NOT EXISTS(SELECT rfc_menucode FROM  afc_rolefunction  WHERE rfc_rolecode = sRoleCode and rfc_businessapp = sRoleBiz and  rfc_menucode = sMnuCode) THEN
+
+
+                     INSERT INTO afc_rolefunction (rfc_rolecode, rfc_businessapp, rfc_menucode, rfc_view, rfc_add,
+                                                   rfc_edit, ref_verify, ref_approve, ref_del, rfc_recstatus, rfc_sequence,
+                                                   createby, createdate)
+                                            VALUES (sRoleCode, sRoleBiz, sMnuCode, sView, sAdd,
+                                                    sEdit, sVerify, sApprove, sDel, '1', sSEQ,
+                                                    sBy, NOW());
+                            SELECT '00000' INTO Result;
+                            SELECT 'Function Success updated' INTO Message;
+                 ELSE
+
+                    UPDATE afc_rolefunction
+                    SET  rfc_view =  sView,
+                         rfc_add = sAdd,
+                         rfc_edit = sEdit,
+                         ref_del = ref_del,
+                         ref_verify = sVerify,
+                         ref_approve = sApprove,
+                         modifyby = sBy,
+                         modifydate = NOW()
+                    WHERE  rfc_rolecode = sRoleCode and rfc_businessapp = sRoleBiz
+                    and rfc_menucode = sMnuCode;
+
+
+
+
+                   SELECT '00000' INTO Result;
+                   SELECT 'Function Success updated' INTO Message;
+
+                  END IF;
+
+
+         END IF;
+
+
+END

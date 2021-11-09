@@ -1,0 +1,222 @@
+<%@taglib prefix="jstl" uri="http://java.sun.com/jsp/jstl/core" %>
+<jsp:useBean id="DDL" scope="page" class="BusinessLogic.Servlet_PopulateData" />
+<style type="text/css">
+    .ui-jqgrid tr.jqgrow td {
+        word-wrap: break-word; /* IE 5.5+ CSS3 see http://www.w3.org/TR/css3-text/#text-wrap */
+        white-space: pre-wrap; /* CSS3 */
+        white-space: -moz-pre-wrap; /* Mozilla, since 1999 */
+        white-space: -pre-wrap; /* Opera 4-6 */
+        white-space: -o-pre-wrap; /* Opera 7 */
+        overflow: hidden;
+        height: auto;
+        vertical-align: middle;
+        padding-top: 3px;
+        padding-bottom: 3px 
+    }
+    .centered {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        margin-top: -50px;
+        margin-left: -200px;
+    }
+    select:disabled{
+        background: #dddddd;
+    }
+    li{
+        list-style:none;
+    }
+    .disabledTab{
+        pointer-events: none;
+    }
+</style>
+<link rel="stylesheet" type="text/css" href="css/your_style.css" />
+<link rel="stylesheet" type="text/css" href="js/plugin/jqgrid/ui.multiselect.css" />
+<section id="widget-grid" class="">
+    <!--<span>{{params}}</span>-->
+    <input type="hidden" value={{params}} id="hidHospCode">
+
+    <div class="col-xs-12 col-sm-7 col-md-7 col-lg-12">
+        <h1 class="page-title txt-color-blueDark">
+            <!-- PAGE HEADER -->
+            <i class="fa-fw fa fa-file fa-2x"></i> 
+            Stock Adjustment Details
+        </h1>
+    </div>
+    <div class="widget-body row">
+        <article class="col-sm-12 col-md-12 col-lg-12">
+            <div class="jarviswidget jarviswidget-color-blueDark" id="wid-id-1"  data-widget-editbutton="false" data-widget-custombutton="false"
+                 data-widget-deletebutton="false" data-widget-colorbutton="false" data-widget-fullscreenbutton="false" data-widget-togglebutton="false">
+                <header>
+                    <span class="widget-icon"> <i class="fa fa-file"></i></span>
+                    <span><h2>&nbsp;Stock Adjustment</h2></span>
+                </header>
+                <div class="row">
+                    <div class="widget-body">
+                        <table id="tbAdjHeader" class="table table-bordered table-striped" style="clear:both;">
+                            <tbody>
+                                <tr>
+                                    <td width="12%">Document No</td>
+                                    <td width="1%">:</td>
+                                    <td width="25%"> 
+                                        <input type="text" id="lblDocNo" name="lblPrdCode" lblDocNo  class="tboxreadonly" />    
+                                    </td>
+                                    <td width="12%">Date</td>
+                                    <td width="1%">:</td>
+                                    <td width="75%">       
+                                        <input type="text" id="lblDocDate" name="lblDocDate" readonly  class="tboxreadonly" />    
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>Company</td>
+                                    <td>:</td>
+                                    <td>     
+                                        <input type="text" id="lblCompany" name="lblCompany" readonly class="tboxreadonly" />
+                                    </td>
+                                    <td>Status</td>
+                                    <td>:</td>
+                                    <td>   
+                                        <input type="text" id="lblStatus" name="lblStatus" readonly class="tboxreadonly" />    
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>Location</td>
+                                    <td>:</td>
+                                    <td>     
+                                        <input type="text" id="lblLocation" name="lblLocation" readonly class="tboxreadonly" />
+                                    </td>
+                                    <td>Remarks</td>
+                                    <td>:</td>
+                                    <td>     
+                                        <input type="text" id="lblRemarks" name="lblRemarks" readonly class="tboxreadonly" />
+                                    </td>
+                                </tr>                               
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </article>       
+        <article class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+            <div class="row">
+                <form id="form_AdjDetail" name="form_AdjDetail">                  
+                    <article class="col-sm-12 col-md-12 col-lg-12">
+                        <div class="jarviswidget jarviswidget-color-blueDark" id="wid-id-4"  data-widget-editbutton="false" data-widget-custombutton="false"
+                             data-widget-deletebutton="false" data-widget-colorbutton="false" data-widget-fullscreenbutton="false" data-widget-togglebutton="false">
+                            <header>
+                                <span class="widget-icon"> <i class="fa fa-file"></i></span>
+                                <span><h2>&nbsp;Stock Adjustment Details</h2></span>
+                            </header>
+                            <div class="padding-10">                                               
+                                <div id="gridAdjDetail" class="" >
+                                    <table  class="table table-striped" id="tbItems" >
+                                        <thead>             
+                                            <th id="PRDCODE">Product Code</th> 
+                                            <th id="PRDDESC">Product</th>                                        
+                                            <th id="UOM">UOM</th>
+                                            <th id="UNITCOST">Unit Cost</th>
+                                            <th id="BATCHNO">Batch#</th>
+                                            <th id="EXPDATE">Expiry Date</th>
+                                            <th id="QTY">Qty</th>
+                                            <th id="ACTQTY">Actual Balance</th>
+                                            <th id="VARIANCE">Variance</th>
+                                        </thead>
+                                        <tbody id="AdjDetailGrid" >
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </article>
+                    <div hidden>
+                        <input type="hidden" id="hidAdjItems" name="hidAdjItems"/>
+                        <input type="hidden" id="hidAdjHdrIdx" name="hidAdjHdrIdx"/>
+                    </div>
+                </form>
+            </div>
+        </article>
+        <div>
+            <div class="row">
+                <div class="col-sm-12">
+                    <div align="center" class="padding-5" >                                              
+                        <input type="button" id="btnCancel" class="btn btn-default bg-color-blueDark txt-color-white" value="Go Back" onclick="location.href = '#/StockAdjustmentList'" />
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<jsp:include page="../../includes/loading-no-status.jsp"/>
+<script type="text/javascript">
+    pageSetUp();
+
+    function bindData(sParam) {
+        
+        $().ready(function() {
+            
+            var AdjHdrID = sParam.ADJHDRIDX;
+            $("#hidAdjHdrIdx").val(AdjHdrID);
+            
+            $.ajax({
+                type:'POST',
+                url:"${pageContext.request.contextPath}/Servlet_StockAdjustment",
+                data:  {
+                    SFC: 'GET_STKADJ_HEADER', 
+                    ADJHDRIDX: AdjHdrID                 
+                },
+                dataType: 'json',
+                success: function(data) {
+                    var arrData = data.object1[0];
+
+                    $("#lblDocNo").val(arrData.adjh_docno);
+                    $("#lblDocDate").val(arrData.adjh_docdate);                      
+                    $("#lblCompany").val(arrData.adjh_companycode + ' - ' + arrData.comp_name);                  
+                    $("#lblStatus").val(arrData.adjh_status);
+                    $("#lblRemarks").val(arrData.adjh_remarks);                                                                             
+                }
+            });          
+
+            $.ajax({
+                type:'POST',
+                url:"${pageContext.request.contextPath}/Servlet_StockAdjustment",
+                data:  {
+                    SFC: 'GET_STKADJ_ITEMS', 
+                    ADJHDRIDX: AdjHdrID               
+                },
+                dataType: 'json',
+                success: function(data) {                                      
+                    var arrItemData = data;  
+                    var j = 0;   
+                    for (var i = 0; i < arrItemData.rows.length; i++) {           
+                        
+                        j = j+1;                                   
+                        $("#tbItems tbody").append("<tr id=tr" + j + ">" +
+                            "<td><input type='text' class='form-control' readonly ID='txtStkCode" + j + "' name='txtStkCode" + j + "' style='width:150px'/></td>" +
+                            "<td><input type='text' class='form-control' readonly ID='txtStkDesc" + j + "' name='txtStkDesc" + j + "' style='width:250px'/></td>" +
+                            "<td><input type='text' class='form-control' readonly ID='txtUOM" + j + "' name='txtUOM" + j + "' style='width:80px'/></td>" +
+                            "<td><input type='text' class='form-control' readonly ID='txtUnitCost" + j + "' name='txtUnitCost" + j + "' style='width:80px'/></td>" +
+                            "<td><input type='text' class='form-control' readonly ID='txtBatchNo" + j + "' name='txtBatchNo" + j + "' style='width:80px'/></td>" +
+                            "<td><input type='text' class='form-control' readonly ID='txtExpiryDate" + j + "' name='txtExpiryDate" + j + "' style='width:100px'/></td>" +
+                            "<td><input type='text' class='form-control' readonly ID='txtOnhandQty" + j + "' name='txtOnhandQty" + j + "' style='width:90px'/></td>" +
+                            "<td><input type='text' class='form-control' readonly ID='txtNewQty" + j + "' name='txtNewQty" + j + "' style='width:90px'/></td>" +
+                            "<td><input type='text' class='form-control' readonly ID='txtVariance" + j + "' name='txtVariance" + j + "' style='width:90px'/></td>" +
+                            "</tr>"
+                        );                                             
+                        $("#txtStkCode"+ j).val(arrItemData.rows[i].adjd_stockcode);
+                        $("#txtStkDesc"+ j).val(arrItemData.rows[i].stk_desc);                     
+                        $("#txtUOM"+ j).val(arrItemData.rows[i].adjd_uomcode);
+                        $("#txtUnitCost"+ j).val(arrItemData.rows[i].adjd_unitcost);
+                        $("#txtBatchNo"+ j).val(arrItemData.rows[i].adjd_batchno);
+                        $("#txtExpiryDate"+ j).val(arrItemData.rows[i].adjd_expirydate);
+                        $("#txtOnhandQty"+ j).val(arrItemData.rows[i].adjd_onhandqty);
+                        $("#txtNewQty"+ j).val(arrItemData.rows[i].adjd_newqty);
+                        $("#txtVariance"+ j).val(arrItemData.rows[i].adjd_varianceqty);   
+                        $("#lblLocation").val(arrItemData.rows[i].adjd_locationcode + ' - ' + arrItemData.rows[i].loc_name);
+                    }                 
+                }
+            });           
+        }); 
+    }
+   
+</script>

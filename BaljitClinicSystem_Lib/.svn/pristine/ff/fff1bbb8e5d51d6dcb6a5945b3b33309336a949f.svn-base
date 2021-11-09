@@ -1,0 +1,13 @@
+package BusinessData;
+
+import BusinessData.BaseDAL;
+import BusinessLogic.BLL_Common;
+
+public class DAL_Media {
+    
+    BaseDAL DAL = new BaseDAL();
+        
+    public BLL_Common.Common_Object DAL_UPDATE_MEDIA(String SiteName, String[] sStringIn) {
+        return BaseDAL.Get_Multiple_QueryReturn_No_Commit("SP_TRX_MEDIA(?,?,?,?)", sStringIn, new int[]{java.sql.Types.VARCHAR}, SiteName);
+    }      
+}

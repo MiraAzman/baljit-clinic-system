@@ -1,0 +1,96 @@
+CREATE DEFINER=`root`@`localhost` PROCEDURE `SP_TRX_DEPOSIT`(
+IN sMethod			varchar(30),
+IN sDI_Company 		varchar(100),
+IN sDI_Branch 		varchar(100),
+IN sDI_IDX 			int(11),
+IN sDI_ENTRYNO 		int(11),
+IN sDI_REFNO 		varchar(12),
+IN sDI_REMARK 		varchar(100),
+IN sDI_REFIDX 		int(11),
+IN sDI_DATE 		varchar(30),
+IN sDI_AMOUNT 		decimal(15,3),
+IN sDI_TYPE 		varchar(10),
+IN sDI_ISCANCEL 	varchar(1),
+IN sDI_JNACCGEN 	varchar(1),
+IN sDI_PatientName 	varchar(100),
+IN sDI_MRN 			varchar(45),
+IN sDI_ICNO 		varchar(45),
+IN sDI_CustType 	varchar(45),
+
+IN sDP_IDX 			int(11),
+IN sDP_REFNO 		varchar(12),
+IN sDP_PAYVIABILL 	varchar(10),
+IN sDP_ISCANCEL 	varchar(1),
+IN sDP_AMOUNT 		decimal(15,3),
+IN sDP_REFIDX 		int(11),
+
+IN sDPD_AMOUNT 		decimal(15,3),
+IN sBy              varchar(10),
+
+OUT Result 			varchar(30),
+OUT Message 		varchar(30)
+)
+BEGIN
+
+SET sDI_DATE  = STR_TO_DATE(REPLACE(sDI_DATE,"'",''), '%Y-%m-%d %H:%i:%s');
+
+IF sMethod = 'ADD_DEPOSITINFO' THEN
+  IF (SELECT COUNT(di_idx) FROM his_depositinfo WHERE di_idx=sDI_IDX AND di_company=sDI_Company AND di_branch=sDI_Branch) = 0 THEN
+	INSERT INTO his_depositinfo
+    (di_company, di_branch, di_idx, di_entryno, di_refno, di_remark, di_refidx, 
+    di_date, di_amount, di_type, di_iscancel, createby, createdate, modifyby, modifydate, 
+    di_jnaccgen, di_patientname, di_mrn, di_icno, di_custtype)
+    VALUES
+    (sDI_Company, sDI_Branch, sDI_IDX, sDI_ENTRYNO, sDI_REFNO, sDI_REMARK, sDI_REFIDX, 
+    sDI_DATE, sDI_AMOUNT, sDI_TYPE, sDI_ISCANCEL, sBy, now(), sBy, now(), 
+    sDI_JNACCGEN, sDI_PatientName, sDI_MRN, sDI_ICNO, sDI_CustType);
+  ELSE
+	UPDATE his_depositinfo
+    SET di_entryno = sDI_ENTRYNO, di_refno = sDI_REFNO, di_remark = sDI_REMARK, di_refidx = sDI_REFIDX, 
+    di_date = sDI_DATE, di_amount = sDI_AMOUNT, di_type = sDI_TYPE, di_iscancel = sDI_ISCANCEL, 
+    di_jnaccgen = sDI_JNACCGEN, di_patientname = sDI_PatientName, di_mrn = sDI_MRN, di_icno = sDI_ICNO, 
+    modifyby = sBy, modifydate = now() 
+    WHERE di_idx=sDI_IDX AND di_company=sDI_Company AND di_branch=sDI_Branch;
+  END IF;
+  
+	SELECT '00000' INTO Result;
+	SELECT  'Success Inserted' INTO Message;
+END IF;
+
+IF sMethod = 'ADD_DEPOSITPAYMENT' THEN
+  IF (SELECT COUNT(dp_idx) FROM his_depositpayment WHERE dp_idx=sDP_IDX AND dp_company=sDI_Company AND dp_branch=sDI_Branch) = 0 THEN
+	INSERT INTO his_depositpayment
+    (dp_company, dp_branch, dp_idx, dp_diidx, dp_refno, dp_payviabill, 
+    dp_iscancel, dp_amount, createby, createdate, modifyby, modifydate, dp_refidx)
+    VALUES
+    (sDI_Company, sDI_Branch, sDP_IDX, sDI_IDX, sDP_REFNO, sDP_PAYVIABILL,
+    sDP_ISCANCEL, sDP_AMOUNT, sBy, NOW(), sBy, NOW(), sDP_REFIDX);
+  ELSE
+	UPDATE his_depositpayment
+    SET dp_diidx = sDI_IDX, dp_refno = sDP_REFNO, dp_payviabill = sDP_PAYVIABILL, dp_iscancel = sDP_ISCANCEL, 
+    dp_amount = sDP_AMOUNT, modifyby = sBy, modifydate = NOW(), dp_refidx = sDP_REFIDX
+    WHERE dp_idx=sDP_IDX AND dp_company=sDI_Company AND dp_branch=sDI_Branch;
+  END IF;
+  
+	SELECT '00000' INTO Result;
+	SELECT  'Success Inserted' INTO Message;
+END IF;
+
+IF sMethod = 'ADD_DEPOSITPYMTDETAIL' THEN
+  IF (SELECT COUNT(dpd_autoidx) FROM his_depositpaymentdtl WHERE dpd_dpidx=sDP_IDX AND dpd_diidx=sDI_IDX AND dpd_company=sDI_Company AND dpd_branch=sDI_Branch) = 0 THEN
+	INSERT INTO his_depositpaymentdtl
+    (dpd_company, dpd_branch, dpd_dpidx, dpd_diidx, dpd_direfno, 
+    dpd_amount, createby, createdate, modifyby, modifydate)
+    VALUES
+    (sDI_Company, sDI_Branch, sDP_IDX, sDI_IDX, sDI_REFNO,
+    sDPD_AMOUNT, sBy, NOW(), sBy, NOW());
+  ELSE
+	UPDATE his_depositpaymentdtl
+    SET dpd_direfno = sDI_REFNO, dpd_amount = sDPD_AMOUNT, modifyby = sBy, modifydate = NOW()
+    WHERE dpd_dpidx=sDP_IDX AND dpd_diidx=sDI_IDX AND dpd_company=sDI_Company AND dpd_branch=sDI_Branch;
+  END IF;
+  
+	SELECT '00000' INTO Result;
+	SELECT  'Success Inserted' INTO Message;
+END IF;
+END

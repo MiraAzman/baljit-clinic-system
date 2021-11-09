@@ -1,0 +1,123 @@
+CREATE DEFINER=`root`@`localhost` PROCEDURE `SP_TRX_CASH`(
+IN sMethod			varchar(30),
+IN sCSH_Company 	varchar(100),
+IN sCSH_Branch 		varchar(100),
+IN sCSH_IDX 		int(11),
+IN sCSH_NO 			varchar(12),
+IN sCSH_STATUS 		varchar(10),
+IN sCSH_RECEIPTNO 	varchar(12),
+IN sCSH_CASHAMT 	decimal(15,3),
+IN sCSH_CARDAMT 	decimal(15,3),
+IN sCSH_CHEQUEAMT 	decimal(15,3),
+IN sCSH_TOTALRCVAMT decimal(15,3),
+IN sCSH_REMARK 		varchar(100),
+IN sCSH_PRNTIME 	int(11),
+IN sCSH_DISPLAYNAME varchar(100),
+IN sCSH_DISPLAYNRICNO 	varchar(20),
+IN sCSH_CARDREF1 	varchar(20),
+IN sCSH_CARDREF2 	varchar(20),
+IN sCSH_CHEQREF1 	varchar(20),
+IN sCSH_CHEQREF2 	varchar(20),
+IN sCSH_ACCNO 		varchar(10),
+IN sCSH_PMDATE 		varchar(30),
+IN sCSH_WORKSTATION varchar(20),
+IN sCSH_PAIDAMT 	decimal(15,3),
+IN sCSH_CHGAMT 		decimal(15,3),
+IN sCSH_BILDEPTID 	varchar(10),
+IN sCSH_SHIFTCLOSEDAT 	varchar(30),
+IN sCSH_CARDTYPE 	varchar(20),
+IN sCSH_ALTRECEIPTNO 	varchar(12),
+IN sCSH_ALLOCATED 	varchar(1),
+IN sCSH_PYMTVOUCHER decimal(15,3),
+IN sCSH_PYMTVOUCHERREF1 varchar(20),
+IN sCSH_PYMTVOUCHERREF2 varchar(50),
+IN sCSH_TT 			decimal(15,3),
+IN sCSH_TTBANKDETAILS 	varchar(50),
+
+IN sCSD_IDX 		int(11),
+IN sCSD_NO 			varchar(12),
+IN sCSD_TYPE 		varchar(12),
+IN sCSD_REFNO 		varchar(10),
+IN sCSD_REFIDX 		int(11),
+IN sCSD_RCVAMT 		decimal(15,3),
+IN sCSD_STATUS 		varchar(20),
+IN sCSD_RCVDATE 	varchar(30), 
+IN sCSD_ISCANCEL 	varchar(1),
+IN sCSD_PAYVIABILL 	char(10),
+IN sCSD_CASHAMT 	decimal(15,3),
+IN sCSD_CHKAMT 		decimal(15,3),
+IN sCSD_CCAMT 		decimal(15,3),
+IN sCSD_JNACCGEN 	varchar(1),
+IN sCSD_PYMTVOUCHERAMT 	decimal(15,3),
+IN sCSD_TTAMT 		decimal(15,3),
+IN sBy              varchar(10),
+
+OUT Result 			varchar(30),
+OUT Message 		varchar(30)
+)
+BEGIN
+
+SET sCSH_PMDATE  = STR_TO_DATE(REPLACE(sCSH_PMDATE,"'",''), '%Y-%m-%d %H:%i:%s');
+SET sCSH_SHIFTCLOSEDAT  = STR_TO_DATE(REPLACE(sCSH_SHIFTCLOSEDAT,"'",''), '%Y-%m-%d %H:%i:%s');
+SET sCSD_RCVDATE  = STR_TO_DATE(REPLACE(sCSD_RCVDATE,"'",''), '%Y-%m-%d %H:%i:%s');
+
+IF sMethod = 'ADD_CASHHEADER' THEN
+  IF (SELECT COUNT(csh_idx) FROM his_cashheader WHERE csh_idx=sCSH_IDX AND csh_company=sCSH_Company AND csh_branch=sCSH_Branch) = 0 THEN
+	INSERT INTO his_cashheader
+    (csh_company, csh_branch, csh_idx, csh_no, csh_status, csh_receiptno, csh_cashamt, csh_cardamt, 
+    csh_chequeamt, csh_totalrcvamt, csh_remark, csh_prntime, csh_displayname, csh_displaynricno, 
+    createby, createdate, modifyby, modifydate, csh_cardref1, csh_cardref2, csh_cheqref1, csh_cheqref2, 
+    csh_accno, csh_pmdate, csh_workstation, csh_paidamt, csh_chgamt, csh_bildeptid, csh_shiftclosedat, 
+    csh_cardtype, csh_altreceiptno, csh_allocated, csh_pymtvoucher, csh_pymtvoucherref1, csh_pymtvoucherref2, 
+    csh_tt, csh_ttbankdetails)
+    VALUES
+    (sCSH_Company, sCSH_Branch, sCSH_IDX, sCSH_NO, sCSH_STATUS, sCSH_RECEIPTNO, sCSH_CASHAMT, sCSH_CARDAMT, 
+    sCSH_CHEQUEAMT, sCSH_TOTALRCVAMT, sCSH_REMARK, sCSH_PRNTIME, sCSH_DISPLAYNAME, sCSH_DISPLAYNRICNO, 
+    sBy, NOW(), sBy, NOW(), sCSH_CARDREF1, sCSH_CARDREF2, sCSH_CHEQREF1, sCSH_CHEQREF2, 
+    sCSH_ACCNO, sCSH_PMDATE, sCSH_WORKSTATION, sCSH_PAIDAMT, sCSH_CHGAMT, sCSH_BILDEPTID, sCSH_SHIFTCLOSEDAT, 
+    sCSH_CARDTYPE, sCSH_ALTRECEIPTNO, sCSH_ALLOCATED, sCSH_PYMTVOUCHER, sCSH_PYMTVOUCHERREF1, sCSH_PYMTVOUCHERREF2, 
+    sCSH_TT, sCSH_TTBANKDETAILS);
+  ELSE
+	UPDATE his_cashheader
+    SET csh_no = sCSH_NO, csh_status = sCSH_STATUS, csh_receiptno = sCSH_RECEIPTNO, csh_cashamt = sCSH_CASHAMT, 
+    csh_cardamt = sCSH_CARDAMT, csh_chequeamt = sCSH_CHEQUEAMT, csh_totalrcvamt = sCSH_TOTALRCVAMT, 
+    csh_remark = sCSH_REMARK, csh_prntime = sCSH_PRNTIME, csh_displayname = sCSH_DISPLAYNAME, 
+    csh_displaynricno = sCSH_DISPLAYNRICNO, modifyby = sBy, modifydate = NOW(), csh_cardref1 = sCSH_CARDREF1, 
+    csh_cardref2 = sCSH_CARDREF2, csh_cheqref1 = sCSH_CHEQREF1, csh_cheqref2 = sCSH_CHEQREF2, 
+    csh_accno = sCSH_ACCNO, csh_pmdate = sCSH_PMDATE, csh_workstation = sCSH_WORKSTATION, csh_paidamt = sCSH_PAIDAMT, 
+    csh_chgamt = sCSH_CHGAMT, csh_bildeptid = sCSH_BILDEPTID, csh_shiftclosedat = sCSH_SHIFTCLOSEDAT, 
+    csh_cardtype = sCSH_CARDTYPE, csh_altreceiptno = sCSH_ALTRECEIPTNO, csh_allocated = sCSH_ALLOCATED, 
+    csh_pymtvoucher = sCSH_PYMTVOUCHER, csh_pymtvoucherref1 = sCSH_PYMTVOUCHERREF1, csh_pymtvoucherref2 = sCSH_PYMTVOUCHERREF2, 
+    csh_tt = sCSH_TT, csh_ttbankdetails = sCSH_TTBANKDETAILS
+    WHERE csh_idx=sCSH_IDX AND csh_company=sCSH_Company AND csh_branch=sCSH_Branch;
+  END IF;
+  
+	SELECT '00000' INTO Result;
+	SELECT  'Success Inserted' INTO Message;
+END IF;
+
+IF sMethod = 'ADD_CASHDETAIL' THEN
+  IF (SELECT COUNT(csd_idx) FROM his_cashdetails WHERE csd_idx=sCSD_IDX AND csd_branch=sCSH_Branch AND csd_company=sCSH_Company) = 0 THEN
+	INSERT INTO his_cashdetails
+    (csd_idx, csd_hdridx, csd_no, csd_type, csd_refno, csd_refidx, csd_rcvamt, 
+    createby, createdate, modifyby, modifydate, csd_status, csd_rcvdate, csd_iscancel, 
+    csd_payviabill, csd_cashamt, csd_chkamt, csd_ccamt, csd_jnaccgen, csd_pymtvoucheramt, 
+    csd_ttamt, csd_branch, csd_company)
+    VALUES
+    (sCSD_IDX, sCSH_IDX, sCSD_NO, sCSD_TYPE, sCSD_REFNO, sCSD_REFIDX, sCSD_RCVAMT, 
+    sBy, NOW(), sBY, NOW(), sCSD_STATUS, sCSD_RCVDATE, sCSD_ISCANCEL, 
+    sCSD_PAYVIABILL, sCSD_CASHAMT, sCSD_CHKAMT, sCSD_CCAMT, sCSD_JNACCGEN, sCSD_PYMTVOUCHERAMT, 
+    sCSD_TTAMT, sCSH_Branch, sCSH_Company);
+  ELSE
+	UPDATE his_cashdetails
+    SET csd_hdridx=sCSH_IDX, csd_no=sCSD_NO, csd_type=sCSD_TYPE, csd_refno=sCSD_REFNO, csd_refidx=sCSD_REFIDX, 
+    csd_rcvamt=sCSD_RCVAMT, modifyby=sBy, modifydate=NOW(), csd_status=sCSD_STATUS, csd_rcvdate=sCSD_RCVDATE, 
+    csd_iscancel=sCSD_ISCANCEL, csd_payviabill=sCSD_PAYVIABILL, csd_cashamt=sCSD_CASHAMT, csd_chkamt=sCSD_CHKAMT, 
+    csd_ccamt=sCSD_CCAMT, csd_jnaccgen=sCSD_JNACCGEN, csd_pymtvoucheramt=sCSD_PYMTVOUCHERAMT, csd_ttamt=sCSD_TTAMT
+    WHERE csd_idx=sCSD_IDX AND csd_branch=sCSH_Branch AND csd_company=sCSH_Company;
+  END IF;
+  
+	SELECT '00000' INTO Result;
+	SELECT  'Success Inserted' INTO Message;
+END IF;
+END

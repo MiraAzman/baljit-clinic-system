@@ -1,0 +1,746 @@
+<%@taglib prefix="jstl" uri="http://java.sun.com/jsp/jstl/core" %>
+<jsp:useBean id="DDL" scope="page" class="BusinessLogic.Servlet_PopulateData" />
+<%  
+ String s_CompCode = (String) session.getAttribute("CompCode");   
+%>    
+<style type="text/css">
+    .ui-jqgrid tr.jqgrow td {
+        word-wrap: break-word; /* IE 5.5+ CSS3 see http://www.w3.org/TR/css3-text/#text-wrap */
+        white-space: pre-wrap; /* CSS3 */
+        white-space: -moz-pre-wrap; /* Mozilla, since 1999 */
+        white-space: -pre-wrap; /* Opera 4-6 */
+        white-space: -o-pre-wrap; /* Opera 7 */
+        overflow: hidden;
+        height: auto;
+        vertical-align: middle;
+        padding-top: 3px;
+        padding-bottom: 3px 
+    }
+
+    .centered {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        margin-top: -50px;
+        margin-left: -200px;
+    }
+    div.errorContainer, div.errorContainer2{
+        display:none;
+        width:100%;
+    }
+    div.errorContainer, div.errorContainer2 ol li{
+        list-style-type:disc;
+        margin-left: 20px;
+    }
+    select:disabled{
+        background: #dddddd;
+    }
+    li{
+        list-style:none;
+    }
+    .disabledTab{
+        pointer-events: none;
+    }
+    input[type="text"].error { border: 1px solid #A94444; background-color:#FFF0F0; }
+    select.error { border: 1px solid #A94444; background-color:#FFF0F0; }
+    textarea.error { border: 1px solid #A94444; background-color:#FFF0F0; }
+</style>
+<link rel="stylesheet" type="text/css" href="css/your_style.css" />
+<link rel="stylesheet" type="text/css" href="js/plugin/jqgrid/ui.multiselect.css" />
+<section id="widget-grid" class="">
+
+<input type="hidden" id="lblCompCode" value="<%= session.getAttribute("CompCode")%>"  class="tboxreadonlyShort"/>
+    <input type="hidden" id="lblLocCode" value="<%= session.getAttribute("LocCode")%>"  class="tboxreadonlyShort"/>
+    <div class="col-xs-12 col-sm-7 col-md-7 col-lg-12">
+        <h1 class="page-title txt-color-blueDark">
+            <!-- PAGE HEADER -->
+            <i class="fa fa-lg fa-fw fa-arrows-h"></i> 
+            Manual Stock Request                                     
+        </h1>
+    </div>
+    <div class="widget-body row">
+        <article class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+            <div class="row" style="padding-bottom:10px;padding-left:10px;padding-right:10px;">
+                <div class="errorContainer alert alert-danger alert-block">
+                    <h4 class="alert-heading">There were some field left out or invalid inputs. Please brief through the form and reenter necessarily.</h4>
+                    <ol>
+                    </ol>
+                </div>
+            </div>
+            <div class="row">
+                <form id="form_AddReq" name="form_AddReq">
+                    <article class="col-sm-12 col-md-12 col-lg-12">
+                        <div class="jarviswidget jarviswidget-color-blueDark" id="wid-id-1"  data-widget-editbutton="false" data-widget-custombutton="false"
+                             data-widget-deletebutton="false" data-widget-colorbutton="false" data-widget-fullscreenbutton="false" data-widget-togglebutton="false">
+                            <header>
+                                <span class="widget-icon"> <i class="fa fa-file"></i></span>
+                                <span><h2>&nbsp;Stock Request Info</h2></span>
+                            </header>
+                            <div class="row">
+                                <div class="widget-body">
+
+                                    <table id="tbProductInfo" class="table table-bordered table-striped" style="clear:both;">
+                                        <tbody>
+                                            <tr>
+                                                <td width="12%">Request No</td>
+                                                <td width="1%">:</td>
+                                                <td width="25%"> 
+                                                   
+                                                    
+                                                    
+                                                </td>
+                                                <td width="12%">Request Date</td>
+                                                <td width="1%">:</td>
+                                                <td width="75%">       
+                                                    <input id="txtReqDate" name="txtReqDate" placeholder="Request Date" class="searchbox-date" disabled="" readonly=""/>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td width="12%">Company</td>
+                                                <td width="1%">:</td>
+                                                <td width="25%">     
+                                                    <label id="selectCompany" class="searchbox">
+<!--                                                        <select class="form-control" id="ddlCompany" required name="ddlCompany" rel="popover-hover" data-original-title="Company Selection" data-content="Select Company." style="width:250px;"   >-->
+                                                        <select class="form-control" id="ddlCompany" required name="ddlCompany" rel="popover-hover" data-original-title="Company Selection" data-content="Select Company." style="width:250px;" onchange="GetLocation(this.value)"  >
+                                                            <option value="">- Select Company -</option>
+                                                            <jstl:forEach var="ddl_Company" items="${DDL.ddlGet('GET_COMP', sessionScope.CompCode, '', sessionScope.SiteName)}">
+                                                                <option value="${ddl_Company.VALUE}">${ddl_Company.TEXT}</option>
+                                                            </jstl:forEach>                                             
+                                                        </select>    
+                                                    </label>  
+                                                </td>
+                                                <td width="12%">Location</td>
+                                                <td width="1%">:</td>
+                                                <td width="75%">   
+                                                    <label id="selectLocation" class="searchbox">
+                                                        <select class="form-control" id="ddlLoc" name="ddlLoc" rel="popover-hover" data-original-title="Location Selection" data-content="Select Location." style="width:250px;"  >
+                                                            <!--<option value="">- Select Location -</option>-->
+                                                            <jstl:forEach var="ddl_Loc" items="${DDL.ddlGet('GET_LOCATION', sessionScope.CompCode, sessionScope.LocCode, sessionScope.SiteName)}">
+                                                                <option value="${ddl_Loc.VALUE}">${ddl_Loc.TEXT}</option>
+                                                            </jstl:forEach>                                             
+                                                        </select>    
+                                                    </label> 
+                                                </td>
+                                            </tr>
+<!--                                            <tr>
+                                                <td width="12%">Remarks</td>
+                                                <td width="1%">:</td>
+                                                <td width="25%"> 
+                                                    <textarea rows="4" cols="50" id="txtRemarks" name="txtRemarks" ></textarea>
+                                                </td>
+                                                <td width="12%"></td>
+                                                <td width="1%"></td>
+                                                <td width="75%"> 
+                                                </td>
+                                            </tr>-->
+                                            
+
+                                        </tbody>
+                                    </table>
+
+                                </div>
+                            </div>
+                        </div>
+                    </article>
+
+
+
+                    <article class="col-sm-12 col-md-12 col-lg-12">
+                        <div class="jarviswidget jarviswidget-color-blueDark" id="wid-id-3"  data-widget-editbutton="false" data-widget-custombutton="false"
+                             data-widget-deletebutton="false" data-widget-colorbutton="false" data-widget-fullscreenbutton="false" data-widget-togglebutton="false">
+                            <header>
+                                <span class="widget-icon"> <i class="fa fa-file"></i></span>
+                                <span><h2>&nbsp;Request Item</h2></span>
+                            </header>
+                            <div class="padding-10">
+
+                                <input type="button" Id="btnAddItem" onclick="add_Item();"  class="btn btn-default bg-color-blueDark txt-color-white" value="Add New Item" />&nbsp;
+  
+                                 <div id="gridReqItemSummary" class="">
+                                <!--<div id="bar-chart" class="chart"></div>-->
+
+                                <table  class="table table-striped" id="tbReqItem" >
+                                    <thead>
+                                    <th>Action</th>
+                                    <th id="STOCK">Stock</th>
+                                    <th id="UOM">UOM</th>
+                                    <th id="QTY">QTY</th>
+                                    <!--<th id="Bonus">Bonus</th>
+                                    <th id="UCost">U.Cost</th>
+                                    <th id="DiscOption">Disc Option</th>
+                                    <th id="DiscAmt">Disc Amt</th>
+                                    <th id="GrossTotal">Gross Total</th>
+                                    <th id="GST">GST</th>
+                                    <th id="GSTIncl">GST Incl.</th>
+                                    <th id="GSTAmt">GST Amt.</th>
+                                    <th id="NettTotal">Nett Total.</th>-->
+                                    <!--<th id="Company">Company</th>-->
+                                    </thead>
+                                    <tbody id="PoItemGrid" >
+
+                                    </tbody>
+                                </table>
+
+                            </div>
+                            </div>
+                        </div>
+
+
+
+                    </article>
+
+
+                    <div hidden>
+                        <input type="hidden" id="hdnArrItem" name="hdnArrItem"/>                        
+                        <input type="hidden" id="hdnPricing" name="hdnPricing"/>
+                        <input type="hidden" id="hdnTaxRate" name="hdnTaxRate"/>
+                        <input type="hidden" id="hdnTaxCode" name="hdnTaxCode"/>
+                    </div>
+
+                </form>
+            </div>
+
+        </article>
+        <div>
+            <div class="row">
+                <div class="col-sm-12">
+                    <div align="center" class="padding-5" >
+                         
+                        <input type="button" Id="btnCreate"  class="btn btn-default bg-color-blueDark txt-color-white" value="Create Request" onclick="create()"/>
+                        <input type="button" Id="btnCancel"  class="btn btn-default bg-color-blueDark txt-color-white"  value="Cancel" onclick="location.href = '#/StockRequestList'" />
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+<div class="modal fade" id="PoDetailModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog" style="width: 91%;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">
+                    &times;
+                </button>
+                <h4 class="modal-title" id="PoDetailModalLabel">Create Purchase Order Item</h4>
+            </div>
+
+            <div class="modal-body">
+                <div class="widget-body">
+                    <div class="jarviswidget jarviswidget-color-blueDark" id="wid-id-1" data-widget-editbutton="false" data-widget-deletebutton="false" data-widget-colorbutton="false" data-widget-fullscreenbutton="false" data-widget-togglebutton="false">
+                        <header>
+                            <h2>PO Items</h2>
+                        </header>
+                        <div class="container">
+                            <table id="tblSearch" class="selection-criteria">
+                                <tr>
+                                    <td width="10%">Product Code:</td>
+                                    <td>                                            
+                                        <input type="text" id="txtPrdCode" name="txtPrdCode"  placeholder="--Enter Product Code--" class="searchbox-text" />
+                                        <input type="text" id="txtPrdName" name="txtPrdName"  placeholder="--Enter Product Name--" class="searchbox-text" />
+                                        <button class='btn btn-default bg-color-blueDark txt-color-white' type="button" onclick="searchProduct();" ><i class="fa fa-search fa-lg"></i></button>
+                                    </td>
+                                </tr>
+                            </table>
+
+                           
+
+                        </div>
+                        <input type="button" Id="btnAuto"  class="btn btn-default bg-color-blueDark txt-color-white" value="Auto Allocation Quantity"  />
+                    </div>
+                </div>
+            </div>
+            <div>
+                <div class="row">
+                    <div class="col-sm-12">
+                        <div align="Right" class="padding-5" >
+                            <input type="button" Id="btnOk"  class="btn btn-default bg-color-blueDark txt-color-white" value="OK" style=" width: 80px;" />
+                            <input type="button" Id="btnClose"  class="btn btn-default bg-color-blueDark txt-color-white" value="Close" style=" width: 80px;" data-dismiss="modal" />
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+    </div>
+</div>
+<jsp:include page="../../../includes/loading-no-status.jsp"/>
+<jsp:include page="../../../includes/PopUpInitPage.jsp"/>
+<jsp:include page="../../../includes/yes-no.jsp"/>
+<script src="js/buttonset.js"></script>
+<!--<script src="js/buttonset.js"></script>-->
+<script type="text/javascript">
+pageSetUp();
+
+$.get('${pageContext.request.contextPath}/Servlet_PopulateData', {SFC: 'GET_DLL', METHOD: 'GET_COMP', P1: '<%= session.getAttribute("CompCode")%>', P2: ''}, function (data) {
+            var arrData = data;
+            createOption($("#ddlCompany"), arrData, '- Select Company -'); 
+            if ($("#lblCompCode").val() !== "")
+            {
+                if ($("#lblLocCode").val() === "")
+                { 
+                    $("#ddlComp").trigger("change");                
+                }
+                 
+            }
+        });
+        
+var mySubgrids = {};
+var myStkUOM = {};
+var arrSubGrid = {};
+var myGST = "";
+
+
+var pagefunction = function () {
+    $().ready(function () {
+        
+        $(".numeric").numeric();
+        var container = $('div.errorContainer');
+        //$('#loadingModal').modal('show');
+        var validator = $("#form_AddReq").validate({
+            rules: {
+                    ddlCompany: "required",
+                    txtRefNo: "required"
+                    //  rdPrdCat: "required"
+        },
+            messages: {
+                        ddlCompany: "Company must be selected.",
+                        txtRefNo: "Referemce no is needed."
+                        //   rdPrdCate: "Product category must be selected."
+                      },
+                        errorContainer: container,
+                        errorLabelContainer: $("ol", container),
+                        wrapper: 'li'
+                      });
+                    });
+    };                                          
+    loadScript("js/jquery.numeric.js", pagefunction);                                            
+
+    $(document).ready(function () {
+
+            var tempDate = new Date();
+                $("#txtReqDate").datepicker({
+                        numberOfMonths: 2,
+                        changeMonth: true,
+                        changeYear: true,
+                        dateFormat: "yy-mm-dd",
+                        onSelect: function (selected) {
+                            $("#txtReqDate").datepicker("option", "minDate", selected);
+                        }                            
+                    });
+                var fromDate = $.datepicker.formatDate('yy-mm-dd', new Date(tempDate.getFullYear(), tempDate.getMonth() - 2, tempDate.getDate()));
+                $("#txtReqDate").datepicker("option", "minDate", fromDate);
+                $("#txtReqDate").val($.datepicker.formatDate('yy-mm-dd', tempDate));                                    
+                
+            });                                        
+
+
+
+
+    function add_Item() {                            
+                searchProduct();
+    }                                  
+
+    function searchProduct() {
+        $(".numeric").numeric();
+      //  $('#tbPoItem tbody > tr').remove();
+                        
+        showProduct({width: 1000, height: 600}).done(function (rowIn) {
+        // alert(JSON.stringify(rowIn.stk_stockcode));
+        $("#txtPrdCode").val(rowIn.stk_stockcode);
+        $("#txtPrdName").val(rowIn.stk_desc);
+        $("#hdnTaxRate").val(rowIn.gst_taxrate);
+        $("#hdnTaxCode").val(rowIn.stk_gstpurcode);
+        
+       
+       
+        $('#tbReqItem tr').each(function (row, th) {
+            
+            if ($("#txtStkCode" + row).val() === rowIn.stk_stockcode){
+                isSet = false;
+               // break;
+            }
+            else {
+                isSet = true;
+                
+            }
+        });
+        if (isSet === true){
+            BindStockUOM(rowIn.stk_stockcode);                    
+
+   
+            var rowCount = $('#tbReqItem tr').length;
+            //alert(rowCount);
+            var x = rowCount;
+            
+            
+            
+            $("#tbReqItem tbody").append("<tr>" +
+            "<td><a class='' style='cursor:pointer;' onclick='ItemDelete(this)''><i class='fa fa-fw fa-lg fa-trash-o' /></a></td>" +
+            "<td><input type='hidden' class='form-control' ID='txtStkCode" + x + "' name='txtStkCode" + x + "' /><textarea rows='1' cols='20'  ID='txtStkName" + x + "' name='txtStkName" + x + "' readonly  class='tboxreadonly'/></td>" +
+            "<td><label id='selectPrdUom' class='searchbox' style='width:100px' ><select class='form-control' id='ddlPrdUOM" + x + "' name='ddlPrdUOM" + x + "' ></select></label>" +
+            "</td>" +
+            "<td><input type='text' required   class='form-control numeric'  ID='txtItemQty" + x + "'  name='txtItemQty" + x + "' style='width:70px' value='0'    />\n\
+                 <input type='text' class='form-control' ID='txtCompCode" + x + "' name='txtCompCode" + x + "' style='Display:none;' /><input type='text' class='form-control' ID='txtCompName" + x + "' name='txtCompName" + x + "' style='Display:none;' />\n\
+            </td>" +                
+            "</tr>"
+        );
+
+            $("#txtCompCode" + x).val('<%= session.getAttribute("CompCode")%>');
+            $("#txtCompName" + x).val('<%= session.getAttribute("CompCode")%>');
+            $("#txtStkCode" + x).val(rowIn.stk_stockcode);
+            $("#txtStkName" + x).val(rowIn.stk_desc);
+          $.get('${pageContext.request.contextPath}/Servlet_Company', {SFC: 'GET_COMP_SUPP_STK', STKCODE: $("#txtPrdCode").val(), COMPCODE: ""}, function (Compdata) {
+                                                           
+            var compStkjsonData = JSON.parse(Compdata);                                                         
+            $('#tbReqItem tr').each(function (row, th) {
+                                                               
+            if (row > 0) {
+                for (var i = 0; i < myStkUOM.rows.length; i++) {
+                    $("#ddlPrdUOM" + row).append('<option value=' + myStkUOM.rows[i].VALUE + '>' + myStkUOM.rows[i].TEXT + '</option>');
+                }
+            }
+        });
+        });
+        
+       // if (isSet === true){
+       
+            
+        }  
+        
+    });
+    
+    }
+                             
+    function create() {
+    
+         var container = $('div.errorContainer');
+        
+        var arrPOItemHeader = new Array();
+        var arrPOItemDetail = new Array();
+        var arrActualPOItemDetail = [];
+        var SumQty = 0, SumBonus = 0, SumGrossAmt = 0, SumNettAmt = 0, SumGstAmt = 0, SumDiscVal=0;
+        var isSet = true;
+        $('#tbReqItem tr').each(function (row, th) {
+
+            if (row > 0) {
+       
+                SumQty += parseFloat($('#txtItemQty' + row).val());
+                SumBonus += parseFloat($('#txtItemBonus' + row).val());
+                SumGrossAmt += parseFloat($('#txtGrossTotal' + row).val());
+                SumNettAmt += parseFloat($('#txtNettTotal' + row).val());
+                SumGstAmt += parseFloat($('#txtGstAmt' + row).val());
+                SumDiscVal += parseFloat($('#txtDiscVal' + row).val());
+                //if (parseFloat($('#txtItemQty' + row).val()) > 0) {
+                arrPOItemDetail[row] = {
+                            "PRDCODE": $("#txtStkCode" + row).val()
+                          , "PRDNAME": $("#txtStkName" + row).val()
+                          , "QTY": parseFloat($('#txtItemQty' + row).val())
+                          , "BONUS": parseFloat($('#txtItemBonus' + row).val())
+                          , "UOM": $('#ddlPrdUOM' + row + ' option:selected').val()
+                          , "UCOST": parseFloat($('#txtUnitCost' + row).val())
+                          , "DISC": $('#ddlDisOpt' + row + ' option:selected').val()                                                            
+                          , "DISCAMT": parseFloat($('#txtDiscAmt' + row).val())
+                          , "DISCVal": parseFloat($('#txtDiscVal' + row).val())
+                          , "GST": $('#ddlGst' + row + ' option:selected').val()
+                          , "GSTINC": $('#ddlGstIncl' + row + ' option:selected').val()
+                          , "GROSSTOTAL": parseFloat($('#txtGrossTotal' + row).val())
+                          , "NETTTOTAL": parseFloat($('#txtNettTotal' + row).val())
+                          , "GSTAMT": parseFloat($('#txtGstAmt' + row).val())
+                          , "GSTRATE": parseFloat($('#txtGstRate' + row).val())
+                          , "COMPANY": $("#txtCompCode" + row).val()//$('#ddlCompany' + row + ' option:selected').val() //$(th).find('td:eq(11)').val()
+                        };
+                 // }
+                       }
+                    });
+
+            if (arrPOItemDetail.length > 0) {
+                if (SumQty > 0) {
+                    arrPOItemHeader[1] = {
+                     "PRDCODE": $("#txtPrdCode").val()
+                   , "PRDNAME": $("#txtPrdName").val()
+                   , "TOTALQTY": parseFloat(SumQty).toFixed(2)
+                   , "TOTALBONUS": parseFloat(SumBonus).toFixed(2)
+                   , "TOTALGROSS": parseFloat(SumGrossAmt).toFixed(2)
+                   , "TOTALNETT": parseFloat(SumNettAmt).toFixed(2)
+                   , "TOTALGSTAMT": parseFloat(SumGstAmt).toFixed(2)
+                   , "TOTALDISCVAL": parseFloat(SumDiscVal).toFixed(2)
+                };
+                } else {
+                    $.bigBoxFail({
+                        title: "Request Quantity.",
+                        content: "Request quantity must greater then 0.",
+                        timeout: 6000
+                        
+                    });
+                    isSet = false;
+                    
+                }
+                }
+                else {
+                    $.bigBoxFail({
+                    title: "No Item To Request.",
+                    content: "There is no Stock to Request.",
+                    timeout: 6000
+                });
+                isSet = false;
+               
+               }
+               // removeNulls(arrPOItemDetail);
+              if  (isSet=== true){
+               arrPOItemHeader.splice(0, 1);
+               arrPOItemDetail.splice(0, 1);
+                 
+     
+                for (var j = 0; j < arrPOItemDetail.length; j++) {                  
+                    if (arrPOItemDetail[j].QTY > 0) { 
+                     // arrActualPOItemDetail = (JSON.stringify(arrPOItemDetail[j])) ;
+                        arrActualPOItemDetail.push(arrPOItemDetail[j]);
+                      //  alert(JSON.stringify(arrPOItemDetail[j]));
+                       // console.log(JSON.stringify(arrActualPOItemDetail));
+                   //     arrPOItemDetail.splice(j,j);                        
+                    }
+                }
+                 
+                //alert(arrActualPOItemDetail);
+                mySubgrids[$("#txtPrdCode").val()] = arrActualPOItemDetail;
+               // alert(JSON.stringify(mySubgrids[$("#txtPrdCode").val()]));
+                var ItemHeader = JSON.stringify(arrPOItemHeader);
+              
+        
+        var json = mySubgrids;
+        var arr = [];
+        // console.log(JSON.stringify(mySubgrids));
+        $.each(json, function (key, data) {
+        // console.log(arr.length);
+        $.each(data, function (index, data) {
+            arr.push(data);
+        });
+        });
+// alert(JSON.stringify(arr));
+        var saveItem = (arr.reduce(function (result, current) {
+            result[current.COMPANY] = result[current.COMPANY] || [];
+            result[current.COMPANY].push(current);
+            $("#hdnArrItem").val(JSON.stringify(result));
+           //alert(JSON.stringify(result));
+                return result;
+        }, {}));
+        
+       
+        document.getElementById("btnCreate").disabled = true;
+            showYesNo({
+                    title: "Create Stock Request...",
+                    width: 420,
+                    noClose: true,
+                    isModal: true,
+                    body: [
+                        "<br><h4>Are you sure to create Stock Request?<h4><br>"
+                    ],
+                    show: function () {
+                    },
+                    Yes: {
+                         text: "Yes",
+                        opt: function () {           
+                        var $validReq = $("#form_AddReq").valid();
+        
+         if ($validReq === true && isSet === true) {
+                        $.ajax({
+                type: "POST",
+                url: "${pageContext.request.contextPath}/Servlet_StockRequest?SFC=ADD_MANUAL_REQ",
+                data: {
+                     REQMASTER: JSON.stringify($('#form_AddReq').serializeArray()),
+                     REQDETAIL: $('#hdnArrItem').val()
+                },
+                dataType: 'json',
+                beforeSend: function () {
+                      $.showLoadingNoStatus();
+                },
+                success: function(data) {
+                    var arrReturn = data;                   
+                    if (arrReturn.bool === true) {
+                    $.bigBoxSuccess({
+                        title: "REQUEST SUCCESS CREATED.",
+                        content: "Request " + arrReturn.msg +  " SUCCESS Created.",
+                        timeout: 6000
+                    });
+                } else {
+                    $.bigBoxFail({
+                        title: "FAILED To Create Request.",
+                        content: "There is some error during Request creation.<br> Please try again...",
+                        timeout: 6000
+                    });
+                }
+                                },
+                                error: function (xhr, status, error) {
+                                    $.bigBoxFail({
+                                        title: "ERROR : FAILED To Create Request!!",
+                                        content: "There is some error occur during create request. Please try again later",
+                                        timeout: 6000
+                                    });
+                            },
+                            complete: function (xhr, status) {
+                                if (xhr.status === 200) {
+                                    $.hideLoadingNoStatus(function () {
+                                       window.location.href = "#/StockRequestList";
+                 },500);
+                                } else {
+                                    $.hideLoadingNoStatus(function () {
+                                    }, 0);
+                                }
+                 }
+            });
+            }
+                            hideYesNo();
+                        }
+                    },
+                    No: {
+                        text: "No",
+                        opt: function () {
+                            document.getElementById("btnCreate").disabled = false;
+                            hideYesNo();
+                        }
+            } 
+    });
+
+            }
+    }
+
+    function BindStockUOM(stkCode) {
+        //alert(stkCode);
+            $.get('${pageContext.request.contextPath}/Servlet_Stock', {SFC: 'GET_REL_STKUOM', STKCODE: stkCode}, function (data) {
+                myStkUOM = JSON.parse(data);
+               //var arrData = JSON.parse(data.object1[0]);
+            // alert(JSON.stringify(myStkUOM));
+            });
+
+    }
+
+    function ItemDelete(e) {
+        $(e).closest('tr').remove();
+    }
+
+    (function () {
+        // var delay = 25; //1 seconds
+        setTimeout(function () {
+                loadScript("js/column-chooser.js", function () {
+                loadScript("js/plugin/jqgrid/ui.multiselect.js", function () {
+                loadScript("js/plugin/jqgrid/grid.locale-en.min.js", function () {
+                loadScript("js/plugin/jqgrid/jquery.jqGrid.min.js", run_jqgrid_function);
+                });
+            });
+         });
+        });
+    })();                                        
+
+    function run_jqgrid_function() {
+       
+    }                                        
+    function RemoveRow(cellvalue, options, rowObject) {
+        return "<a class='' style='cursor:pointer;' onclick='Remove_PoItem(\"" +  cellvalue + "\")''><i class='fa fa-fw fa-lg fa-trash-o' /></a>";
+
+    }
+                                                
+                                               
+
+    function Remove_PoItem(s_param) {
+              
+        showYesNo({
+            title: "Are you sure remove particular item?",
+            width: 520,
+            _HtmlBody:
+                    "<table class='selection-criteria' style='width:100%' >" +
+                    "<tr><td align='center'>" +
+                    "<button style='width:180px' class='btn btn-default bg-color-blueDark txt-color-white' onclick='RemovePoItem(\"" + s_param + "\")';>Yes</button>" +
+                    "</td><td align='center'>" +
+                    "<input type='button' Id='btnCloseDelete'  class='btn btn-default bg-color-blueDark txt-color-white' value='No' style=' width: 180px;' data-dismiss='modal' />" +
+                    "</td>" +
+                    "</tr>" +
+                    "</table>",
+            Yes: false,
+            No: false
+
+        });
+        
+    }
+    
+     function RemovePoItem(sParam) {
+//         var myGrid = $('#jqgridPoItem'),
+//           selectedRowId = myGrid.jqGrid ('getGridParam', 'selrow');
+//          // cellValue = myGrid.jqGrid ('getCell', selectedRowId, 'PRDCODE');
+//          // alert(selectedRowId);
+//           $('#jqgridPoItem').jqGrid('delRowData', selectedRowId);
+           
+    }
+    
+   
+    
+    function GetLocation(CompCode) {
+        //alert(CompCode);
+        
+         var request = $.ajax({
+                type: "GET",
+                url: "${pageContext.request.contextPath}/Servlet_PopulateData?SFC=GET_DLL",
+                data: {METHOD: 'GET_LOCATION', P1:CompCode },
+                dataType: 'json'
+            });
+            request.done(function (response) {
+                 //alert(JSON.stringify(response));
+                 var jsonp = JSON.stringify(response);
+                 var list = $.parseJSON(jsonp);
+         
+                $("#ddlLoc").empty();
+                $('#ddlLoc').append("<option value=''>- Select Location -</option>");
+                for (var i = 0; i < list.length; i++) {
+                    var option = list[i];
+                    $('#ddlLoc').append("<option value='" + option.VALUE + "'>" + option.TEXT + "</option>");
+                }
+                
+                
+             });    
+        
+        
+    }
+
+      function createOption(ddl, arrData, stext) {
+        ddl.html('');
+        if(arrData.length > 1){
+        ddl.append($("<option>"). 
+        attr("value",'').
+        data("sel", 0).
+        text(stext));
+        }
+        if(arrData.length > 0){
+            for(var i=0; i < arrData.length; i++){
+                ddl.append($("<option>"). 
+                attr("value",arrData[i].VALUE).
+                data("sel", 0).
+                text(arrData[i].TEXT));
+            }
+        }
+    }                                 
+
+
+//     function createOption(ddl, arrData, stext) {
+//        ddl.html('');
+//        ddl.append($("<option>"). 
+//        attr("value",'').
+//        data("sel", 0).
+//        text(stext));
+//       
+//        
+//        if(arrData.length > 0){
+//            for(var i=0; i < arrData.length; i++){
+//                ddl.append($("<option>"). 
+//                attr("value",arrData[i].VALUE).
+//                data("sel", 0).
+//                text(arrData[i].TEXT));
+//            }
+//        }
+//    }
+                                      
+
+    pagefunction();
+                                            
+
+</script>

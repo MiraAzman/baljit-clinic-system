@@ -1,0 +1,120 @@
+CREATE DEFINER=`root`@`localhost` PROCEDURE `SP_GET_LOCATION_STK_BAL`(
+IN sMethod          varchar(30),
+IN sStkCode         varchar(20),
+IN sCompCode        varchar(20)
+
+, IN sConvertToUOM        varchar(10)
+, IN sLocation varchar(20)
+)
+BEGIN
+
+
+
+
+ DECLARE _statement VARCHAR(8000);
+
+
+
+    IF sMethod = 'SUMMARY' THEN
+            SET _statement = ' SELECT stkm_stockbalance.bal_companycode, stkm_stockbalance.bal_location,stkm_stockbalance.bal_stockcode, ';
+            SET _statement = CONCAT(_statement, "'", sConvertToUOM, "'", ' AS bal_uom,');
+
+            SET _statement = CONCAT(_statement, 'stkm_stockmaster.stk_Desc ');
+
+             IF (sConvertToUOM != '') THEN
+                     SET _statement = CONCAT(_statement, ',SUM(F_CONVERT_UOM(stkm_stockbalance.bal_balanceqty, ', "'", sConvertToUOM, "'" ,', stkm_stockbalance.bal_uom,stkm_stockbalance.bal_stockcode)) AS CONVERTED_QTY');
+
+                     SET _statement = CONCAT(_statement, ',SUM(F_CONVERT_UOM(stkm_stockbalance.bal_tempbalanceqty, ', "'", sConvertToUOM, "'" ,', stkm_stockbalance.bal_uom,stkm_stockbalance.bal_stockcode)) AS CONVERTED_TEMPQTY');
+
+             ELSE
+                     SET _statement = CONCAT(_statement, ',stkm_stockbalance.bal_balanceqty AS CONVERTED_QTY');
+                     SET _statement = CONCAT(_statement, ',stkm_stockbalance.bal_tempbalanceqty AS CONVERTED_QTY');
+             END IF;
+
+                     SET _statement = CONCAT(_statement, ',stkm_location.loc_ismainstore as IS_MAINSTORE');
+
+             SET _statement = CONCAT(_statement, ' FROM stkm_stockbalance
+                        left join stkm_stockmaster on stkm_stockmaster.stk_stockcode = stkm_stockbalance.bal_stockcode ' );
+
+SET _statement = CONCAT(_statement, ' left join stkm_location on stkm_location.loc_code = bal_location ');
+            SET _statement = CONCAT(_statement, ' WHERE stkm_stockbalance.bal_stockcode = ',"'",sStkCode ,"'" );
+
+            SET _statement = CONCAT(_statement, ' AND stkm_stockbalance.bal_companycode = ',"'",sCompCode ,"'" );
+
+            IF (sLocation <> '') THEN
+                    SET _statement = CONCAT(_statement, ' AND stkm_stockbalance.bal_location = ',"'",sLocation ,"'" );
+            END IF;
+
+            SET _statement = CONCAT(_statement, ' group by bal_companycode, bal_location,bal_stockcode ');
+
+
+            
+
+            SET _statement = CONCAT(_statement, ' union ');
+            SET _statement = CONCAT(_statement, ' select stkm_location.loc_companycode AS bal_companycode, stkm_location.loc_code AS bal_location, ');
+            SET _statement = CONCAT(_statement, "'",sStkCode ,"'", ' AS bal_stockcode,' );
+            SET _statement = CONCAT(_statement, "'",sConvertToUOM ,"'", ' AS bal_uom,' );
+            SET _statement = CONCAT(_statement, "'' AS stk_Desc", ', 0 as CONVERTED_TEMPQTY, 0 as CONVERTED_TEMPQTY');
+
+SET _statement = CONCAT(_statement, ',stkm_location.loc_ismainstore as IS_MAINSTORE');
+
+            SET _statement = CONCAT(_statement, ' FROM stkm_location ');
+            SET _statement = CONCAT(_statement, ' where   stkm_location.loc_code not in (select stkm_stockbalance.bal_location from stkm_stockbalance ');
+            SET _statement = CONCAT(_statement, ' where stkm_stockbalance.bal_companycode = ', "'",sCompCode ,"'", ' AND stkm_stockbalance.BAL_StockCOde =' ,"'",sStkCode ,"')" );
+            SET _statement = CONCAT(_statement,  '  AND stkm_location.loc_companycode = ',  "'",sCompCode ,"';");
+
+
+
+   END IF;
+   IF sMethod = 'BALANCE' THEN
+            SET _statement = ' SELECT stkm_stockbalance.bal_companycode, stkm_stockbalance.bal_location,stkm_stockbalance.bal_stockcode,stkm_stockbalance.bal_uom,
+                    stkm_stockbalance.bal_balanceqty,stkm_stockbalance.createddt,stkm_stockbalance.createdby,
+                    stkm_stockbalance.modifiedby,stkm_stockbalance.modifieddt,stkm_stockbalance.recstatus, stkm_stockmaster.stk_Desc ';
+
+             IF (sConvertToUOM != '') THEN
+             SET _statement = CONCAT(_statement, ',F_CONVERT_UOM(stkm_stockbalance.bal_balanceqty, ', "'", sConvertToUOM, "'" ,', stkm_stockbalance.bal_uom,stkm_stockbalance.bal_stockcode) AS CONVERTED_QTY');
+             ELSE
+                     SET _statement = CONCAT(_statement, ',stkm_stockbalance.bal_balanceqty AS CONVERTED_QTY');
+             END IF;
+
+             SET _statement = CONCAT(_statement, ' FROM stkm_stockbalance
+                        left join stkm_stockmaster on stkm_stockmaster.stk_stockcode = stkm_stockbalance.bal_stockcode ' );
+
+
+            SET _statement = CONCAT(_statement, ' WHERE stkm_stockbalance.bal_stockcode = ',"'",sStkCode ,"'" );
+
+            SET _statement = CONCAT(_statement, ' AND stkm_stockbalance.bal_companycode = ',"'",sCompCode ,"'" );
+
+            IF (sLocation <> '') THEN
+                    SET _statement = CONCAT(_statement, ' AND stkm_stockbalance.bal_location = ',"'",sLocation ,"'" );
+            END IF;
+
+   END IF;
+
+
+   IF sMethod = 'WORK' THEN
+            SET _statement = ' select cast(0 as decimal) AS XFER_QTY, bal_companycode,bal_stockcode,bal_location,bal_stockcode, bal_uom,bal_balanceqty';
+            IF (sConvertToUOM != '') THEN
+                         SET _statement = CONCAT(_statement, ',F_CONVERT_UOM(stkm_stockbalance.bal_balanceqty, ', "'", sConvertToUOM, "'" ,', stkm_stockbalance.bal_uom,stkm_stockbalance.bal_stockcode) AS CONVERTED_QTY');
+            ELSE
+                    SET _statement = CONCAT(_statement, ',bal_uom,bal_balanceqty AS CONVERTED_QTY');
+            END IF;
+
+            SET _statement = CONCAT(_statement, ' from stkm_stockbalance '  );
+
+
+            SET _statement = CONCAT(_statement, ' WHERE stkm_stockbalance.bal_stockcode = ',"'",sStkCode ,"'" );
+
+            SET _statement = CONCAT(_statement, ' AND stkm_stockbalance.bal_companycode = ',"'",sCompCode ,"'" );
+
+            IF (sLocation <> '') THEN
+                    SET _statement = CONCAT(_statement, ' AND stkm_stockbalance.bal_location = ',"'",sLocation ,"'" );
+            END IF;
+
+   END IF;
+
+SET @statement = _statement;
+PREPARE dynquery FROM @statement;
+EXECUTE dynquery;
+DEALLOCATE PREPARE dynquery;
+END

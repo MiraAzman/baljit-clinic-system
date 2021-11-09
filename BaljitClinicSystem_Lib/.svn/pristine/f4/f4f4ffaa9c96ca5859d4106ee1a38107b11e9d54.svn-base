@@ -1,0 +1,130 @@
+CREATE DEFINER=`root`@`localhost` PROCEDURE `SP_GET_ROLE`(
+IN sMethod        varchar(30),
+IN sRoleCode      varchar(20),
+IN sRoleBiz       varchar(100),
+IN sRoleName      varchar(50),
+IN sRoleStatus    varchar(1),
+IN sMenuDesc	  varchar(500),
+IN sOrderBy       varchar(30),
+IN sPage          varchar(10),
+IN sPerPage       varchar(10)
+
+)
+BEGIN
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+DECLARE _statement VARCHAR(8000);
+
+IF sMethod = 'ROLE_SEARCH' THEN
+   SET _statement = ' Select rol_code as RoleCode, rol_name as RoleName, rol_businessapp as RoleBiz, rol_desc as RoleDesc, rol_recstatus as recstatus, date(createdate) as createdate,
+							 CASE
+								WHEN rol_recstatus=''1'' THEN ''Active''
+								WHEN rol_recstatus=''0'' THEN ''Inactive''
+							 END as ROLSTATUS
+							 From afc_role
+							 WHERE ROL_Code IS NOT NULL ';
+
+   IF (sRoleCode <> '') THEN
+      SET _statement = CONCAT(_statement, ' AND rol_code LIKE ',"'%",sRoleCode ,"%'", ' ');
+   END IF;
+
+   IF (sRoleBiz <> '') THEN
+      SET _statement = CONCAT(_statement, ' AND rol_businessapp = ', "'", sRoleBiz, "'", ' ');
+   END IF;
+
+   IF (sRoleName <> '') THEN
+      SET _statement = CONCAT(_statement, ' AND rol_name LIKE ',"'%",sRoleName ,"%'", ' ');
+   END IF;
+
+   IF (sRoleStatus <> '') THEN
+      SET _statement = CONCAT(_statement, ' AND rol_recstatus = ', "'", sRoleStatus, "'", ' ');
+   END IF;
+
+   IF (sOrderBy <> '') THEN
+      SET _statement = CONCAT(_statement, ' ORDER BY ', sOrderBy);
+   ELSE
+      SET _statement = CONCAT(_statement, ' ORDER BY rol_code');
+   END IF;
+
+   SET _statement = CONCAT(_statement, ' LIMIT ', (sPage-1)*sPerPage, ",", sPerPage);
+
+END IF;
+
+IF sMethod = 'ROLE_COUNT' THEN
+
+   SET _statement = ' Select COUNT(*) AS TOTAL
+	    	  From afc_role
+                      WHERE ROL_Code IS NOT NULL  ';
+
+   IF (sRoleCode <> '') THEN
+      SET _statement = CONCAT(_statement, ' AND rol_code LIKE ',"'%",sRoleCode ,"%'", ' ');
+   END IF;
+
+   IF (sRoleBiz <> '') THEN
+      SET _statement = CONCAT(_statement, ' AND rol_businessapp = ', "'", sRoleBiz, "'", ' ');
+   END IF;
+
+   IF (sRoleName <> '') THEN
+      SET _statement = CONCAT(_statement, ' AND rol_name LIKE ',"'%",sRoleName ,"%'", ' ');
+   END IF;
+
+   IF (sRoleStatus <> '') THEN
+      SET _statement = CONCAT(_statement, ' AND rol_recstatus = ', "'", sRoleStatus, "'", ' ');
+   END IF;
+
+END IF;
+
+IF sMethod = 'ROLE_DETAIL' THEN
+
+   SET _statement = ' SELECT rol_index as ROLIDX, rol_code as ROLCODE, rol_businessapp as ROLBIZAPP, rol_name as ROLNAME,
+                      rol_desc as ROLDESC,  rol_recstatus as ROLSTATUS
+                      FROM afc_role
+                      WHERE ROL_Code IS NOT NULL ';
+
+   IF (sRoleCode <> '') THEN
+      SET _statement = CONCAT(_statement, ' AND rol_code = ', "'", sRoleCode, "'", ' ');
+   END IF;
+
+
+
+END IF;
+
+IF sMethod = 'GET_ROLE_ACCESS' THEN
+
+   SET _statement = ' SELECT rfc_add, rfc_edit, ref_approve
+                      FROM afc_rolefunction
+                      LEFT JOIN afc_menu ON rfc_menucode = mnu_menucode
+                      LEFT JOIN afc_user ON rfc_rolecode = usr_role
+                      WHERE rfc_index IS NOT NULL ';
+
+   IF (sRoleCode <> '') THEN
+      SET _statement = CONCAT(_statement, ' AND usr_code = ', "'", sRoleCode, "'", ' ');
+   END IF;
+   
+	IF (sMenuDesc <> '') THEN
+      SET _statement = CONCAT(_statement, ' AND mnu_desc = ', "'", sMenuDesc, "'");
+   END IF;
+
+END IF;
+
+SET @statement = _statement;
+PREPARE dynquery FROM @statement;
+EXECUTE dynquery;
+DEALLOCATE PREPARE dynquery;
+
+
+
+END

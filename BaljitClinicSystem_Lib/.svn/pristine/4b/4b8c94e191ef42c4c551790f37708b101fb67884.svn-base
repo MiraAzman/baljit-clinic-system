@@ -1,0 +1,20 @@
+CREATE DEFINER=`root`@`localhost` PROCEDURE `SP_GET_APPLICATION_SETTING`(IN KeyName varchar(45) )
+BEGIN
+
+        DECLARE _statement VARCHAR(8000);
+
+        SET _statement = 'SELECT apps_key AS AppKey, apps_value AS AppValue FROM stkm_applicationsetting ';
+        IF (KeyName <> '') THEN
+
+        SET _statement = CONCAT(_statement, ' WHERE apps_key =', "'", KeyName, "'");
+        SET _statement = CONCAT(_statement, ' AND recstatus =1;');
+        ELSE
+            SET _statement = CONCAT(_statement, ' WHERE recstatus =1;');
+        END IF;
+
+
+        SET @statement = _statement;
+        PREPARE dynquery FROM @statement;
+        EXECUTE dynquery;
+        DEALLOCATE PREPARE dynquery;
+END

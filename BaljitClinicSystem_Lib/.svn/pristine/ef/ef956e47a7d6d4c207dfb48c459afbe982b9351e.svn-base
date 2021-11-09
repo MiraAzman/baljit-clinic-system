@@ -1,0 +1,179 @@
+CREATE DEFINER=`root`@`localhost` PROCEDURE `SP_GET_USER`(
+IN sMethod         varchar(30),
+IN sUsrCode        varchar(20),
+IN sUsrName        varchar(100),
+IN sUsrPwd         varchar(50),
+IN sUsrComp        varchar(20),
+IN sUsrLoc         varchar(20),
+IN sUsrRole        varchar(20),
+IN sUsrStatus      varchar(20),  
+IN sIdx           varchar(20),
+IN sOrderBy       varchar(30),
+IN sPage          varchar(10),
+IN sPerPage       varchar(10)
+)
+BEGIN
+
+DECLARE _statement VARCHAR(8000);
+
+IF sMethod = 'VALIDATE' THEN
+            SET _statement = ' Select usr.usr_index as IDC, usr.usr_code as usrCode, usr.usr_name as usrName, usr.usr_pwd as usrPwd,
+                               CONCAT(usr.usr_firstname , usr.usr_lastname) as usrfullname, usr.usr_email as usrmail, usr.usr_compcode as CompCode, usr.usr_loccode as LocCode,
+                                usr.usr_role as usrRole
+                               FROM  afc_user usr
+                               WHERE usr.usr_index  is not null ';
+
+                           IF (sUsrCode <> '') THEN
+                                      SET _statement = CONCAT(_statement, ' AND usr.usr_code = ', "'", sUsrCode, "'", ' ');
+
+                           END IF;
+
+                           IF (sUsrPwd <> '') THEN
+                                      SET _statement = CONCAT(_statement, ' AND usr.usr_pwd = ', "'", sUsrPwd, "'", ' ');
+                           END IF;
+
+
+                          IF (sUsrName <> '') THEN
+                                      SET _statement = CONCAT(_statement, ' AND usr.usr_name = ', "'", sUsrName, "'", ' ');
+                          END IF;
+
+END IF;
+
+
+IF sMethod = 'GET_USER_LIST' THEN
+
+                SET _statement = ' SELECT usr.usr_code, usr.usr_name, usr.usr_recstatus
+                                   FROM afc_user usr
+                                   WHERE usr.usr_code IS NOT NULL ';
+
+                IF (sUsrCode <> '') THEN
+                        SET _statement = CONCAT(_statement, ' AND usr.usr_code LIKE ',"'%",sUsrCode ,"%'", ' ');
+                END IF;
+
+                IF (sUsrName <> '') THEN
+                        SET _statement = CONCAT(_statement, ' AND usr.usr_name LIKE ',"'%",sUsrName ,"%'", ' ');
+                END IF;
+
+                IF (sUsrComp <> '') THEN
+                        SET _statement = CONCAT(_statement, ' AND usr.usr_compcode LIKE ',"'%",sUsrComp ,"%'", ' ');
+                END IF;
+
+                IF (sUsrLoc <> '') THEN
+                        SET _statement = CONCAT(_statement, ' AND usr.usr_loccode LIKE ',"'%",sUsrLoc ,"%'", ' ');
+                END IF;
+
+                IF (sOrderBy <> '')  THEN
+                        SET _statement = CONCAT(_statement, ' ORDER BY usr.', sOrderBy);
+                ELSE
+                        SET _statement = CONCAT(_statement, ' ORDER BY usr.usr_code');
+                END IF;
+
+
+                SET _statement = CONCAT(_statement, ' LIMIT ',  (sPage - 1) * sPerPage, ",", sPerPage );
+
+END IF;
+
+
+
+IF sMethod = 'COUNT_USER_LIST' THEN
+
+                SET _statement = ' SELECT Count(usr.usr_code) as Total
+                                   FROM afc_user usr
+                                   WHERE usr.usr_code IS NOT NULL';
+
+
+                IF (sUsrCode <> '') THEN
+                        SET _statement = CONCAT(_statement, ' usr.usr_code LIKE ',"'%",sUsrCode ,"%'", ' ');
+                END IF;
+
+
+                IF (sUsrName <> '') THEN
+                        SET _statement = CONCAT(_statement, ' AND usr.usr_name LIKE ',"'%",sUsrName ,"%'", ' ');
+                END IF;
+
+END IF;
+
+
+IF sMethod = 'USER_DETAIL' THEN
+
+                SET _statement = ' SELECT usr.usr_code, usr.usr_name, usr.usr_pwd, usr.usr_firstname, usr.usr_lastname,
+                                   usr.usr_contact, usr.usr_email, usr.usr_compcode, usr.usr_loccode, usr.usr_role
+                                   FROM afc_user usr';
+
+                SET _statement = CONCAT(_statement, ' WHERE usr.usr_code = ', "'",sUsrCode, "'");
+
+
+END IF;
+
+
+IF sMethod = 'SEARCH_USERROLEMENU' THEN
+
+                SET _statement = ' Select MN.mnu_menucode, ML.mlm_menueng, ML.mnu_menucodename AS mnu_menucodename, MN.mnu_type,
+                                   coalesce(MN.mnu_urlpath, null, '''') as mnu_urlpath, coalesce(MN.mnu_parentcode, null, '''') as mnu_parentcode,
+						MN.mnu_haschild,
+						RF.rfc_view, RF.rfc_add, RF.rfc_edit,
+						RF.rfc_sequence, MN.mnu_menuimg
+						From afc_menu MN
+						Left Join afc_menulanguage ML ON MN.mnu_menucode=ML.mlm_menucode
+						Inner join afc_rolefunction RF ON RF.rfc_menucode=MN.mnu_menucode
+						Inner join afc_role RL ON RL.rol_code=RF.rfc_rolecode
+					        -- Inner join afc_userrole URL ON URL.url_rolecode=RL.rol_code
+						Inner join afc_user USR ON RL.rol_code =  USR.usr_role ';
+
+                SET _statement = CONCAT(_statement, ' Where USR.usr_code= ', "'",sUsrCode, "'");
+                SET _statement = CONCAT(_statement, ' AND RF.rfc_recstatus=''1'' AND RF.rfc_view = ''1''
+                                                      AND MN.mnu_recstatus=''1''
+                                                      AND ML.mlm_recstatus=''1''
+                                                      AND RL.rol_recstatus=''1''
+                                                     -- AND URL.url_recstatus=''1''
+                                                      AND USR.usr_recstatus=''1''
+          					    Order by RF.rfc_sequence, MN.mnu_parentcode');
+
+
+
+END IF;
+
+IF sMethod = 'SEARCH_USRMENU_BYPARENTCODE' THEN
+
+                SET _statement = ' Select MN.mnu_menucode, ML.mlm_menueng, ML.mnu_menucodename, MN.mnu_type,
+						coalesce(MN.mnu_urlpath, null, '''') as mnu_urlpath, coalesce(MN.mnu_parentcode, null, '''') as mnu_parentcode,
+						MN.mnu_haschild,
+						RF.rfc_view, RF.rfc_add, RF.rfc_edit,
+						RF.rfc_sequence, MN.mnu_menuimg  
+						From afc_menu MN
+						Left Join afc_menulanguage ML ON MN.mnu_menucode=ML.mlm_menucode
+						Inner join afc_rolefunction RF ON RF.rfc_menucode=MN.mnu_menucode
+						Inner join afc_role RL ON RL.rol_code=RF.rfc_rolecode
+						-- Inner join afc_userrole URL ON URL.url_rolecode=RL.rol_code
+						Inner join afc_user USR ON RL.rol_code =  USR.usr_role ';
+
+                SET _statement = CONCAT(_statement, ' Where USR.usr_code= ', "'",sUsrCode, "'");
+                SET _statement = CONCAT(_statement, ' AND MN.mnu_parentcode= ', "'",sUsrStatus, "'");
+                SET _statement = CONCAT(_statement, ' AND RF.rfc_recstatus=''1'' AND RF.rfc_view = ''1''
+                                                      AND MN.mnu_recstatus=''1''
+                                                      AND ML.mlm_recstatus=''1''
+                                                      AND RL.rol_recstatus=''1''
+                                                     -- AND URL.url_recstatus=''1''
+                                                      AND USR.usr_recstatus=''1''
+                                                      AND MN.mnu_type NOT IN (''MN'',''SM'')
+          					    Order by RF.rfc_sequence, MN.mnu_parentcode');
+
+
+
+END IF;
+
+IF sMethod = 'GET_CURRENT_PASSWORD' THEN
+
+		SET _statement = 'SELECT usr_pwd FROM afc_user ';
+
+		SET _statement = CONCAT(_statement, 'WHERE usr_code = ', "'",sUsrCode, "'");
+
+END IF;
+
+SET @statement = _statement;
+PREPARE dynquery FROM @statement;
+EXECUTE dynquery;
+DEALLOCATE PREPARE dynquery;
+
+
+END

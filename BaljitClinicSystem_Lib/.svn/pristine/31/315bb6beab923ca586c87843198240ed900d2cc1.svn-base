@@ -1,0 +1,388 @@
+CREATE DEFINER=`root`@`localhost` PROCEDURE `SP_GET_PO`(
+IN sMethod        varchar(30),
+IN sSupCode       varchar(100),
+IN sCompany       varchar(100),
+IN sPONo          varchar(20),
+IN sStatus        varchar(20),
+IN sPoDTFrom      varchar(20),
+IN sPoDTto        varchar(20),
+IN sGrpNo         varchar(20),
+IN sStkCode       varchar(20),
+IN sPoStatus      varchar(20),
+IN sIdx           varchar(20),
+IN sRefNo    varchar(30),
+IN sOrderBy       varchar(30),
+IN sPage          varchar(10),
+IN sPerPage       varchar(10)
+
+)
+BEGIN
+
+DECLARE _statement VARCHAR(8000);
+
+IF sMethod = 'GET_PO_LIST' THEN
+   SET _statement = ' SELECT POH.pohdr_companycode as CompCode, comp.comp_name as CompName, POH.pohdr_pogrpno as GrpNo,
+POH.pohdr_suppliercode as SuppCode, SPPM.sup_name as SuppName, POH.pohdr_pono as PoNo, date(POH.pohdr_podate) as PoDate, 
+POH.pohdr_totalnetamt as PoNettAmt, POH.pohdr_postatus, POH.pohdr_refno as RefNo, POH.pohdr_refdate as RefDate,
+POD.podtl_idx as PODIDX, POD.podtl_uomcode as UomCode, POD.podtl_qty as Qty, POD.podtl_qtybonus as QtyBonus,
+POD.podtl_unitcost as UnitCost, POD.podtl_discoption as DiscOpt, POD.podtl_discpercent as DiscPerc, POD.podtl_discamt as DiscAmt,  
+POD.podtl_grosstotal as GrossTotal, POD.podtl_gstpurcode as GstPurCode,  POD.podtl_gsttaxrates as GstTaxRate, 
+POD.podtl_gstinclusive as GStInc, POD.podtl_gstamt as GstAmt, podtl_subtotalamt as NettAmt,
+POD.podtl_stockcode as StkCode,  STKM.stk_desc as StkDesc, 
+POH.pohdr_locationcode as LocCode, POD.podtl_lineno as LineNo, POD.podtl_rcvqty as RcvQty,
+-- POD.podtl_rcvqty as RcvQty, POD.podtl_rcvqtybonus as RcvQtyBonus, POD.podtl_fulfill as DtlFulfill,
+POD.podtl_rcvqty as RcvQty,  POD.podtl_fulfill as DtlFulfill,
+
+                     CASE
+   WHEN POH.pohdr_postatus=''O'' THEN ''Open''
+   WHEN POH.pohdr_postatus=''X'' THEN ''Cancel''
+   WHEN POH.pohdr_postatus=''C'' THEN ''Closed''
+            WHEN POH.pohdr_postatus=''P'' THEN ''Partial''
+       END AS POStatus,
+     POD.podtl_qtybonus - POD.podtl_rcvqtybonus as RcvQtyBonus,
+             
+     POD.podtl_qty - POD.podtl_rcvqty AS PODTL_BalanceQty
+                     -- POD.podtl_qty - POD.podtl_fulfill AS PODTL_BalanceQty
+                     FROM stkt_poheader POH
+                     LEFT JOIN stkt_podetail POD ON POH.pohdr_poidx = POD.podtl_poidx
+                     LEFT JOIN stkm_stockmaster STKM ON POD.podtl_stockcode = STKM.stk_stockcode
+       LEFT OUTER JOIN stkm_company comp on comp.comp_code = POH.pohdr_companycode
+       LEFT OUTER JOIN stkm_suppliermaster SPPM on SPPM.sup_code = POH.pohdr_suppliercode
+                            WHERE POH.pohdr_pono IS NOT NULL   ';
+
+   IF (sSupCode <> '') THEN
+      SET _statement = CONCAT(_statement, ' AND POH.pohdr_suppliercode LIKE ',"'%",sSupCode ,"%'", ' ');
+   END IF;
+
+   IF (sCompany <> '') THEN
+      SET _statement = CONCAT(_statement, ' AND POH.pohdr_companycode = ', "'", sCompany, "'", ' ');
+   END IF;
+
+   IF (sPONo <> '') THEN
+      SET _statement = CONCAT(_statement, ' AND POH.pohdr_pono LIKE ',"'%",sPONo ,"%'", ' ');
+   END IF;
+
+   IF (sGrpNo <> '') THEN
+      SET _statement = CONCAT(_statement, ' AND POH.pohdr_pogrpno LIKE ',"'%",sGrpNo ,"%'", ' ');
+   END IF;
+
+   IF  (sPoDTFrom <> '' and sPoDTto <> '') THEN
+         SET _statement = CONCAT(_statement, ' AND date(POH.pohdr_podate) between',"'", sPoDTFrom ,"'", ' AND ' ,"'", sPoDTto ,"'",' ');
+   END IF;
+
+   IF (sStkCode <> '') THEN
+      SET _statement = CONCAT(_statement, ' AND STKM.stk_stockcode  = ', "'", sStkCode, "'", ' ');
+   END IF;
+
+   IF (sPoStatus <> '') THEN
+      -- SET _statement = CONCAT(_statement, ' AND POH.pohdr_postatus IN (',  sPoStatus, ') ');
+      SET _statement = CONCAT(_statement, ' AND POD.podtl_fulfill IN (',  sPoStatus, ') ');
+   END IF;
+   
+   IF (sStatus <> '') THEN  
+      SET _statement = CONCAT(_statement, ' AND CASE WHEN podtl_fulfill < podtl_qty THEN podtl_fulfill <> podtl_qty ELSE podtl_rcvqtybonus < podtl_qtybonus END');
+   END IF;
+
+   IF (sOrderBy <> '') THEN
+      SET _statement = CONCAT(_statement, ' ORDER BY ', sOrderBy);
+   ELSE
+      SET _statement = CONCAT(_statement, ' ORDER BY POH.pohdr_pono, POD.podtl_lineno ');
+   END IF;
+
+   SET _statement = CONCAT(_statement, ' LIMIT ', (sPage-1)*sPerPage, ",", sPerPage);
+
+END IF;
+
+IF sMethod = 'COUNT_PO_LIST' THEN
+
+   SET _statement = ' SELECT Count(POH.pohdr_poidx) as Total
+                     FROM stkt_poheader POH
+                     LEFT JOIN stkt_podetail POD ON POH.pohdr_poidx = POD.podtl_poidx
+                     LEFT JOIN stkm_stockmaster STKM ON POD.podtl_stockcode = STKM.stk_stockcode
+       LEFT OUTER JOIN stkm_company comp on comp.comp_code = POH.pohdr_companycode
+       LEFT OUTER JOIN stkm_suppliermaster SPPM on SPPM.sup_code = POH.pohdr_suppliercode
+                     WHERE POH.pohdr_pono IS NOT NULL  ';
+
+  IF (sSupCode <> '') THEN
+      SET _statement = CONCAT(_statement, ' AND POH.pohdr_suppliercode LIKE ',"'%",sSupCode ,"%'", ' ');
+   END IF;
+
+   IF (sCompany <> '') THEN
+      SET _statement = CONCAT(_statement, ' AND POH.pohdr_companycode = ', "'", sCompany, "'", ' ');
+   END IF;
+
+   IF (sPONo <> '') THEN
+      SET _statement = CONCAT(_statement, ' AND POH.pohdr_pono LIKE ',"'%",sPONo ,"%'", ' ');
+   END IF;
+
+   IF (sGrpNo <> '') THEN
+      SET _statement = CONCAT(_statement, ' AND POH.pohdr_pogrpno LIKE ',"'%",sGrpNo ,"%'", ' ');
+   END IF;
+
+   IF  (sPoDTFrom <> '' and sPoDTto <> '') THEN
+         SET _statement = CONCAT(_statement, ' AND date(POH.pohdr_podate) between',"'", sPoDTFrom ,"'", ' AND ' ,"'", sPoDTto ,"'",' ');
+   END IF;
+
+   IF (sStkCode <> '') THEN
+      SET _statement = CONCAT(_statement, ' AND STKM.stk_stockcode  = ', "'", sStkCode, "'", ' ');
+   END IF;
+
+   IF (sPoStatus <> '') THEN
+      SET _statement = CONCAT(_statement, ' AND POH.pohdr_postatus IN (',  sPoStatus, ') ');
+   END IF;
+
+   IF (sStatus <> '') THEN  
+      SET _statement = CONCAT(_statement, ' AND CASE WHEN podtl_fulfill < podtl_qty THEN podtl_fulfill <> podtl_qty ELSE podtl_rcvqtybonus < podtl_qtybonus END');
+   END IF;
+
+END IF;
+
+
+IF sMethod = 'PO_HISTORY_LIST' THEN
+
+         SET _statement = ' SELECT POH.pohdr_companycode as CompCode, comp.comp_name as CompName, POH.pohdr_pogrpno as GrpNo, POH.pohdr_suppliercode as SuppCode,
+                            SPPM.sup_name as SuppName, POH.pohdr_pono as PoNo, date(POH.pohdr_podate) as PoDate, TRUNCATE(POH.pohdr_totalnetamt,2) as PoNettAmt, POH.pohdr_postatus,
+                            POH.pohdr_refno as RefNo, 
+                            CASE
+           WHEN POH.pohdr_postatus=''O'' THEN ''Open''
+           WHEN POH.pohdr_postatus=''X'' THEN ''Cancel''
+                                WHEN POH.pohdr_postatus=''C'' THEN ''Closed''
+                        WHEN POH.pohdr_postatus=''P'' THEN ''Partial''
+              END AS POStatus
+                            FROM stkt_poheader POH
+                            LEFT JOIN stkt_podetail POD ON POH.pohdr_poidx = POD.podtl_poidx
+                            LEFT JOIN stkm_stockmaster STKM ON POD.podtl_stockcode = STKM.stk_stockcode
+                            LEFT OUTER JOIN stkm_company comp on comp.comp_code = POH.pohdr_companycode
+                            LEFT OUTER JOIN stkm_suppliermaster SPPM on SPPM.sup_code = POH.pohdr_suppliercode
+                            WHERE POH.pohdr_pono IS NOT NULL ';
+
+         IF (sSupCode <> '') THEN
+              -- SET _statement = CONCAT(_statement, ' AND POH.pohdr_suppliercode LIKE ',"'%",sSupCode ,"%'", ' ');
+              SET _statement = CONCAT(_statement, ' AND SPPM.sup_name LIKE ',"'%",sSupCode ,"%'", ' ');
+         END IF;
+
+         IF (sCompany <> '') THEN
+              SET _statement = CONCAT(_statement, ' AND POH.pohdr_companycode = ', "'", sCompany, "'", ' ');
+         END IF;
+
+         IF (sPONo <> '') THEN
+              SET _statement = CONCAT(_statement, ' AND POH.pohdr_pono LIKE ',"'%",sPONo ,"%'", ' ');
+         END IF;
+
+         IF (sGrpNo <> '') THEN
+              SET _statement = CONCAT(_statement, ' AND POH.pohdr_pogrpno LIKE ',"'%",sGrpNo ,"%'", ' ');
+         END IF;
+
+         IF  (sPoDTFrom <> '' and sPoDTto <> '') THEN
+             SET _statement = CONCAT(_statement, ' AND date(POH.pohdr_podate) between',"'", sPoDTFrom ,"'", ' AND ' ,"'", sPoDTto ,"'",' ');
+         END IF;
+
+         IF (sPoStatus <> '') THEN
+              SET _statement = CONCAT(_statement, ' AND POH.pohdr_postatus IN (',  sPoStatus, ') ');
+         END IF;
+
+         IF (sStkCode <> '') THEN
+              -- SET _statement = CONCAT(_statement, ' AND STKM.stk_stockcode  = ', "'", sStkCode, "'", ' ');
+              SET _statement = CONCAT(_statement, ' AND STKM.stk_desc LIKE ', "'%", sStkCode, "%'");
+         END IF;
+
+         IF (sRefNo <> '') THEN
+			SET _statement = CONCAT(_statement, ' AND POH.pohdr_refno LIKE ', "'%", sRefNo, "%'");
+         END IF;
+
+              SET _statement = CONCAT(_statement, ' Group by POH.pohdr_companycode, comp.comp_name, POH.pohdr_pogrpno, POH.pohdr_suppliercode,
+                                                    SPPM.sup_name, POH.pohdr_pono, date(POH.pohdr_podate), POH.pohdr_totalnetamt, POH.pohdr_postatus ');
+
+         IF (sOrderBy <> '') THEN
+              SET _statement = CONCAT(_statement, ' ORDER BY ', sOrderBy);
+         ELSE
+              SET _statement = CONCAT(_statement, ' ORDER BY POH.pohdr_pono, POD.podtl_lineno ');
+         END IF;
+
+           SET _statement = CONCAT(_statement, ' LIMIT ', (sPage-1)*sPerPage, ",", sPerPage);
+
+
+END IF;
+
+
+IF sMethod = 'COUNT_PO_HISTORY' THEN
+
+
+          SET _statement = ' SELECT COUNT(*) as Total FROM (SELECT POH.pohdr_poidx as Total
+                             FROM stkt_poheader POH
+                             LEFT JOIN stkt_podetail POD ON POH.pohdr_poidx = POD.podtl_poidx
+                             LEFT JOIN stkm_stockmaster STKM ON POD.podtl_stockcode = STKM.stk_stockcode
+                             LEFT OUTER JOIN stkm_company comp on comp.comp_code = POH.pohdr_companycode
+                             LEFT OUTER JOIN stkm_suppliermaster SPPM on SPPM.sup_code = POH.pohdr_suppliercode
+                             WHERE POH.pohdr_pono IS NOT NULL  ';
+
+         IF (sSupCode <> '') THEN
+              -- SET _statement = CONCAT(_statement, ' AND POH.pohdr_suppliercode LIKE ',"'%",sSupCode ,"%'", ' ');
+			  SET _statement = CONCAT(_statement, ' AND SPPM.sup_name LIKE ',"'%",sSupCode ,"%'", ' ');
+         END IF;
+
+         IF (sCompany <> '') THEN
+              SET _statement = CONCAT(_statement, ' AND POH.pohdr_companycode = ', "'", sCompany, "'", ' ');
+         END IF;
+
+         IF (sPONo <> '') THEN
+              SET _statement = CONCAT(_statement, ' AND POH.pohdr_pono LIKE ',"'%",sPONo ,"%'", ' ');
+         END IF;
+
+         IF (sGrpNo <> '') THEN
+              SET _statement = CONCAT(_statement, ' AND POH.pohdr_pogrpno LIKE ',"'%",sGrpNo ,"%'", ' ');
+         END IF;
+
+         IF  (sPoDTFrom <> '' and sPoDTto <> '') THEN
+             SET _statement = CONCAT(_statement, ' AND date(POH.pohdr_podate) between',"'", sPoDTFrom ,"'", ' AND ' ,"'", sPoDTto ,"'",' ');
+         END IF;
+
+         IF (sPoStatus <> '') THEN
+              SET _statement = CONCAT(_statement, ' AND POH.pohdr_postatus IN (',  sPoStatus, ') ');
+         END IF;
+
+         IF (sStkCode <> '') THEN
+              -- SET _statement = CONCAT(_statement, ' AND STKM.stk_stockcode  = ', "'", sStkCode, "'", ' ');
+              SET _statement = CONCAT(_statement, ' AND STKM.stk_desc LIKE ', "'%", sStkCode, "%'");
+         END IF;
+
+         IF (sRefNo <> '') THEN
+			SET _statement = CONCAT(_statement, ' AND POH.pohdr_refno LIKE ', "'%", sRefNo, "%'");
+         END IF;
+
+              SET _statement = CONCAT(_statement, ' Group by POH.pohdr_companycode, comp.comp_name, POH.pohdr_pogrpno, POH.pohdr_suppliercode,
+                                                    SPPM.sup_name, POH.pohdr_pono, date(POH.pohdr_podate), POH.pohdr_totalnetamt, POH.pohdr_postatus) as Total ');
+
+
+
+
+
+END IF;
+
+
+
+IF sMethod = 'PO_DETAIL' THEN
+  SET _statement = ' SELECT POH.pohdr_companycode as CompCode, COMP.comp_name as CompName, POH.pohdr_pogrpno as GrpNo,
+                            POH.pohdr_suppliercode as SuppCode, SPPM.sup_name as SuppName, POH.pohdr_pono as PoNo, date(POH.pohdr_podate) as PoDate,
+                            ROUND(POH.pohdr_totalnetamt,2) as PoNettAmt,  ROUND(POH.pohdr_totaldiscamt,2) as TotDiscAmt,
+                            ROUND(POH.pohdr_gstamt,2) as TotGSTAmt, ROUND(POH.pohdr_grosstotal,2) as TotGross, POH.pohdr_remark as PoRemarks,
+                            POH.pohdr_postatus, POH.pohdr_refno as RefNo, POH.pohdr_refdate as RefDate,
+                            POD.podtl_idx as PODIDX, POD.podtl_uomcode as UomCode, ROUND(POD.podtl_qty,2) as Qty, ROUND(POD.podtl_qtybonus,2) as QtyBonus,
+                            ROUND(POD.podtl_unitcost,2) as UnitCost, POD.podtl_discoption as DiscOpt, POD.podtl_discpercent as DiscPerc, ROUND(POD.podtl_discamt,2) as DiscAmt,
+                            ROUND(POD.podtl_grosstotal,2) as GrossTotal, POD.podtl_gstpurcode as GstPurCode,  ROUND(POD.podtl_gsttaxrates,2) as GstTaxRate,
+                            POD.podtl_gstinclusive as GStInc, ROUND(POD.podtl_gstamt,2) as GstAmt, ROUND(podtl_subtotalamt,2) as NettAmt,
+                            POD.podtl_stockcode as StkCode,  STKM.stk_desc as StkDesc,
+                            POH.pohdr_locationcode as LocCode, POD.podtl_lineno as LineNo, ROUND(POD.podtl_rcvqty,2) as RcvQty,
+                            ROUND(POD.podtl_rcvqty,2) as RcvQty, ROUND(POD.podtl_rcvqtybonus,2) as RcvQtyBonus, POD.podtl_fulfill AS DtlFulfill, POH.pohdr_fulfill AS HdrFulfill,
+                            CASE
+           WHEN POH.pohdr_postatus=''O'' THEN ''Open''
+           WHEN POH.pohdr_postatus=''X'' THEN ''Cancel''
+           WHEN POH.pohdr_postatus=''C'' THEN ''Closed''
+                    WHEN POH.pohdr_postatus=''P'' THEN ''Partial''
+              END AS POStatus,
+                            ROUND(POD.podtl_qty - POD.podtl_rcvqty,2) AS PODTL_BalanceQty, POH.pohdr_poidx as POIDX
+                            FROM stkt_poheader POH
+                            LEFT JOIN stkt_podetail POD ON POH.pohdr_poidx = POD.podtl_poidx
+                            LEFT JOIN stkm_stockmaster STKM ON POD.podtl_stockcode = STKM.stk_stockcode
+                            LEFT OUTER JOIN stkm_company comp on comp.comp_code = POH.pohdr_companycode
+                            LEFT OUTER JOIN stkm_suppliermaster SPPM on SPPM.sup_code = POH.pohdr_suppliercode
+                            WHERE POH.pohdr_pono IS NOT NULL ' ;
+
+   IF (sPONo <> '') THEN
+      SET _statement = CONCAT(_statement, ' AND POH.pohdr_pono LIKE ',"'%",sPONo ,"%'", ' ');
+   END IF;
+
+
+
+END IF;
+
+
+IF sMethod = 'PO_ITEM' THEN
+  SET _statement = ' SELECT POH.pohdr_companycode as CompCode, COMP.comp_name as CompName, POH.pohdr_pogrpno as GrpNo,
+                            POH.pohdr_suppliercode as SuppCode, SPPM.sup_name as SuppName, POH.pohdr_pono as PoNo, date(POH.pohdr_podate) as PoDate,
+                            POH.pohdr_totalnetamt as PoNettAmt, POH.pohdr_postatus, POH.pohdr_refno as RefNo, POH.pohdr_refdate as RefDate,
+                            POD.podtl_idx as PODIDX, POD.podtl_uomcode as UomCode, POD.podtl_qty as Qty, POD.podtl_qtybonus as QtyBonus,
+                            POD.podtl_unitcost as UnitCost, POD.podtl_discoption as DiscOpt, POD.podtl_discpercent as DiscPerc, POD.podtl_discamt as DiscAmt,
+                            POD.podtl_grosstotal as GrossTotal, POD.podtl_gstpurcode as GstPurCode,  POD.podtl_gsttaxrates as GstTaxRate,
+                            POD.podtl_gstinclusive as GStInc, POD.podtl_gstamt as GstAmt, podtl_subtotalamt as NettAmt,
+                            POD.podtl_stockcode as StkCode,  STKM.stk_desc as StkDesc,
+                            POH.pohdr_locationcode as LocCode, POD.podtl_lineno as LineNo, POD.podtl_rcvqty as RcvQty,
+                            POD.podtl_rcvqty as RcvQty, POD.podtl_rcvqtybonus as RcvQtyBonus, POD.podtl_fulfill as FullFill,
+                            CASE
+       WHEN POH.pohdr_postatus=''O'' THEN ''Open''
+                            WHEN POH.pohdr_postatus=''X'' THEN ''Cancel''
+       WHEN POH.pohdr_postatus=''C'' THEN ''Closed''
+              END AS POStatus,
+                            POD.podtl_qty - POD.podtl_rcvqty AS PODTL_BalanceQty
+                            FROM stkt_poheader POH
+                            LEFT JOIN stkt_podetail POD ON POH.pohdr_poidx = POD.podtl_poidx
+                            LEFT JOIN stkm_stockmaster STKM ON POD.podtl_stockcode = STKM.stk_stockcode
+              LEFT OUTER JOIN stkm_company comp on comp.comp_code = POH.pohdr_companycode
+                            LEFT OUTER JOIN stkm_suppliermaster SPPM on SPPM.sup_code = POH.pohdr_suppliercode
+                            WHERE POH.pohdr_pono IS NOT NULL ' ;
+
+
+
+   IF (sIdx <> '') THEN
+      SET _statement = CONCAT(_statement, ' AND POD.podtl_idx = ',"'",sIdx ,"'", ' ');
+   END IF;
+
+
+
+END IF;
+
+IF sMethod = 'PO_DETAIL_RPT' THEN
+  SET _statement = ' SELECT stkm_systemenvironment.*,
+                            POH.pohdr_companycode as CompCode, COMP.comp_name as CompName,
+                            COMP.comp_add1,COMP.comp_add2,COMP.comp_add3,COMP.comp_postcode,COMP.comp_telephone,COMP.comp_fax,
+                            COMP.comp_statecode,COMP.comp_contactperson,COMP.comp_businessregno,
+                            POH.pohdr_pogrpno as GrpNo,POH.pohdr_suppliercode as SuppCode,
+                            SPPM.sup_name as SuppName,SPPM.sup_add1,SPPM.sup_add2,SPPM.sup_add3,SPPM.sup_postcode,SPPM.sup_telephone,
+                            SPPM.sup_fax,SPPM.sup_countrycode,SPPM.sup_areacode,SPPM.sup_statecode,SPPM.sup_contactperson,
+                            SPPM.sup_businessregno,SPPM.sup_gstregno,
+stat.cd_cddesc as SUP_StateDesc,   stat2.cd_cddesc as COMP_StateDesc,
+                            POH.pohdr_pogrpno as GrpNo,
+                            POH.pohdr_suppliercode as SuppCode, SPPM.sup_name as SuppName, POH.pohdr_pono as PoNo, date(POH.pohdr_podate) as PoDate,
+                            ROUND(POH.pohdr_totalnetamt,2) as PoNettAmt,  ROUND(POH.pohdr_totaldiscamt,2) as TotDiscAmt,
+                            ROUND(POH.pohdr_gstamt,2) as TotGSTAmt, ROUND(POH.pohdr_grosstotal,2) as TotGross, POH.pohdr_remark as PoRemarks,
+                            POH.pohdr_postatus, POH.pohdr_refno as RefNo, POH.pohdr_refdate as RefDate,
+                            POD.podtl_idx as PODIDX, POD.podtl_uomcode as UomCode, ROUND(POD.podtl_qty,2) as Qty, ROUND(POD.podtl_qtybonus,2) as QtyBonus,
+                            ROUND(POD.podtl_unitcost,2) as UnitCost, POD.podtl_discoption as DiscOpt, POD.podtl_discpercent as DiscPerc, ROUND(POD.podtl_discamt,2) as DiscAmt,
+                            ROUND(POD.podtl_grosstotal,2) as GrossTotal, POD.podtl_gstpurcode as GstPurCode,  ROUND(POD.podtl_gsttaxrates,2) as GstTaxRate,
+                            POD.podtl_gstinclusive as GStInc, ROUND(POD.podtl_gstamt,2) as GstAmt, ROUND(podtl_subtotalamt,2) as NettAmt,
+                            POD.podtl_stockcode as StkCode,  STKM.stk_desc as StkDesc,
+                            POH.pohdr_locationcode as LocCode, POD.podtl_lineno as LineNo, ROUND(POD.podtl_rcvqty,2) as RcvQty,
+                            ROUND(POD.podtl_rcvqty,2) as RcvQty, ROUND(POD.podtl_rcvqtybonus,2) as RcvQtyBonus, ROUND(POD.podtl_rcvqty,2) as FullFill,
+                            CASE
+           WHEN POH.pohdr_postatus=''O'' THEN ''Open''
+           WHEN POH.pohdr_postatus=''X'' THEN ''Cancel''
+           WHEN POH.pohdr_postatus=''C'' THEN ''Closed''
+              END AS POStatus,
+                            ROUND(POD.podtl_qty - POD.podtl_rcvqty,2) AS PODTL_BalanceQty, POH.pohdr_poidx as POIDX
+                            FROM stkm_systemenvironment, stkt_poheader POH
+                            LEFT JOIN stkt_podetail POD ON POH.pohdr_poidx = POD.podtl_poidx
+                            LEFT JOIN stkm_stockmaster STKM ON POD.podtl_stockcode = STKM.stk_stockcode
+                            LEFT OUTER JOIN stkm_company comp on comp.comp_code = POH.pohdr_companycode
+                            LEFT OUTER JOIN stkm_suppliermaster SPPM on SPPM.sup_code = POH.pohdr_suppliercode
+
+                            left join stkc_codedesc stat on stat.cd_cdcode = SPPM.sup_statecode and stat.cd_cdtype = ''STATE''
+                            left join stkc_codedesc stat2 on stat2.cd_cdcode = COMP.comp_statecode and stat2.cd_cdtype = ''STATE''
+                            WHERE POH.pohdr_pono IS NOT NULL ' ;
+
+   IF (sPONo <> '') THEN
+      SET _statement = CONCAT(_statement, ' AND POH.pohdr_pono LIKE ',"'%",sPONo ,"%'", ' ');
+   END IF;
+
+
+
+END IF;
+
+
+SET @statement = _statement;
+PREPARE dynquery FROM @statement;
+EXECUTE dynquery;
+DEALLOCATE PREPARE dynquery;
+
+
+
+END

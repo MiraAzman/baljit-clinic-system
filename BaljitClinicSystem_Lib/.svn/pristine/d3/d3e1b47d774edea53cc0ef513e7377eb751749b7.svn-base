@@ -1,0 +1,173 @@
+CREATE DEFINER=`root`@`localhost` PROCEDURE `SP_TRX_STOCK_RETURN`(
+IN sMethod               VARCHAR(50),
+IN sRETH_ReturnHdrIdx    INTEGER,
+IN sRETD_ReturnDtlIdx    INTEGER,
+IN sRETH_Company         VARCHAR(10),
+IN sRETH_IssueLocation   VARCHAR(10),
+IN sRETH_recievelocation   VARCHAR(10),
+IN sRETH_DocNo           VARCHAR(30),
+IN sRETH_DocDate         VARCHAR(100),
+IN sRETH_Remark          VARCHAR(100),
+IN sRETH_PersonName      VARCHAR(200),
+IN sRETD_StockCode       VARCHAR(16),        
+IN sRETD_UOMCode         VARCHAR(6),
+IN sRETD_UOMIdx          INTEGER,
+IN sRETD_Qty             NUMERIC(15,3),
+IN sRETD_CostQtyIdx      VARCHAR(10),
+IN sRETD_BatchNo         VARCHAR(10),
+IN sRETD_ExpiryDate      VARCHAR(10),
+IN sRETD_UnitCost        VARCHAR(10),
+IN sRETD_Status          VARCHAR(4),
+IN sRETD_Remarks         VARCHAR(200),
+IN sRETD_StockLedgerDtlIdx    INTEGER,           
+IN sRETD_Accepted_Qty    NUMERIC(15,3),
+IN sRETH_Status          VARCHAR(10),
+IN sBy                   VARCHAR(10),
+IN sRecStatus            VARCHAR(4),
+OUT Result varchar(30),
+OUT Message varchar(30),
+OUT retReturnHdrIdx INTEGER,
+OUT retReturnDtlIdx INTEGER    
+)
+BEGIN
+
+        DECLARE _statement VARCHAR(8000);
+
+        IF sMethod = 'ADD_RETURN_HEADER' THEN
+
+           INSERT INTO stkt_stockreturnheader (
+
+                reth_company,
+                reth_issuelocation,
+                reth_recievelocation,
+                reth_docno,
+                reth_docdate,
+                reth_remark,
+                reth_personname,
+                reth_status,
+                createdby,
+                createddt,
+                recstatus
+                
+           ) VALUES (
+
+                sRETH_Company,
+                sRETH_IssueLocation,
+                sRETH_recievelocation,
+                sRETH_DocNo,
+                NOW(),
+                sRETH_Remark,
+                sRETH_PersonName,
+                sRETH_Status,
+                sBy,
+                NOW(),
+                sRecStatus
+           );
+
+
+          SELECT '00000' INTO Result;
+          SELECT  'Success Inserted' INTO Message;
+
+          SELECT LAST_INSERT_ID() INTO retReturnHdrIdx;
+          SELECT 0 INTO retReturnDtlIdx;
+
+        END IF;
+
+
+        IF sMethod = 'ADD_RETURN_DETAIL' THEN
+
+if (sRETD_ExpiryDate = '') THEN
+ select null into sRETD_ExpiryDate;
+end if;
+           INSERT INTO stkt_stockreturndetail (
+
+                retd_returnhdridx,
+                retd_stockcode,
+                retd_uomcode,
+                retd_uomidx,
+                retd_qty,
+                retd_costqtyidx,
+                retd_batchno,
+                retd_expirydate,
+                retd_unitcost,
+                retd_status,
+                retd_remarks,
+                retd_stockledgerdtlidx,
+                retd_accepted_qty,
+                createdby,
+                createddt,
+                recstatus
+
+           ) VALUES (
+
+                sRETH_ReturnHdrIdx,
+                sRETD_StockCode,
+                sRETD_UOMCode,
+                sRETD_UOMIdx,
+                sRETD_Qty,
+                sRETD_CostQtyIdx,
+                sRETD_BatchNo,
+                sRETD_ExpiryDate,
+                sRETD_UnitCost,
+                sRETD_Status,
+                sRETD_Remarks,
+                sRETD_StockLedgerDtlIdx,
+                sRETD_Accepted_Qty,
+                sBy,
+                NOW(),
+                sRecStatus
+           );
+
+
+           SELECT '00000' INTO Result;
+           SELECT  'Success Inserted' INTO Message;
+
+           SELECT LAST_INSERT_ID() INTO retReturnDtlIdx;
+           SET retReturnHdrIdx = sRETH_ReturnHdrIdx;
+
+        END IF;
+
+        
+        IF sMethod = 'UPDATE_RETURN_HEADER' THEN
+
+           UPDATE stkt_stockreturnheader
+
+           SET
+                reth_status = sRETH_Status,
+                modifiedby = sBy,
+                modifieddt = NOW(),
+                recstatus = sRecStatus
+
+           WHERE reth_returnhdridx = sRETH_ReturnHdrIdx;
+
+           SELECT '00000' INTO Result;
+           SELECT 'Successfully Updated' INTO Message;
+           SET retReturnHdrIdx = sRETH_ReturnHdrIdx;
+           SELECT 0 INTO retReturnDtlIdx;
+
+        END IF;
+
+
+        IF sMethod = 'UPDATE_RETURN_DETAIL' THEN
+
+          UPDATE stkt_stockreturndetail
+
+          SET
+                retd_accepted_qty = sRETD_Accepted_Qty,
+                retd_status = sRETD_Status,
+                retd_remarks = sRETD_Remarks,
+                modifiedby = sBy,
+                modifieddt = NOW(),
+                recstatus = sRecStatus
+
+          WHERE retd_returnhdtlidx = sRETD_ReturnDtlIdx;
+
+
+          SELECT '00000' INTO Result;
+          SELECT 'Successfully Updated' INTO Message;
+          SET retReturnHdrIdx = sRETH_ReturnHdrIdx;
+          SET retReturnDtlIdx = sRETD_ReturnDtlIdx;
+
+        END IF;
+
+END

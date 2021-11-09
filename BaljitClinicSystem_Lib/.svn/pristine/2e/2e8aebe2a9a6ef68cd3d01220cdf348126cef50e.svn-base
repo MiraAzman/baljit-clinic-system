@@ -1,0 +1,227 @@
+CREATE DEFINER=`root`@`localhost` PROCEDURE `SP_TRX_STOCK_ADJUSTMENT`(
+IN sMethod            VARCHAR(50),
+IN sadjh_headeridx    INTEGER,
+IN sadjd_detailidx    INTEGER,
+IN sadjh_companycode  VARCHAR(10),
+IN sadjh_finyear      INTEGER,
+IN sadjh_finperiod    INTEGER,
+IN sadjh_trxtype      VARCHAR(6),
+IN sadjh_docno        VARCHAR(10),
+IN sadjh_docdate      VARCHAR(10),
+IN sadjh_remarks      VARCHAR(200),
+IN sadjh_status       VARCHAR(1),
+IN sadjh_reasoncode   VARCHAR(6),
+IN sadjd_locationcode VARCHAR(10),
+IN sadjd_stockcode    VARCHAR(20),
+IN sadjd_stockidx     INTEGER,
+IN sadjd_batchno      VARCHAR(10),
+IN sadjd_expirydate   VARCHAR(10),
+IN sadjd_unitcost     NUMERIC(15,3),
+IN sadjd_uomcode      VARCHAR(6),
+IN sadjd_uomidx       INTEGER,
+IN sadjd_onhandqty    NUMERIC(15,3),
+IN sadjd_newqty       NUMERIC(15,3),
+IN sadjd_varianceqty  NUMERIC(15,3),
+IN sadjd_defaultrow   VARCHAR(1),
+IN sBy                VARCHAR(10),
+IN srecstatus         VARCHAR(4),
+IN sControlDateTime   VARCHAR(20),
+OUT Result            VARCHAR(30),
+OUT Message           VARCHAR(30),
+OUT retAdjHdrIdx   INTEGER,
+OUT retAdjDtlIdx   INTEGER
+)
+BEGIN
+
+        DECLARE _statement VARCHAR(8000);
+
+        DECLARE dt VARCHAR(20);
+
+        IF sControlDateTime = '' THEN
+                SELECT now() INTO dt;
+        ELSE
+               SELECT sControlDateTime INTO dt;
+        END IF;
+
+        IF sMethod = 'ADD_ADJUSTMENT_HEADER' THEN
+
+           INSERT INTO stkt_stockadjustmentheader (
+
+                adjh_companycode,
+                adjh_finyear,
+                adjh_finperiod,
+                adjh_trxtype,
+                adjh_docno,
+                adjh_docdate,
+                adjh_remarks,
+                adjh_status,
+                adjh_reasoncode,
+                createdby,
+                createddt,
+                recstatus
+
+           ) VALUES (
+
+                sadjh_companycode,
+                sadjh_finyear,
+                sadjh_finperiod,
+                sadjh_trxtype,
+                sadjh_docno,
+                NOW(),
+                sadjh_remarks,
+                sadjh_status,
+                sadjh_reasoncode,
+                sBy,
+                dt,
+                srecstatus
+           );
+
+
+          SELECT '00000' INTO Result;
+          SELECT  'Success Inserted' INTO Message;
+
+          SELECT LAST_INSERT_ID() INTO retAdjHdrIdx;
+          SELECT 0 INTO retAdjDtlIdx;
+
+        END IF;
+
+
+        IF sMethod = 'ADD_ADJUSTMENT_DETAIL' THEN
+
+              IF  sadjd_expirydate = '' Then
+                      INSERT INTO stkt_stockadjustmentdetail (
+
+                adjd_headeridx,
+                adjd_companycode,
+                adjd_locationcode,
+                adjd_stockcode,
+                adjd_stockidx,
+                adjd_batchno,
+                adjd_expirydate,
+                adjd_unitcost,
+                adjd_uomcode,
+                adjd_uomidx,
+                adjd_onhandqty,
+                adjd_newqty,
+                adjd_varianceqty,
+                adjd_defaultrow,
+                createdby,
+                createddt,
+                recstatus
+
+           ) VALUES (
+
+                sadjh_headeridx,
+                sadjh_companycode,
+                sadjd_locationcode,
+                sadjd_stockcode,
+                sadjd_stockidx,
+                sadjd_batchno,
+                null,
+                sadjd_unitcost,
+                sadjd_uomcode,
+                sadjd_uomidx,
+                sadjd_onhandqty,
+                sadjd_newqty,
+                sadjd_varianceqty,
+                sadjd_defaultrow,
+                sBy,
+                dt,
+                srecstatus
+           );
+              Else
+           INSERT INTO stkt_stockadjustmentdetail (
+
+                adjd_headeridx,
+                adjd_companycode,
+                adjd_locationcode,
+                adjd_stockcode,
+                adjd_stockidx,
+                adjd_batchno,
+                adjd_expirydate,
+                adjd_unitcost,
+                adjd_uomcode,
+                adjd_uomidx,
+                adjd_onhandqty,
+                adjd_newqty,
+                adjd_varianceqty,
+                adjd_defaultrow,
+                createdby,
+                createddt,
+                recstatus
+
+           ) VALUES (
+
+                sadjh_headeridx,
+                sadjh_companycode,
+                sadjd_locationcode,
+                sadjd_stockcode,
+                sadjd_stockidx,
+                sadjd_batchno,
+                sadjd_expirydate,
+                sadjd_unitcost,
+                sadjd_uomcode,
+                sadjd_uomidx,
+                sadjd_onhandqty,
+                sadjd_newqty,
+                sadjd_varianceqty,
+                sadjd_defaultrow,
+                sBy,
+                dt,
+                srecstatus
+           );
+              End If ;
+
+             /*
+
+           INSERT INTO stkt_stockadjustmentdetail (
+
+                adjd_headeridx,
+                adjd_companycode,
+                adjd_locationcode,
+                adjd_stockcode,
+                adjd_stockidx,
+                adjd_batchno,
+                adjd_expirydate,
+                adjd_unitcost,
+                adjd_uomcode,
+                adjd_uomidx,
+                adjd_onhandqty,
+                adjd_newqty,
+                adjd_varianceqty,
+                adjd_defaultrow,
+                createdby,
+                createddt,
+                recstatus
+
+           ) VALUES (
+
+                sadjh_headeridx,
+                sadjh_companycode,
+                sadjd_locationcode,
+                sadjd_stockcode,
+                sadjd_stockidx,
+                sadjd_batchno,
+                sadjd_expirydate,
+                sadjd_unitcost,
+                sadjd_uomcode,
+                sadjd_uomidx,
+                sadjd_onhandqty,
+                sadjd_newqty,
+                sadjd_varianceqty,
+                sadjd_defaultrow,
+                sBy,
+                NOW(),
+                srecstatus
+           );
+                               */
+
+           SELECT '00000' INTO Result;
+           SELECT  'Success Inserted' INTO Message;
+
+           SELECT LAST_INSERT_ID() INTO retAdjDtlIdx;
+           SET retAdjHdrIdx = sadjh_headeridx;
+
+        END IF;
+
+END

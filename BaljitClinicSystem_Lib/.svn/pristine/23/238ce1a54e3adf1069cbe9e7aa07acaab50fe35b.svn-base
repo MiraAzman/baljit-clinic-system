@@ -1,0 +1,276 @@
+CREATE DEFINER=`root`@`localhost` PROCEDURE `SP_GET_STOCK`(
+IN sMethod          varchar(30),
+IN sStkCode         varchar(20),
+IN sCompCode        varchar(20),
+IN sLocCode         varchar(20),
+IN sOrderBy varchar(30),
+IN sPage varchar(10),
+IN sPerPage varchar(10)
+
+)
+BEGIN
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ DECLARE _statement VARCHAR(8000);
+   IF sMethod = 'GET_UNFULFILLED_STOCKCODE' THEN
+            SET _statement = 'select distinct rqdtl_stockcode from stkt_stockrequestdetail
+                left join stkt_stockrequestheader
+                on stkt_stockrequestdetail.rqdtl_requestidx = stkt_stockrequestheader.RQHDR_REquestIdx
+                where rqhdr_statuscode in ("A","P")
+                and rqdtl_approvedqty - rqdtl_fulfilledqty > 0;';
+
+    END IF;
+
+   IF sMethod = 'GET_PO_AUTOALLO' THEN
+
+                  
+
+              SET _statement = ' Select comp.comp_code as CompanyCode, comp.Comp_Name, StkM.stk_stockcode as StockCode,
+                                 coalesce(stkspp.stsp_uomcode, null, StkM.stk_baseuomcode) as BaseUomCode,
+                                 ROUND(coalesce((SELECT SUM(F_CONVERT_UOM((STKBAL.bal_balanceqty + STKBAL.bal_tempbalanceqty) , coalesce(stkspp.stsp_uomcode, null, StkM.stk_baseuomcode), STKBAL.bal_uom, STKBAL.bal_stockcode))
+                                 FROM stkm_stockbalance stkBal
+                                 Where stkbal.BAL_COMPANYCODE = RQHDR.rqhdr_companycode and stkbal.bal_stockcode = StkM.stk_stockcode
+                                 ), null, 0),1) AS BalanceQty,
+                                 coalesce(stkspp.stsp_unitcost, null, 0) as UnitCost,
+                                 ROUND(coalesce(SUM(F_CONVERT_UOM(RQDTL.rqdtl_requestqty, coalesce(stkspp.stsp_uomcode, null, StkM.stk_baseuomcode), RQDTL.rqdtl_uomcode, RQDTL.rqdtl_stockcode)), null,0),1) as RequestQty,
+                                 ROUND(coalesce(SUM(F_CONVERT_UOM((RQDTL.rqdtl_approvedqty) ,coalesce(stkspp.stsp_uomcode, null, StkM.stk_baseuomcode), RQDTL.rqdtl_uomcode, RQDTL.rqdtl_stockcode)), null,0) ,1) as ApprovedQty,
+                                 ROUND(coalesce(SUM(F_CONVERT_UOM((RQDTL.rqdtl_verifiedqty) ,coalesce(stkspp.stsp_uomcode, null, StkM.stk_baseuomcode), RQDTL.rqdtl_uomcode, RQDTL.rqdtl_stockcode)), null,0),1) as VerifiedQty,
+                                 ROUND(coalesce(SUM(F_CONVERT_UOM((RQDTL.rqdtl_fulfilledqty) ,coalesce(stkspp.stsp_uomcode, null, StkM.stk_baseuomcode), RQDTL.rqdtl_uomcode, RQDTL.rqdtl_stockcode)), null,0),1) as FullfiledQty,
+                                 ROUND(coalesce(SUM(F_CONVERT_UOM((RQDTL.rqdtl_currentbalance) ,coalesce(stkspp.stsp_uomcode, null, StkM.stk_baseuomcode), RQDTL.rqdtl_uomcode, RQDTL.rqdtl_stockcode)), null,0),1) as CurrentBalance,
+                                 ROUND(coalesce(ABS(((SELECT SUM(F_CONVERT_UOM((STKBAL.bal_balanceqty + STKBAL.bal_tempbalanceqty) , coalesce(stkspp.stsp_uomcode, null, StkM.stk_baseuomcode), STKBAL.bal_uom, STKBAL.bal_stockcode))
+                                 FROM stkm_stockbalance stkBal
+                                 Where stkbal.BAL_COMPANYCODE = RQHDR.rqhdr_companycode and stkbal.bal_stockcode =  StkM.stk_stockcode)
+                                 +
+                                (SELECT SUM(case when F_CONVERT_UOM((STKBAL.bal_balanceqty + STKBAL.bal_tempbalanceqty) , coalesce(stkspp.stsp_uomcode, null, StkM.stk_baseuomcode), STKBAL.bal_uom, STKBAL.bal_stockcode) < 0 then
+                                ABS(F_CONVERT_UOM((STKBAL.bal_balanceqty + STKBAL.bal_tempbalanceqty) , coalesce(stkspp.stsp_uomcode, null, StkM.stk_baseuomcode), STKBAL.bal_uom, STKBAL.bal_stockcode)) else 0 end)
+                                FROM stkm_stockbalance stkBal
+                                Where stkbal.BAL_COMPANYCODE = RQHDR.rqhdr_companycode and stkbal.bal_stockcode = StkM.stk_stockcode
+                                )
+                                -
+                                coalesce(sum(F_CONVERT_UOM((RQDTL.rqdtl_approvedqty) ,coalesce(stkspp.stsp_uomcode, null, StkM.stk_baseuomcode), RQDTL.rqdtl_uomcode, RQDTL.rqdtl_stockcode)), null,0))), null,0)
+                                ,1)AS OrdQty,
+                                ROUND((Select COALESCE(SUM(F_CONVERT_UOM((POD.PODTL_QTY) ,coalesce(stkspp.stsp_uomcode, null, StkM.stk_baseuomcode), POD.podtl_uomcode, POD.podtl_stockcode)) - SUM(F_CONVERT_UOM((POD.podtl_rcvqty) ,stkm.stk_baseUOMcode, POD.podtl_uomcode, POD.podtl_stockcode)),0)
+                                From stkt_podetail POD
+                                Left outer join stkt_poheader POH on POH.pohdr_poidx = POD.podtl_poidx
+                                WHERE POD.podtl_stockcode = RQDTL.rqdtl_stockcode and POH.pohdr_companycode = RQHDR.rqhdr_companycode
+                                and POH.pohdr_postatus = ''O''),1) as AldOrd,
+                                ROUND(coalesce(ABS(((SELECT SUM(F_CONVERT_UOM((STKBAL.bal_balanceqty + STKBAL.bal_tempbalanceqty),
+                                coalesce(stkspp.stsp_uomcode, null, stkm.stk_baseUOMcode) , coalesce(STKBAL.bal_uom, null, stkm.stk_baseUOMcode) , STKBAL.bal_stockcode))
+                                FROM stkm_stockbalance stkBal
+                                Where stkbal.BAL_COMPANYCODE = RQHDR.rqhdr_companycode and stkbal.bal_stockcode = StkM.stk_stockcode)
+                                +
+                                (SELECT SUM(case when F_CONVERT_UOM((STKBAL.bal_balanceqty + STKBAL.bal_tempbalanceqty) , coalesce(stkspp.stsp_uomcode, null, stkm.stk_baseUOMcode),
+                                coalesce(STKBAL.bal_uom, null, stkm.stk_baseUOMcode)  , STKBAL.bal_stockcode) < 0 then
+                                ABS(F_CONVERT_UOM((STKBAL.bal_balanceqty + STKBAL.bal_tempbalanceqty) , coalesce(stkspp.stsp_uomcode, null, stkm.stk_baseUOMcode),
+                                coalesce(STKBAL.bal_uom, null, stkm.stk_baseUOMcode) , STKBAL.bal_stockcode)) else 0 end)
+                                FROM stkm_stockbalance stkBal
+                                Where stkbal.BAL_COMPANYCODE = RQHDR.rqhdr_companycode and stkbal.bal_stockcode = StkM.stk_stockcode)
+                                -
+                                SUM(F_CONVERT_UOM((RQDTL.rqdtl_approvedqty) , coalesce(stkspp.stsp_uomcode, null, stkm.stk_baseUOMcode),
+                                coalesce(RQDTL.rqdtl_uomcode, null, stkm.stk_baseUOMcode)  , RQDTL.rqdtl_stockcode))))
+                                -
+                                (Select COALESCE(SUM(F_CONVERT_UOM((POD.PODTL_QTY) , coalesce(stkspp.stsp_uomcode, null, stkm.stk_baseUOMcode),  POD.podtl_uomcode, POD.podtl_stockcode))
+                                -
+                                SUM(F_CONVERT_UOM((POD.podtl_rcvqty) , coalesce(stkspp.stsp_uomcode, null, stkm.stk_baseUOMcode),  POD.podtl_uomcode, POD.podtl_stockcode)),0)
+                                From stkt_podetail POD
+                                Left outer join stkt_poheader POH on POH.pohdr_poidx = POD.podtl_poidx
+                                WHERE POD.podtl_stockcode = RQDTL.rqdtl_stockcode and POH.pohdr_companycode = RQHDR.rqhdr_companycode), null,0),1) as PoOrdQty
+                                From stkm_company comp
+                               ';
+                               SET _statement = CONCAT(_statement, 'left join stkm_stocksupplier stkspp on stkspp.stsp_companycode = comp.comp_code and stkSPP.recstatus =''1'' and  stkspp.stsp_stockcode =',"'",sStkCode ,"'", ' ');
+                               SET _statement = CONCAT(_statement, 'left join stkm_stockmaster StkM on StkM.stk_stockcode =',"'",sStkCode ,"'", ' ');
+                               
+                               SET _statement = CONCAT(_statement, 'Left join stkt_stockrequestheader RQHDR on comp.comp_code = RQHDR.rqhdr_companycode ');
+                               SET _statement = CONCAT(_statement, 'Left join stkt_stockrequestdetail RQDTL on RQDTL.RQDTL_RequestIDX = RQHDR.rqhdr_requestidx and  rqdtl_stockcode =',"'",sStkCode ,"'", ' ');
+                               SET _statement = CONCAT(_statement, 'and RQDTL.rqdtl_requeststatuscode IN (''A'', ''P'')');
+                               SET _statement = CONCAT(_statement, 'Group by comp.comp_code Order by comp.Comp_Name');
+          
+
+
+
+   END IF;
+
+
+
+  IF sMethod = 'STOCK_REQ_QTY_BAK_2018AUG17' THEN
+
+               SET _statement = ' SELECT STKBAL.bal_companycode as CompCode, STKBAL.bal_location as LocCode,
+                                  STKBAL.bal_stockcode as StkCode,
+                                  stkm.stk_baseUOMcode as UOMCODE,
+                                  SUM(STKBAL.bal_balanceqty + STKBAL.bal_tempbalanceqty) as BalQty,
+                                  ROUND(SUM(F_CONVERT_UOM((STKBAL.bal_balanceqty + STKBAL.bal_tempbalanceqty) , stkm.stk_baseUOMcode, STKBAL.bal_uom, STKBAL.bal_stockcode)),1) as ConvBalQty,
+                                  ROUND(F_CONVERT_UOM((STKLVL.rord_reorderlevel) , stkm.stk_baseUOMcode, STKLVL.RORD_UOMCODE,STKBAL.bal_stockcode),1)  as ReOrdLvl,
+                                  ROUND(F_CONVERT_UOM((STKLVL.rord_reorderqty) , stkm.stk_baseUOMcode, STKLVL.RORD_UOMCODE,STKBAL.bal_stockcode),1) as ReOrdQty,
+                                  ROUND(COALESCE(NULLIF(F_CONVERT_UOM(ReqD.rqdtl_requestqty, stkm.stk_baseUOMcode, ReqD.rqdtl_uomcode, STKBAL.bal_stockcode) , ''''), ''0''),1) as AlreadyReqQty,
+                                  ROUND(COALESCE(NULLIF(F_CONVERT_UOM(ReqD.rqdtl_approvedqty, stkm.stk_baseUOMcode, ReqD.rqdtl_uomcode, STKBAL.bal_stockcode),''''), ''0''),1) as ReqApprovedQty,
+                                  COALESCE(
+								  CASE
+                                  WHEN SUM(F_CONVERT_UOM((STKBAL.bal_balanceqty + STKBAL.bal_tempbalanceqty) , stkm.stk_baseUOMcode, STKBAL.bal_uom,STKBAL.bal_stockcode))
+										<= ROUND(F_CONVERT_UOM((STKLVL.rord_reorderlevel) , stkm.stk_baseUOMcode, STKLVL.RORD_UOMCODE,STKBAL.bal_stockcode),1) and SUM(F_CONVERT_UOM((STKBAL.bal_balanceqty + STKBAL.bal_tempbalanceqty) , stkm.stk_baseUOMcode, STKBAL.bal_uom,STKBAL.bal_stockcode))  > 0 THEN
+                                  CASE 
+								  WHEN ReqD.rqdtl_requeststatuscode  = ''A'' THEN
+                                  ROUND((F_CONVERT_UOM((STKLVL.rord_reorderqty) , stkm.stk_baseUOMcode, STKLVL.RORD_UOMCODE,STKBAL.bal_stockcode)
+                                  - SUM(COALESCE(NULLIF(F_CONVERT_UOM(ReqD.rqdtl_approvedqty, stkm.stk_baseUOMcode, ReqD.rqdtl_uomcode, STKBAL.bal_stockcode), ''''), ''0''))),1)
+                                  ELSE 
+								  ROUND((F_CONVERT_UOM((STKLVL.rord_reorderqty) , stkm.stk_baseUOMcode, STKLVL.RORD_UOMCODE,STKBAL.bal_stockcode)
+                                  - SUM(COALESCE(NULLIF(F_CONVERT_UOM(ReqD.rqdtl_requestqty, stkm.stk_baseUOMcode, ReqD.rqdtl_uomcode, STKBAL.bal_stockcode), ''''), ''0''))),1)
+								  END
+
+                                  WHEN ROUND(SUM(F_CONVERT_UOM((STKBAL.bal_balanceqty + STKBAL.bal_tempbalanceqty) , stkm.stk_baseUOMcode, STKBAL.bal_uom,STKBAL.bal_stockcode)),1)
+                                  >= ROUND(F_CONVERT_UOM( STKLVL.rord_reorderlevel, stkm.stk_baseUOMcode, STKBAL.bal_uom, STKBAL.bal_stockcode),1) THEN ''0''
+                                  WHEN ROUND(SUM(F_CONVERT_UOM((STKBAL.bal_balanceqty + STKBAL.bal_tempbalanceqty) , stkm.stk_baseUOMcode, STKBAL.bal_uom,STKBAL.bal_stockcode)),1)
+                                  <= 0 THEN
+                                  CASE 
+								  WHEN ReqD.rqdtl_requeststatuscode = ''A'' THEN
+                                  ROUND((F_CONVERT_UOM(STKLVL.rord_reorderqty, stkm.stk_baseUOMcode, STKBAL.bal_uom, STKBAL.bal_stockcode)
+                                  + ABS(F_CONVERT_UOM(STKBAL.bal_balanceqty, stkm.stk_baseUOMcode, STKBAL.bal_uom, STKBAL.bal_stockcode))
+                                  - SUM(COALESCE(NULLIF(F_CONVERT_UOM(ReqD.rqdtl_approvedqty, stkm.stk_baseUOMcode, ReqD.rqdtl_uomcode, STKBAL.bal_stockcode), ''''), ''0''))),1)
+                                  ELSE 
+								  ROUND((F_CONVERT_UOM(STKLVL.rord_reorderqty, stkm.stk_baseUOMcode, STKLVL.RORD_UOMCODE, STKBAL.bal_stockcode)
+                                  + ABS(F_CONVERT_UOM(STKBAL.bal_balanceqty, stkm.stk_baseUOMcode, STKBAL.bal_uom, STKBAL.bal_stockcode))
+                                  - SUM(COALESCE(NULLIF(F_CONVERT_UOM(ReqD.rqdtl_requestqty, stkm.stk_baseUOMcode, ReqD.rqdtl_uomcode, STKBAL.bal_stockcode), ''''), ''0''))),1) END
+                                  END, null,0) as ReqQty
+                                  FROM stkm_stockbalance STKBAL
+                                  Left outer join stkm_stockreorderlevel STKLVL on STKBAL.bal_companycode = STKLVL.rord_companycode and
+                                  STKBAL.bal_location = STKLVL.rord_locationcode and STKBAL.bal_stockcode = STKLVL.rord_stockcode
+                                  Left outer join stkt_stockrequestdetail ReqD on 
+                                  ReqD.rqdtl_stockcode  = STKBAL.bal_stockcode and ReqD.rqdtl_requeststatuscode in (''O'', ''A'', ''P'', ''V'')
+                                  Left outer join  (select * from stkt_stockrequestheader where rqhdr_manualrequest = ''A'') ReqH on ReqD.rqdtl_requestidx = ReqH.rqhdr_requestidx
+                                  -- Left outer join stkt_stockrequestheader ReqH on ReqH.rqhdr_requestidx = ReqD.rqdtl_requestidx
+                                  -- and ReqH.rqhdr_companycode = STKBAL.bal_companycode and ReqH.rqhdr_locationcode = STKBAL.bal_location
+                                  -- and ReqH.rqhdr_manualrequest <> ''M''
+                                  Left outer join stkm_stockmaster stkm on stkm.stk_stockcode = STKBAL.bal_stockcode
+                                  Where STKBAL.bal_stockcode IS NOT NULL
+                                ';
+
+
+
+
+          
+
+            IF (sStkCode <> '') THEN
+                    SET _statement = CONCAT(_statement, ' AND STKBAL.bal_stockcode = ',"'",sStkCode ,"'", ' ');
+            END IF;
+
+            IF (sCompCode <> '') THEN
+                    SET _statement = CONCAT(_statement, ' AND STKBAL.bal_companycode = ',"'",sCompCode ,"'", ' ');
+            END IF;
+
+            IF (sLocCode <> '') THEN
+                    SET _statement = CONCAT(_statement, ' AND STKBAL.bal_location = ',"'",sLocCode ,"'", ' ');
+            END IF;
+
+            
+            SET _statement = CONCAT(_statement, ' Group by STKBAL.bal_companycode, STKBAL.bal_location, STKBAL.bal_stockcode, stkm.stk_baseUOMcode
+                                                  -- HAVING ReqQty > 0
+                                                  Order by STKBAL.bal_companycode, STKBAL.bal_location,  STKBAL.bal_stockcode ');
+
+
+
+
+
+   END IF;
+
+IF sMethod = 'STOCK_REQ_QTY' THEN
+
+               SET _statement = ' SELECT STKBAL.bal_companycode as CompCode, STKBAL.bal_location as LocCode,
+                                  STKBAL.bal_stockcode as StkCode,
+                                  stkm.stk_baseUOMcode as UOMCODE,
+                                  SUM(STKBAL.bal_balanceqty + STKBAL.bal_tempbalanceqty) as BalQty,
+                                  ROUND(SUM(F_CONVERT_UOM((STKBAL.bal_balanceqty + STKBAL.bal_tempbalanceqty) , stkm.stk_baseUOMcode, STKBAL.bal_uom, STKBAL.bal_stockcode)),1) as ConvBalQty,
+                                  ROUND(F_CONVERT_UOM((STKLVL.rord_reorderlevel) , stkm.stk_baseUOMcode, STKLVL.RORD_UOMCODE,STKBAL.bal_stockcode),1)  as ReOrdLvl,
+                                  ROUND(F_CONVERT_UOM((STKLVL.rord_reorderqty) , stkm.stk_baseUOMcode, STKLVL.RORD_UOMCODE,STKBAL.bal_stockcode),1) as ReOrdQty,
+                                  ROUND(COALESCE(NULLIF(F_CONVERT_UOM(ReqD.rqdtl_requestqty, stkm.stk_baseUOMcode, ReqD.rqdtl_uomcode, STKBAL.bal_stockcode) , ''''), ''0''),1) as AlreadyReqQty,
+                                  ROUND(COALESCE(NULLIF(F_CONVERT_UOM(ReqD.rqdtl_approvedqty, stkm.stk_baseUOMcode, ReqD.rqdtl_uomcode, STKBAL.bal_stockcode),''''), ''0''),1) as ReqApprovedQty,
+                                  COALESCE(
+								  CASE
+                                  WHEN SUM(F_CONVERT_UOM((STKBAL.bal_balanceqty + STKBAL.bal_tempbalanceqty) , stkm.stk_baseUOMcode, STKBAL.bal_uom,STKBAL.bal_stockcode))
+										<= ROUND(F_CONVERT_UOM((STKLVL.rord_reorderlevel) , stkm.stk_baseUOMcode, STKLVL.RORD_UOMCODE,STKBAL.bal_stockcode),1) and SUM(F_CONVERT_UOM((STKBAL.bal_balanceqty + STKBAL.bal_tempbalanceqty) , stkm.stk_baseUOMcode, STKBAL.bal_uom,STKBAL.bal_stockcode))  > 0 THEN
+                                  CASE 
+								  WHEN ReqD.rqdtl_requeststatuscode  = ''A'' THEN
+                                  ROUND((F_CONVERT_UOM((STKLVL.rord_reorderqty) , stkm.stk_baseUOMcode, STKLVL.RORD_UOMCODE,STKBAL.bal_stockcode)
+                                  - SUM(COALESCE(NULLIF(F_CONVERT_UOM(ReqD.rqdtl_approvedqty, stkm.stk_baseUOMcode, ReqD.rqdtl_uomcode, STKBAL.bal_stockcode), ''''), ''0''))),1)
+                                  ELSE 
+								  ROUND((F_CONVERT_UOM((STKLVL.rord_reorderqty) , stkm.stk_baseUOMcode, STKLVL.RORD_UOMCODE,STKBAL.bal_stockcode)
+                                  - SUM(COALESCE(NULLIF(F_CONVERT_UOM(ReqD.rqdtl_requestqty, stkm.stk_baseUOMcode, ReqD.rqdtl_uomcode, STKBAL.bal_stockcode), ''''), ''0''))),1)
+								  END
+
+                                  WHEN ROUND(SUM(F_CONVERT_UOM((STKBAL.bal_balanceqty + STKBAL.bal_tempbalanceqty) , stkm.stk_baseUOMcode, STKBAL.bal_uom,STKBAL.bal_stockcode)),1)
+                                  >= ROUND(F_CONVERT_UOM( STKLVL.rord_reorderlevel, stkm.stk_baseUOMcode, STKBAL.bal_uom, STKBAL.bal_stockcode),1) THEN ''0''
+                                  WHEN ROUND(SUM(F_CONVERT_UOM((STKBAL.bal_balanceqty + STKBAL.bal_tempbalanceqty) , stkm.stk_baseUOMcode, STKBAL.bal_uom,STKBAL.bal_stockcode)),1)
+                                  <= 0 THEN
+                                  CASE 
+								  WHEN ReqD.rqdtl_requeststatuscode = ''A'' THEN
+                                  ROUND((F_CONVERT_UOM(STKLVL.rord_reorderqty, stkm.stk_baseUOMcode, STKBAL.bal_uom, STKBAL.bal_stockcode)
+                                  -- + ABS(F_CONVERT_UOM(STKBAL.bal_balanceqty, stkm.stk_baseUOMcode, STKBAL.bal_uom, STKBAL.bal_stockcode))
+                                  - SUM(COALESCE(NULLIF(F_CONVERT_UOM(ReqD.rqdtl_approvedqty, stkm.stk_baseUOMcode, ReqD.rqdtl_uomcode, STKBAL.bal_stockcode), ''''), ''0''))),1)
+                                  ELSE 
+								  ROUND((F_CONVERT_UOM(STKLVL.rord_reorderqty, stkm.stk_baseUOMcode, STKLVL.RORD_UOMCODE, STKBAL.bal_stockcode)
+                                  -- + ABS(F_CONVERT_UOM(STKBAL.bal_balanceqty, stkm.stk_baseUOMcode, STKBAL.bal_uom, STKBAL.bal_stockcode))
+                                  - SUM(COALESCE(NULLIF(F_CONVERT_UOM(ReqD.rqdtl_requestqty, stkm.stk_baseUOMcode, ReqD.rqdtl_uomcode, STKBAL.bal_stockcode), ''''), ''0''))),1) END
+                                  END, null,0) as ReqQty
+                                  FROM stkm_stockbalance STKBAL
+                                  Left outer join stkm_stockreorderlevel STKLVL on STKBAL.bal_companycode = STKLVL.rord_companycode and
+                                  STKBAL.bal_location = STKLVL.rord_locationcode and STKBAL.bal_stockcode = STKLVL.rord_stockcode
+                                  
+                                   Left outer join stkt_stockrequestdetail ReqD on 
+	  ReqD.rqdtl_stockcode  = STKBAL.bal_stockcode and ReqD.rqdtl_requeststatuscode in (''O'', ''A'', ''P'', ''V'')
+      and ReqD.rqdtl_requestidx in (select rqhdr_requestidx from stkt_stockrequestheader hdr 
+		where hdr.rqhdr_locationcode = STKBAL.bal_location and rqhdr_manualrequest = ''A'')
+        
+                                  
+                                  Left outer join stkm_stockmaster stkm on stkm.stk_stockcode = STKBAL.bal_stockcode
+                                  Where STKBAL.bal_stockcode IS NOT NULL
+                                ';
+
+
+
+
+          
+
+            IF (sStkCode <> '') THEN
+                    SET _statement = CONCAT(_statement, ' AND STKBAL.bal_stockcode = ',"'",sStkCode ,"'", ' ');
+            END IF;
+
+            IF (sCompCode <> '') THEN
+                    SET _statement = CONCAT(_statement, ' AND STKBAL.bal_companycode = ',"'",sCompCode ,"'", ' ');
+            END IF;
+
+            IF (sLocCode <> '') THEN
+                    SET _statement = CONCAT(_statement, ' AND STKBAL.bal_location = ',"'",sLocCode ,"'", ' ');
+            END IF;
+
+            
+            SET _statement = CONCAT(_statement, ' Group by STKBAL.bal_companycode, STKBAL.bal_location, STKBAL.bal_stockcode, stkm.stk_baseUOMcode
+                                                  -- HAVING ReqQty > 0
+                                                  Order by STKBAL.bal_companycode, STKBAL.bal_location,  STKBAL.bal_stockcode ');
+
+
+
+
+
+   END IF;
+   
+
+
+SET @statement = _statement;
+PREPARE dynquery FROM @statement;
+EXECUTE dynquery;
+DEALLOCATE PREPARE dynquery;
+
+
+
+END

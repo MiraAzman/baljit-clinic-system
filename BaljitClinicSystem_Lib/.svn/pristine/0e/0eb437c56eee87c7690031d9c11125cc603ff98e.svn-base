@@ -1,0 +1,143 @@
+package BusinessLogic;
+
+import BusinessData.DAL_Refund;
+import java.io.IOException;
+import java.sql.SQLException;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import net.sf.json.JSONObject;
+
+/**
+ *
+ * @author N0535
+ */
+public class BLL_Refund {
+    
+    public String Insert_REFUND(JSONObject sJsonIn, String sMethod, String SiteName) throws IOException, SQLException, ParseException {
+        String s_return = "";
+        BLL_Common.Common_Object obj = null;
+        DAL_Refund objRefund = new DAL_Refund();
+        BLL_Common Dal_CM = new BLL_Common();
+        
+        
+        String[] aryExRefund = {
+            ""  /*0 sMethod             VARCHAR(30)*/,
+            sJsonIn.get("compcode").toString(),/*1 sRFH_Company  	varchar(100)*/
+            sJsonIn.get("location").toString(), /*2 sRFH_Branch          varchar(100)*/
+            "0",/*3 sRFH_IDX 		int(11)*/
+            "", /*4 sRFH_NO 			varchar(12)*/
+            "", /*5 sRFH_STATUS 		varchar(10)*/
+            "", /*6 sRFH_REFUNDNO 	varchar(12)*/
+            "0",/*7 sRFH_CASHAMT 	decimal(15,3)*/            
+            "0",/*8 sRFH_CHEQUEAMT 	decimal(15,3)*/
+            "0",/*9 sRFH_TOTALRCVAMT decimal(15,3)*/
+            "", /*10 sRFH_REMARK 		varchar(50)*/
+            "0",/*11 sRFH_PRNTIME 	int(11)*/
+            "", /*12 sRFH_DISPLAYNAME varchar(100)*/
+            "", /*13 sRFH_DISPLAYNRICNO 	varchar(20)*/
+            "", /*14 sRFH_CHEQREF1 	varchar(20)*/
+            "", /*15 sRFH_CHEQREF2 	varchar(20)*/
+	    "",/*16 sRFH_RFDDATE 		varchar(30)*/
+            "", /*17 sRFH_WORKSTATION varchar(20)*/
+            "", /*18 sRFH_ACCNO 		varchar(10)*/
+            "", /*19 sRFH_BILDEPTID 	varchar(10)*/
+            "0",/*20 sRFH_PRINTNO 		int(11)*/
+            "", /*21 sRFH_BILLNO 	varchar(20)*/
+            "",/*22 sRFH_SHIFTCLOSEDAT 	varchar(30)*/
+            "0",/*23 sRFH_CARDAMT 	decimal(15,3)*/
+	    "", /*24 sRFH_CARDREF1 	varchar(20)*/
+            "", /*25 sRFH_CARDREF2 	varchar(20)*/           
+            "0",/*26 sRFH_PAIDAMT 	decimal(15,3)*/
+            "0",/*27 sRFH_CHGAMT 		decimal(15,3)*/
+            "", /*28 sRFH_CARDTYPE 	varchar(6)*/
+            "", /*29 sRFH_JNACCGEN 	varchar(1)*/
+            
+            "0",/*30 sRFD_RDIDX 		int(11)*/
+            //"0", /*31 sRFD_RDHDRIDX     int(11)*/
+            "", /*31 sRFD_RDNO 		varchar(12)*/
+            "", /*32 sRFD_RDTYPE 	varchar(12)*/
+	    "", /*33 sRFD_RDREFNO 	varchar(10)*/
+            "0",/*34 sRFD_RDREFIDX 	int(11)*/            
+            "0",/*35 sRFD_RDRFDAMT 	decimal(15,3)*/
+            "",/*36 sRFD_RDSTATUS       varchar(20)*/
+            //"",/*37 sRFH_RDRFDDATE 	varchar(30)*/
+            "", /*37 sRFH_RDISCANCEL    varchar(1)*/
+            "SYSTEM" /*38 sBy           varchar(10)*/};
+        
+        DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        DateFormat inputFormat = new SimpleDateFormat ("dd/MM/yyyy hh:mm:ss a"); //yyyy/MM/dd HH:mm:ss  
+        
+
+        if(sMethod.toUpperCase().trim().equals("REFUNDHEADER")){
+            aryExRefund[0] = "ADD_REFUNDHEADER";
+            aryExRefund[3] = sJsonIn.get("RHIDX").toString();
+            aryExRefund[4] = sJsonIn.get("RHNO").toString();
+            aryExRefund[5] = sJsonIn.get("RHSTATUS").toString();
+            aryExRefund[6] = sJsonIn.get("RHREFUNDNO").toString();
+            aryExRefund[7] = sJsonIn.get("RHCASHAMT").toString();
+            aryExRefund[8] = sJsonIn.get("RHCHEQUEAMT").toString();
+            aryExRefund[9] = sJsonIn.get("RHTOTALRFDAMT").toString();
+            aryExRefund[10] = sJsonIn.get("RHREMARK").toString();
+            aryExRefund[11] = sJsonIn.get("RHPRNTIME").toString();
+            aryExRefund[12] = sJsonIn.get("RHDISPLAYNAME").toString();
+            aryExRefund[13] = sJsonIn.get("RHDISPLAYNRICNO").toString();
+            aryExRefund[14] = sJsonIn.get("RHCHEQREF1").toString();
+            aryExRefund[15] = sJsonIn.get("RHCHEQREF2").toString();
+            aryExRefund[17] = sJsonIn.get("RHWORKSTATION").toString();
+            aryExRefund[18] = sJsonIn.get("RHACCNO").toString();
+            aryExRefund[19] = sJsonIn.get("RHBILDEPTID").toString();
+            aryExRefund[20] = sJsonIn.get("RHPRINTNO").toString();
+            aryExRefund[21] = sJsonIn.get("RHBILLNO").toString();
+            aryExRefund[23] = sJsonIn.get("RHCARDAMT").toString();
+            aryExRefund[24] = sJsonIn.get("RHCARDREF1").toString();
+            aryExRefund[25] = sJsonIn.get("RHCARDREF2").toString();
+            aryExRefund[26] = sJsonIn.get("RHPAIDAMT").toString();
+            aryExRefund[27] = sJsonIn.get("RHCHGAMT").toString();
+            aryExRefund[28] = sJsonIn.get("RHCARDTYPE").toString();
+            aryExRefund[29] = sJsonIn.get("RHJNACCGEN").toString();
+            
+            
+            if(!sJsonIn.get("RHRFDDATE").toString().equals("")){
+                aryExRefund[16] = "'"+dateFormat.format(inputFormat.parse(sJsonIn.get("RHRFDDATE").toString()))+"'";
+            }
+            
+            if(!sJsonIn.get("RHSHIFTCLOSEDAT").toString().equals("")){
+                aryExRefund[22] = "'"+dateFormat.format(inputFormat.parse(sJsonIn.get("RHSHIFTCLOSEDAT").toString()))+"'";
+            }
+  
+            obj = objRefund.DAL_ADDEDIT_REFUND(SiteName, aryExRefund);
+        }else{
+            aryExRefund[0] = "ADD_REFUNDDETAILS";
+            aryExRefund[30] = sJsonIn.get("RDIDX").toString();
+            aryExRefund[3] = sJsonIn.get("RDHDRIDX").toString();  
+            aryExRefund[31] = sJsonIn.get("RDNO").toString();
+            aryExRefund[32] = sJsonIn.get("RDTYPE").toString();
+            aryExRefund[33] = sJsonIn.get("RDREFNO").toString();
+            aryExRefund[34] = sJsonIn.get("RDREFIDX").toString();
+            aryExRefund[35] = sJsonIn.get("RDRFDAMT").toString();
+            aryExRefund[36] = sJsonIn.get("RDSTATUS").toString();
+            aryExRefund[37] = sJsonIn.get("RDISCANCEL").toString();
+            
+            if(!sJsonIn.get("RDRFDDATE").toString().equals("")){
+                aryExRefund[16] = "'"+dateFormat.format(inputFormat.parse(sJsonIn.get("RDRFDDATE").toString()))+"'";
+            }
+            
+            obj = objRefund.DAL_ADDEDIT_REFUND(SiteName, aryExRefund);
+        }
+        
+        try{
+            if (obj.getObjectArray(0).toString().equals("00000")) {
+                obj.commit();
+                s_return = obj.getObjectArray(1).toString();
+            } else {
+                s_return = "";
+                obj.rollback();
+            }
+        }catch(Exception ex){
+            s_return = "";
+        }
+        
+        return s_return;
+    }    
+}

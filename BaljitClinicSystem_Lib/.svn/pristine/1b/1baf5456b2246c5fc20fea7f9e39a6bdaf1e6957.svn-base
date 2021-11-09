@@ -1,0 +1,39 @@
+CREATE DEFINER=`root`@`localhost` PROCEDURE `SP_GET_SITE`(
+IN sMethod         varchar(30),
+IN sSiteName        varchar(20)
+)
+BEGIN
+
+
+
+
+
+
+
+
+
+DECLARE _statement VARCHAR(8000);
+
+
+IF sMethod = 'GET_SITE_LIST' THEN
+
+                SET _statement = ' SELECT site.SiteName, site.HostAddress, site.DatabaseName,
+                                site.DBUser, site.DBPassword
+                                   FROM site_databaseinfo site';
+
+                IF (sSiteName <> '') THEN
+                        SET _statement = CONCAT(_statement, ' where site.SiteName = ',"'",sSiteName ,"'", ' ');
+                END IF;
+
+
+
+END IF;
+
+
+SET @statement = _statement;
+PREPARE dynquery FROM @statement;
+EXECUTE dynquery;
+DEALLOCATE PREPARE dynquery;
+
+
+END

@@ -1,0 +1,77 @@
+CREATE DEFINER=`root`@`localhost` PROCEDURE `SP_TRX_STOCK_REORDER`(
+IN sMethod         varchar(30),
+IN sStockCode      varchar(16),
+IN sUOMCode        varchar(6),
+IN sCompanyCode    varchar(10),
+IN sLocationCode   varchar(10),
+IN sReorderLvl     varchar(10),
+IN sReorderQty     varchar(10),
+IN sBy             varchar(20),
+IN sRecStatus      varchar(4),
+OUT Result         varchar(30)
+)
+BEGIN
+
+
+
+
+
+
+       IF sMethod = 'ADD_STOCK_REORDER' THEN
+
+             IF NOT EXISTS(SELECT rord_stockcode FROM stkm_stockreorderlevel
+
+                            WHERE rord_stockcode = sStockCode AND rord_companycode = sCompanyCode AND rord_locationcode = sLocationCode and rord_uomcode = sUOMCode) THEN
+
+
+                    INSERT INTO stkm_stockreorderlevel (rord_stockcode, rord_uomcode, rord_companycode, rord_locationcode,
+
+                                            rord_reorderlevel, rord_reorderqty, createdby, createddt, recstatus)
+
+                    VALUES (sStockCode, sUOMCode, sCompanyCode, sLocationCode,
+
+                        sReorderLvl, sReorderQty, sBy, NOW(), sRecStatus);
+
+                    SELECT '00000' INTO Result;
+
+             ELSE
+
+                     SELECT 'DUPLICATE_ENTRY' INTO Result;
+
+             END IF;
+
+     END IF;
+                                    
+
+      IF sMethod = 'UPDATE_STOCK_REORDER' THEN
+
+                  UPDATE stkm_stockreorderlevel
+                  SET
+                   rord_reorderlevel = sReorderLvl,
+                   rord_reorderqty = sReorderQty,
+                   modifiedby = sBy,
+                   modifieddt = NOW()
+                   WHERE  rord_stockcode = sStockCode and rord_uomcode = sUOMCode and rord_companycode = sCompanyCode and rord_locationcode = sLocationCode;
+
+                  SELECT '00000' INTO Result;
+
+      END IF;
+
+
+       IF sMethod = 'DEL_STOCK_REORDER' THEN
+
+                  DELETE From stkm_stockreorderlevel
+                  WHERE rord_stockcode = sStockCode and rord_uomcode = sUOMCode and rord_companycode = sCompanyCode and rord_locationcode = sLocationCode;
+
+                  SELECT '00000' INTO Result;
+
+      END IF;
+
+
+      IF sMethod = 'NO' THEN
+
+           SELECT '00000' INTO Result;
+
+      END IF;
+
+END

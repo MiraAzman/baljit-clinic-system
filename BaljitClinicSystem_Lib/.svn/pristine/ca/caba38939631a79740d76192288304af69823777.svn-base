@@ -1,0 +1,86 @@
+CREATE DEFINER=`root`@`localhost` PROCEDURE `SP_GET_STKUOM`(
+IN sMethod        varchar(30),
+IN sUOMCode       varchar(20),
+IN sUOMDesc       varchar(100),
+IN sOrderBy       varchar(30),
+IN sPage          varchar(10),
+IN sPerPage       varchar(10)
+)
+BEGIN
+
+
+DECLARE _statement VARCHAR(8000);
+DECLARE isString VARCHAR(1);
+  
+SET isString = 'Y';
+
+IF sMethod = 'GET_STKUOM_LIST' THEN
+   SET _statement = 'SELECT * FROM stkm_stockuom
+                     WHERE uom_uomcode IS NOT NULL ';
+
+   IF (sUOMCode <> '') THEN
+      SET _statement = CONCAT(_statement, ' AND (uom_uomcode LIKE ',"'%",sUOMCode ,"%'", ' ');
+   END IF;
+
+   IF (sUOMDesc <> '') THEN
+      SET _statement = CONCAT(_statement, ' OR uom_uomdesc LIKE ',"'%",sUOMDesc ,"%'", ') ');
+   END IF;
+
+   
+
+   IF (sOrderBy <> '') THEN
+      SET _statement = CONCAT(_statement, ' ORDER BY ', sOrderBy);
+   ELSE
+      SET _statement = CONCAT(_statement, 'ORDER BY uom_uomcode ');
+   END IF;
+
+   SET _statement = CONCAT(_statement, ' LIMIT ', (sPage-1)*sPerPage, ",", sPerPage);
+
+END IF;
+
+IF sMethod = 'COUNT_STKUOM_LIST' THEN
+
+   SET _statement = ' SELECT Count(uom_uomcode) as Total
+                      FROM stkm_stockuom
+                      WHERE uom_uomcode IS NOT NULL ';
+
+   IF (sUOMCode <> '') THEN
+      SET _statement = CONCAT(_statement, ' AND uom_uomcode LIKE ',"'%",sUOMCode ,"%'", ' ');
+   END IF;
+
+   IF (sUOMDesc <> '') THEN
+      SET _statement = CONCAT(_statement, ' AND uom_uomdesc LIKE ',"'%",sUOMDesc ,"%'", ' ');
+   END IF;
+
+  
+
+END IF;
+
+IF sMethod = 'STKUOM_DETAIL' THEN
+   SET _statement = ' SELECT SM.*
+                      
+                      FROM stkm_stockuom SM
+                      
+                      WHERE ';
+
+   SET _statement = CONCAT(_statement, 'uom_uomcode = ', "'", sUOMCode, "'", ' ');
+END IF;
+
+IF sMethod = 'GET_DATAEX' THEN
+  SET isString = 'N';
+  SELECT * FROM stkm_stockuom WHERE uom_uomcode = sUOMCode;
+        
+        /* SELECT IFNULL(wsc_url,'') AS wsc_url FROM wsm_config WHERE wsc_url is not null AND wsc_url <> ''; */
+  SELECT IFNULL(wsc_url,'') AS wsc_url, IFNULL(wsc_companycode,'') AS wsc_companycode
+     , IFNULL(wsc_locationcode,'') AS wsc_locationcode
+     FROM wsm_config; /* WHERE wsc_url is not null AND wsc_url <> ''; */
+END IF;
+
+IF isString = 'Y' THEN
+ SET @statement = _statement;
+ PREPARE dynquery FROM @statement;
+ EXECUTE dynquery;
+ DEALLOCATE PREPARE dynquery;
+END IF;
+
+END

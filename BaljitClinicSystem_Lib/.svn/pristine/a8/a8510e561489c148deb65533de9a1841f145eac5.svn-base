@@ -1,0 +1,179 @@
+CREATE DEFINER=`root`@`localhost` PROCEDURE `SP_GET_STOCK_TRANSFER`(
+IN sMethod varchar(50),
+IN sStkCode VARCHAR(200),
+IN sStkDesc VARCHAR(100), 
+IN sCompCode VARCHAR(200),
+IN sConvertToUOM varchar(10),
+IN sLocation varchar(200),
+IN sStkGroup varchar(200),
+IN sStkType varchar(200),
+IN sStkConsumable varchar(20),
+
+IN sDateFrom varchar(20),
+IN sDateTo varchar(20),
+
+IN sOrderBy varchar(30),
+IN sPage varchar(10),
+IN sPerPage varchar(10)
+
+)
+BEGIN
+
+
+
+         DECLARE _statement VARCHAR(8000);
+
+         SET _statement = "";
+
+          IF sMethod = 'COUNT_UNDISPATCHED_STOCK' THEN
+
+                   SET _statement = 'SELECT  COUNT(stkt_stocktransferdetail.xfrd_stockcode) AS Total
+                FROM stkt_stocktransferdetail
+                left join stkt_stocktransferheader on stkt_stocktransferheader.xfrh_stockxfrhdridx = stkt_stocktransferdetail.xfrd_stockxfrhdridx
+                left join stkt_costqty on stkt_costqty.scq_xfrdtlidx = stkt_stocktransferdetail.xfrd_stockxfrdtlidx
+                left join stkm_stockmaster on stkm_stockmaster.stk_stockCode = stkt_stocktransferdetail.xfrd_stockcode
+                where (xfrd_qty - xfrd_dispatchedqty) > 0 ';
+                
+            IF (sCompCode <> '') THEN
+                    SET _statement = CONCAT(_statement, ' and stkt_stocktransferheader.xfrh_company in (', sCompCode, ')');
+            END IF;
+
+            IF (sLocation <> '') THEN
+                    SET _statement = CONCAT(_statement, ' and stkt_stocktransferdetail.xfrd_recievelocation in (', sLocation, ')');
+            END IF;
+
+            IF (sStkCode <> '') THEN
+                    SET _statement = CONCAT(_statement, ' and stkt_stocktransferdetail.xfrd_stockcode in (', sStkCode, ')');
+            END IF;
+
+IF (sStkDesc <> '') THEN 
+	SET _statement = CONCAT(_statement, ' and stkm_stockmaster.stk_desc like ''%', sStkDesc, '%''');
+END IF;
+
+            IF (sStkGroup <> '') THEN
+                    SET _statement = CONCAT(_statement, ' and stkm_stockmaster.stk_groupcode in (', sStkGroup, ')');
+            END IF;
+
+            IF (sStkType <> '') THEN
+                    SET _statement = CONCAT(_statement, ' and stkm_stockmaster.stk_typecode in (', sStkType, ')');
+            END IF;
+
+            IF (sStkConsumable <> '') THEN
+                    SET _statement = CONCAT(_statement, ' and stkm_stockmaster.stk_consumable in (', sStkConsumable, ')');
+            END IF;
+
+           IF (sDateFrom <> '' and sDateTo <> '') THEN
+               SET _statement = CONCAT(_statement, ' and (stkt_stocktransferheader.xfrh_docdate between ', "'", sDateFrom, "'", ' and ', "'", sDateTo, "'", ')');
+            END IF;
+
+
+
+         END IF;
+
+         IF sMethod = 'GET_UNDISPATCHED_STOCK' THEN
+
+
+            SET _statement = 'SELECT distinct stkt_stocktransferdetail.xfrd_stockcode AS StockCode,
+                stkm_stockmaster.stk_desc AS StockDesc,stkm_stockmaster.stk_TypeCode AS StockType,
+                stkm_stockmaster.stk_GroupCode AS StockGroup,
+                CASE
+                           WHEN stkm_stockmaster.stk_consumable="0" THEN "Drug"
+		           WHEN stkm_stockmaster.stk_consumable="1" THEN "product"
+                           WHEN stkm_stockmaster.stk_consumable="2" THEN "consumable"
+                    END AS StockConsumable,
+                xfrh_company AS Company, xfrh_docdate AS DocDate,
+                stkt_stocktransferdetail.xfrd_uomcode AS UOM,
+                stkt_stocktransferdetail.xfrd_issuelocation AS IssueLocation,
+                stkt_stocktransferdetail.xfrd_recievelocation AS RecieveLocation,
+                stkt_stocktransferdetail.xfrd_qty AS TransferQty,
+                stkt_stocktransferdetail.xfrd_dispatchedqty AS DispatchedQty,
+                TRUNCATE(xfrd_qty - xfrd_dispatchedqty,2) AS UndispatchedQty,
+                stkt_stocktransferdetail.* FROM stkt_stocktransferdetail
+                left join stkt_stocktransferheader on stkt_stocktransferheader.xfrh_stockxfrhdridx = stkt_stocktransferdetail.xfrd_stockxfrhdridx
+                left join stkt_costqty on stkt_costqty.scq_xfrdtlidx = stkt_stocktransferdetail.xfrd_stockxfrdtlidx
+                left join stkm_stockmaster on stkm_stockmaster.stk_stockCode = stkt_stocktransferdetail.xfrd_stockcode
+                where (xfrd_qty - xfrd_dispatchedqty) > 0   ';
+                
+            IF (sCompCode <> '') THEN
+                    SET _statement = CONCAT(_statement, ' and stkt_stocktransferheader.xfrh_company in (', sCompCode, ')');
+            END IF;
+
+            IF (sLocation <> '') THEN
+                    SET _statement = CONCAT(_statement, ' and stkt_stocktransferdetail.xfrd_recievelocation in (', sLocation, ')');
+            END IF;
+
+            IF (sStkCode <> '') THEN
+                    SET _statement = CONCAT(_statement, ' and stkt_stocktransferdetail.xfrd_stockcode in (', sStkCode, ')');
+            END IF;
+
+IF (sStkDesc <> '') THEN 
+	SET _statement = CONCAT(_statement, ' and stkm_stockmaster.stk_desc like ''%', sStkDesc, '%''');
+END IF;
+   
+            IF (sStkGroup <> '') THEN
+                    SET _statement = CONCAT(_statement, ' and stkm_stockmaster.stk_groupcode in (', sStkGroup, ')');
+            END IF;
+
+            IF (sStkType <> '') THEN
+                    SET _statement = CONCAT(_statement, ' and stkm_stockmaster.stk_typecode in (', sStkType, ')');
+            END IF;
+
+            IF (sStkConsumable <> '') THEN
+                    SET _statement = CONCAT(_statement, ' and stkm_stockmaster.stk_consumable in (', sStkConsumable, ')');
+            END IF;
+
+            IF (sDateFrom <> '' and sDateTo <> '') THEN
+               SET _statement = CONCAT(_statement, ' and (stkt_stocktransferheader.xfrh_docdate between ', "'", sDateFrom, "'", ' and ', "'", sDateTo, "'", ')');
+            END IF;
+
+            IF sOrderBy <> ''  THEN
+                    SET _statement = CONCAT(_statement, ' ORDER BY  ',  sOrderBy);
+            ELSE
+                    SET _statement = CONCAT(_statement, ' ORDER BY stkt_stocktransferdetail.xfrd_stockcode ');
+            END IF;
+
+
+
+            SET _statement = CONCAT(_statement, ' LIMIT ',  (sPage - 1) * sPerPage, ",", sPerPage );
+
+
+
+         END IF;
+
+
+         IF sMethod = 'GET_AUTO_ALLOCATION' THEN
+            
+
+            SET _statement = CONCAT(_statement, ' Select stkt_stockrequestheader.rqhdr_companycode AS COMPANY,
+                stkt_stockrequestheader.rqhdr_locationcode AS LOCATION, stkt_stockrequestdetail.rqdtl_stockcode AS STOCKCODE,');
+
+            
+            SET _statement = CONCAT(_statement, "'", sConvertToUOM, "'", ' AS UOM ,');
+
+SET _statement = CONCAT(_statement, ' SUM(', 'F_CONVERT_UOM(stkt_stockrequestdetail.rqdtl_approvedqty,', "'", sConvertToUOM, "'",',stkt_stockrequestdetail.rqdtl_uomcode,stkt_stockrequestdetail.rqdtl_stockcode)');
+SET _statement = CONCAT(_statement, '- F_CONVERT_UOM(stkt_stockrequestdetail.rqdtl_fulfilledqty,', "'", sConvertToUOM, "'",',stkt_stockrequestdetail.rqdtl_uomcode,stkt_stockrequestdetail.rqdtl_stockcode)) AS REQUEST_QTY');
+
+SET _statement = CONCAT(_statement, ' FROM stkt_stockrequestdetail
+                right join stkt_stockrequestheader on stkt_stockrequestheader.rqhdr_requestidx = stkt_stockrequestdetail.rqdtl_requestidx
+                where stkt_stockrequestheader.rqhdr_statuscode in ("A","P") ');
+
+            IF sStkCode <> '' THEN
+                        SET _statement = CONCAT(_statement, ' and stkt_stockrequestdetail.rqdtl_stockcode = ', "'", sStkCode, "'");
+            END IF;
+
+            IF sCompCode <> '' THEN
+                        SET _statement = CONCAT(_statement, ' and rqhdr_companycode = ', "'", sCompCode, "'");
+            END IF;
+
+
+            SET _statement = CONCAT(_statement, ' group by stkt_stockrequestheader.rqhdr_companycode, stkt_stockrequestheader.rqhdr_locationcode,
+                stkt_stockrequestdetail.rqdtl_stockcode,stkt_stockrequestdetail.rqdtl_uomcode;');
+
+            END IF;
+
+
+SET @statement = _statement;
+PREPARE dynquery FROM @statement;
+EXECUTE dynquery;
+DEALLOCATE PREPARE dynquery;
+END

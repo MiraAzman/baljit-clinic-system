@@ -1,0 +1,64 @@
+CREATE DEFINER=`root`@`localhost` PROCEDURE `SP_GET_COMPANY_STOCK_BAL`(IN sMethod varchar(30),
+  IN sStkCode varchar(30),
+  IN sBaseUOM varchar(10),
+  IN sOrderBy varchar(30),
+                IN sPage varchar(10),
+IN sPerPage varchar(10)
+)
+BEGIN
+
+ 
+
+
+
+
+  DECLARE _statement VARCHAR(8000);
+  
+  
+
+
+IF sMethod = 'GET_COMP_LIST' THEN
+
+   SET _statement = concat('select ', 'cast(', "'", sBaseUOM, "'", ' as char(6)) AS BaseUOM , cast(', "'", sStkCode, "'", ' as char(16)) AS stk_stockcode, stkm_company.comp_code AS comp_code, stkm_company.comp_name AS comp_name FROM stkm_company;');
+
+
+
+
+END IF;
+
+IF sMethod = 'COUNT_COMP_LIST' THEN
+
+   SET _statement = ' SELECT Count(comp_code) as Total FROM stkm_company
+                      WHERE comp_code IS NOT NULL ';
+END IF;
+
+IF sMethod = 'GET_COMP_LIST_WITH_PENDINGXFR' THEN
+
+   SET _statement = concat('select ', 'cast(', "'", sBaseUOM, "'", ' as char(6)) AS BaseUOM , cast(', "'", sStkCode, "'", ' as char(16)) AS stk_stockcode, stkm_company.comp_code AS comp_code, stkm_company.comp_name AS comp_name ');
+
+   SET _statement = CONCAT(_statement, ' , CASE 
+								WHEN SUM(stkt_stockrequestdetail.rqdtl_approvedqty - stkt_stockrequestdetail.rqdtl_fulfilledqty) IS NOT NULL THEN ''YES'' 
+                                WHEN SUM(stkt_stockrequestdetail.rqdtl_approvedqty - stkt_stockrequestdetail.rqdtl_fulfilledqty) IS NULL THEN ''NO''
+                                END AS request ');
+   SET _statement = CONCAT(_statement, ' FROM stkm_company
+left join stkt_stockrequestheader on stkt_stockrequestheader.rqhdr_companycode = stkm_company.comp_code
+and stkt_stockrequestheader.rqhdr_statuscode in ("A","P")
+left join stkt_stockrequestdetail on stkt_stockrequestdetail.rqdtl_requestidx = stkt_stockrequestheader.RQHDR_REquestIdx ');
+
+   SET _statement = CONCAT(_statement, ' and stkt_stockrequestdetail.rqdtl_stockcode = ''', sStkCode, '''');
+
+   SET _statement = CONCAT(_statement, ' and stkt_stockrequestdetail.rqdtl_approvedqty - stkt_stockrequestdetail.rqdtl_fulfilledqty > 0
+   group by stk_stockcode, stkm_company.comp_code, stkm_company.comp_name ; ');
+
+
+
+
+END IF;
+
+SET @statement = _statement;
+PREPARE dynquery FROM @statement;
+EXECUTE dynquery;
+DEALLOCATE PREPARE dynquery;
+
+
+END

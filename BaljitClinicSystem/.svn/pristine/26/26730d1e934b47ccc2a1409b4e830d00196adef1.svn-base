@@ -1,0 +1,590 @@
+<!-- 
+    by amira, date 8/1/2016
+    Modification ID         By          Date            Comment
+----------------------------------------------------------------------------------
+    yesno01                 Aaron       07Dec2018       add yes-no.jsp to code
+    c01                     Aaron       07Dec2018       add confirmation box and loading status when creating a new company
+    c02                     Aaron       13Dec2018       add addNew function to be called by Add function for btnSave
+    font01                  Aaron       20Dec2018       change font style and color
+    len01                   Aaron       20Dec2018       set maximum length for a text box
+    re01                    Aaron       02Jan2019       comment out pageSetUp function to let the error container works    
+-->
+<%@taglib prefix="jstl" uri="http://java.sun.com/jsp/jstl/core" %>
+<jsp:useBean id="DDL" scope="page" class="BusinessLogic.Servlet_PopulateData" />
+<style type="text/css">
+    .ui-jqgrid tr.jqgrow td {
+        word-wrap: break-word; /* IE 5.5+ CSS3 see http://www.w3.org/TR/css3-text/#text-wrap */
+        white-space: pre-wrap; /* CSS3 */
+        white-space: -moz-pre-wrap; /* Mozilla, since 1999 */
+        white-space: -pre-wrap; /* Opera 4-6 */
+        white-space: -o-pre-wrap; /* Opera 7 */
+        overflow: hidden;
+        height: auto;
+        vertical-align: middle;
+        padding-top: 3px;
+        padding-bottom: 3px 
+    }
+    .centered {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        margin-top: -50px;
+        margin-left: -200px;
+    }
+    div.errorContainer, div.errorContainer2{
+        display:none;
+        width:100%;
+    }
+    div.errorContainer, div.errorContainer2 ol li{
+        list-style-type:disc;
+        margin-left: 20px;
+    }
+    li{
+        list-style:none;
+    }
+    .disabledTab{
+        pointer-events: none;
+    }
+    input[type="text"].error { border: 1px solid #A94444; background-color:#FFF0F0; }
+    textarea.error { border: 1px solid #A94444; background-color:#FFF0F0; }
+</style>
+<link rel="stylesheet" type="text/css" href="css/your_style.css" />
+<link rel="stylesheet" type="text/css" href="js/plugin/jqgrid/ui.multiselect.css" />
+<section id="widget-grid" class="">
+    <!--<span>{{params}}</span>-->
+    <input type="hidden" value={{params}} id="hidHospCode">
+
+    <div class="col-xs-12 col-sm-7 col-md-7 col-lg-12">
+        <h1 class="page-title txt-color-blueDark">
+            <!-- PAGE HEADER -->
+            <i class="fa-fw fa fa-file fa-2x"></i> 
+            Company Setup                                         
+        </h1>
+    </div>
+    <div class="widget-body row">
+        <article class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+            
+            <!--ERROR MESSAGE-->
+            <div class="row" style="padding-bottom:10px;padding-left:10px;padding-right:10px;">
+                <div class="errorContainer alert alert-danger alert-block">
+                    <h4 class="alert-heading">There were some field left out or invalid inputs. Please brief through the form and reenter necessarily.</h4>
+                    <ol id="error_list">
+                    </ol>
+                </div>
+            </div>
+            <!--END OF ERROR MESSAGE-->
+            
+            <div class="row">
+                <form id="form_AddComp" name="form_AddComp" method="post">
+                    <article class="col-sm-12 col-md-12 col-lg-12">
+                        <div class="jarviswidget jarviswidget-color-blueDark" id="wid-id-1"  data-widget-editbutton="false" data-widget-custombutton="false"
+                             data-widget-deletebutton="false" data-widget-colorbutton="false" data-widget-fullscreenbutton="false" data-widget-togglebutton="false">
+                            <header>
+                                <span class="widget-icon"> <i class="fa fa-file"></i></span>
+                                <span><h2>&nbsp;Information</h2></span>
+                            </header>
+                            <div class="row">
+                                <div class="widget-body">
+
+                                    <table id="tbCompInfo" class="table table-bordered table-striped" style="clear:both;">
+                                        <tbody>
+                                            <tr>
+                                                <td width="12%"><font color="red">*</font> <b>Code</b></td> <!--font01-->
+                                                <td width="1%">:</td>
+                                                <td width="30%"> 
+                                                    <input type="text" id="txtCode" name="txtCode"  required class="form-control" rel="popover-hover" data-original-title="Company Code" data-content="A Company Code is a unique mixture of alphanumerical code with a maximum length of 10 characters." maxlength="10"/>  <!--len01-->  
+                                                </td>
+                                                <td width="12%">Contact Person</td>
+                                                <td width="1%">:</td>
+                                                <td width="70%">       
+                                                    <input type="text" id="txtContactPerson" name="txtContactPerson"  class="form-control" maxlength="100"/>  <!--len01-->  
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td><font color="red">*</font> <b>Name</b></td> <!--font01-->
+                                                <td>:</td>
+                                                <td> 
+                                                    <input type="text" id="txtName" name="txtName" class="form-control" maxlength="100"/> <!--len01-->   
+                                                </td>
+                                                <td>Active ?</td>
+                                                <td>:</td>
+                                                <td> 
+                                                    <input type="checkbox" id="chkIsActive" name="chkIsActive" value="N" /> 
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>Address 1</td>
+                                                <td>:</td>
+                                                <td> 
+                                                    <input type="text" id="txtAdd1" name="txtAdd1"  class="form-control" maxlength="50"/> <!--len01-->    
+                                                </td>
+                                                <td>Business Registration No.</td>
+                                                <td>:</td>
+                                                <td>       
+                                                    <input type="text" id="txtBusRegNo" name="txtBusRegNo"  class="form-control" maxlength="20"/> <!--len01-->    
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>Address 2</td>
+                                                <td>:</td>
+                                                <td> 
+                                                    <input type="text" id="txtAdd2" name="txtAdd2"  class="form-control" maxlength="50"/> <!--len01-->    
+                                                </td>
+                                                <td>Account Group</td>
+                                                <td>:</td>
+                                                <td>       
+                                                    <input type="text" id="txtAccGroup" name="txtAccGroup"  class="form-control" maxlength="20"/> <!--len01-->    
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>Address 3</td>
+                                                <td>:</td>
+                                                <td> 
+                                                    <input type="text" id="txtAdd3" name="txtAdd3"  class="form-control" maxlength="50"/> <!--len01-->    
+                                                </td>
+                                                <td>Business Type **</td>
+                                                <td>:</td>
+                                                <td>       
+                                                    <input type="hidden" id="" name=""  class="form-control"/>    
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>Postcode</td>
+                                                <td>:</td>
+                                                <td> 
+                                                    <input type="text" id="txtPostcode" name="txtPostcode"  class="form-control" maxlength="10"/> <!--len01-->    
+                                                </td>
+                                                <td>Agent</td>
+                                                <td>:</td>
+                                                <td>       
+                                                    <input type="text" id="txtAgent" name="txtAgent"  class="form-control" maxlength="20"/> <!--len01-->    
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>Area</td>
+                                                <td>:</td>
+                                                <td> 
+                                                    <label id="selectArea" class="searchbox">
+                                                        <select class="form-control" id="ddlArea" name="ddlArea" rel="popover-hover" data-original-title="Area" data-content="Select Area." style="width:350px;">
+                                                            <option value="">- Select Area -</option>                                           
+                                                        </select>    
+                                                    </label>   
+                                                </td>
+                                                <td>Credit Term</td>
+                                                <td>:</td>
+                                                <td>       
+                                                    <input type="text" id="txtCreditTerm" name="txtCreditTerm"  value="0" class="form-control" maxlength="20"/> <!--len01-->    
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>State</td>
+                                                <td>:</td>
+                                                <td> 
+                                                    <!--<input type="text" id="txtState" name="txtState" class="form-control"/>-->    
+                                                     <label id="selectState" class="searchbox">
+                                                        <select class="form-control" id="ddlState" name="ddlState" rel="popover-hover" data-original-title="State" data-content="Select State." style="width:350px;">
+                                                            <option value="">- Select State -</option>                                         
+                                                        </select>    
+                                                    </label>   
+                                                </td>
+                                                <td>Credit Limit</td>
+                                                <td>:</td>
+                                                <td>       
+                                                    <input type="text" id="txtCreditLimit" name="txtCreditLimit" value="0" class="form-control" maxlength="20"/> <!--len01-->    
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>Country</td>
+                                                <td>:</td>
+                                                <td> 
+                                                    <label id="selectCountry" class="searchbox">
+                                                        <select class="form-control" id="ddlCountry" name="ddlCountry" rel="popover-hover" data-original-title="Country" data-content="Select Country." style="width:350px;">
+                                                            <option value="">- Select Country -</option>                                        
+                                                        </select>    
+                                                    </label>      
+                                                </td>
+                                                <td>Aging On</td>
+                                                <td>:</td>
+                                                <td>       
+                                                    <input type="text" id="txtAgingOn" name="txtAgingOn"  class="form-control" maxlength="1"/> <!--len01-->    
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>Telephone No.</td>
+                                                <td>:</td>
+                                                <td> 
+                                                    <input type="text" id="txtPhoneNo" name="txtPhoneNo"  class="form-control" maxlength="20"/> <!--len01-->    
+                                                </td>
+                                                <td>Currency Code</td>
+                                                <td>:</td>
+                                                <td>       
+                                                    <input type="text" id="txtCurrCode" name="txtCurrCode"  class="form-control" maxlength="6"/> <!--len01-->    
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>Fax No.</td>
+                                                <td>:</td>
+                                                <td> 
+                                                    <input type="text" id="txtFaxNo" name="txtFaxNo"  class="form-control" maxlength="20"/> <!--len01-->    
+                                                </td>
+                                                <td>GST ?</td>
+                                                <td>:</td>
+                                                <td>     
+                                                    <input type="checkbox" id="chkIsGST" name="chkIsGST" value="N"/>   
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>Remarks</td>
+                                                <td>:</td>
+                                                <td> 
+                                                    <textarea id="txtRemarks" name="txtRemarks"  class="form-control" rows="3" cols="50" maxlength="100"></textarea>  <!--len01-->   
+                                                </td>
+                                                <td>Record Status</td>
+                                                <td>:</td>
+                                                <td> 
+                                                    <input type="checkbox" id="chkrecstatus" name="chkrecstatus" value="0"/>  
+                                                </td>
+                                            </tr>
+                                        </tbody>                                       
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </article>
+                    
+                    <article class="col-sm-12 col-md-12 col-lg-12">
+                        <div class="jarviswidget jarviswidget-color-blueDark" id="wid-id-GST"  data-widget-editbutton="false" data-widget-custombutton="false"
+                             data-widget-deletebutton="false" data-widget-colorbutton="false" data-widget-fullscreenbutton="false" data-widget-togglebutton="false">
+                            <header>
+                                <span class="widget-icon"> <i class="fa fa-file"></i></span>
+                                <span><h2>&nbsp;GST Info</h2></span>
+                            </header>
+                            <div class="row">
+                                <div class="widget-body">
+                                    <table id="tbGSTInfo" class="table table-bordered table-striped" style="clear:both;">
+                                        <tbody>
+                                            <tr>
+                                                <td width="18%">GST Code (Purchase)</td>
+                                                <td width="1%">:</td>
+                                                <td> 
+                                                    <label id="selectGSTCodePurchase" class="searchbox">
+                                                        <select class="form-control" id="ddlGSTCodePurchase" name="ddlGSTCodePurchase" rel="popover-hover" data-original-title="GST Code (Purchase)" data-content="Select GST Code." style="width:300px;">
+                                                            <option value="">- Select GST Code -</option>                                        
+                                                        </select>    
+                                                    </label>   
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td width="18%">GST Code (Supply)</td>
+                                                <td width="1%">:</td>
+                                                <td> 
+                                                    <label id="selectGSTCodeSupply" class="searchbox">
+                                                        <select class="form-control" id="ddlGSTCodeSupply" name="ddlGSTCodeSupply" rel="popover-hover" data-original-title="GST Code (Supply)" data-content="Select GST Code." style="width:300px;">
+                                                            <option value="">- Select GST Code -</option>                                         
+                                                        </select>    
+                                                    </label>   
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>GST Registration No.</td>
+                                                <td>:</td>
+                                                <td> 
+                                                    <input type="text" id="txtGSTRegNo" name="txtGSTRegNo"  class="form-control"/>    
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>GST Inclusive</td>
+                                                <td>:</td>
+                                                <td> 
+                                                    <input type="checkbox" id="chkGSTInclusive" name="chkGSTInclusive" value=""/>   
+                                                </td>
+                                            </tr>
+                                        </tbody>                                       
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </article>
+                    
+                </form>
+            </div>
+        </article>
+                                                
+        <div>
+            <div class="row">
+                <div class="col-sm-12">
+                    <div align="center" class="padding-5" >
+                        <input type="button" Id="btnSave"  class="btn btn-default bg-color-blueDark txt-color-white" value="Save" onclick= "Add();"/>
+                        <input type="button" Id="btnCancel"  class="btn btn-default bg-color-blueDark txt-color-white"  value="Cancel" onclick="location.href = '#/CompanyList'" />
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<jsp:include page="../../includes/loading-no-status.jsp"/>
+<!-- add yes-no.jsp --> <!-- yesno01 --> <!-- Aaron -->
+<jsp:include page="../../../includes/yes-no.jsp"/>
+<script type="text/javascript">
+    //re01
+    //pageSetUp();
+    
+    getDLL("ddlArea", "GET_CODEDESC", "AREA", "");
+    getDLL("ddlState", "GET_CODEDESC", "STATE", "");
+    getDLL("ddlCountry", "GET_CODEDESC", "COU", "");
+    getDLL("ddlGSTCodePurchase", "GET_ACTIVEGSTCODE", "PURCHASE", "");
+    getDLL("ddlGSTCodeSupply", "GET_ACTIVEGSTCODE", "SUPPLY", "");
+
+    function getDLL (ddl, method, param1, param2) {
+        $.get('${pageContext.request.contextPath}/Servlet_PopulateData', {SFC: 'GET_DLL', METHOD: method, P1: param1, P2: param2}, function (data) {
+            for(var i=0; i < data.length; i++){                                                          
+                $("#"+ddl).append($("<option>").val(data[i].VALUE).html(data[i].TEXT));
+            }     
+        });     
+    }    
+   
+    var pagefunction = function() {
+        
+        $().ready(function () {
+            $(".numeric").numeric();   //re01
+            $("#wid-id-GST").hide();  
+            
+            var container = $('div.errorContainer');
+            var validator = $("#form_AddComp").validate({
+                rules: {
+                    txtCode: "required",
+                    txtName: "required"
+                },
+                messages: {
+                    txtCode: "Code cannot be blank.",
+                    txtName: "Name cannot be blank."
+                },
+                //onfocusout: false,
+                //onkeyup: false,
+                errorContainer: container,
+                errorLabelContainer: $("ol", container),
+                wrapper: 'li'
+            });  //end of validate
+            
+            $("#chkIsGST").click(function(){
+                if ( $('#chkIsGST').is(":checked") ) {
+                    $('#chkIsGST').val('Y');
+                    
+                    if ( $('#chkGSTInclusive').is(":unchecked") )
+                        $('#chkGSTInclusive').val('N'); 
+            
+                    $("#wid-id-GST").show(1500);
+                } else {
+                    $('#chkIsGST').val('N');   
+                    $("#wid-id-GST").hide(1500);
+                    $('#ddlGSTCodePurchase').val('');  //reset GST data
+                    $('#ddlGSTCodeSupply').val('');
+                    $('#txtGSTRegNo').val('');
+                    $('#chkGSTInclusive').val('');
+                }
+            });
+            
+            $("#chkrecstatus").click(function(){
+                if ( $('#chkrecstatus').is(":checked") )
+                    $('#chkrecstatus').val('1'); 
+                else
+                    $('#chkrecstatus').val('0');            
+            });
+            
+            $("#chkIsActive").click(function(){
+                if ( $('#chkIsActive').is(":checked") )
+                    $('#chkIsActive').val('Y'); 
+                else
+                    $('#chkIsActive').val('N');            
+            });
+            
+            $("#chkGSTInclusive").click(function(){
+            if ( $('#chkGSTInclusive').is(":checked") )
+                $('#chkGSTInclusive').val('Y'); 
+            else
+                $('#chkGSTInclusive').val('N');            
+            });
+        }); //end of ready
+    }; //end of pagefunction
+    
+    loadScript("js/jquery.numeric.js", pagefunction);   //re01
+    
+    function Add(){
+ 
+        var $validItem = $("#form_AddComp").valid();
+
+        if ($validItem === true) {
+            //Aaron
+            //c01
+            //Add confirmation box and loading status when creating a new company
+            document.getElementById("btnSave").disabled = true;
+            showYesNo({
+                title: "Confirmation needed",
+                width: 420,
+                noClose: true,
+                isModal: true,
+                body: [
+                    "<br><h4>Are you sure to create this company?<h4><br>"
+                ],
+                show: function(){},
+                Yes: {
+                    text: "Yes",
+                    opt: function(){
+                        addNew(); //c02
+                        hideYesNo();
+                    }
+                },
+                No: {
+                    text: "No",
+                    opt: function(){
+                        document.getElementById("btnSave").disabled = false;
+                        hideYesNo();
+                    }
+                }
+            });
+            //c01
+            //Aaron
+//            var request = $.ajax({
+//                    type: "POST",
+//                    url: "${pageContext.request.contextPath}/Servlet_Stock?SFC=UPDATE_COMPANY",
+//                    data: { 
+//                        FUNCTION: 'ADD',
+//                        CODE: $('#txtCode').val(),
+//                        NAME: $('#txtName').val(),
+//                        ADD1: $('#txtAdd1').val(),
+//                        ADD2: $('#txtAdd2').val(),
+//                        ADD3: $('#txtAdd3').val(),
+//                        POSTCODE: $('#txtPostcode').val(),
+//                        AREA: $('#ddlArea').val(),
+//                        //STATE: $('#txtState').val(),
+//                        STATE: $('#ddlState').val(),
+//                        COUNTRY: $('#ddlCountry').val(),
+//                        TEL: $('#txtPhoneNo').val(),
+//                        FAX: $('#txtFaxNo').val(),
+//                        REMARKS: $('#txtRemarks').val(),
+//                        CONTACTPER: $('#txtContactPerson').val(),
+//                        ISACTIVE: $("#chkIsActive").val(), 
+//                        BUSREGNO: $('#txtBusRegNo').val(),
+//                        ACCGROUP: $('#txtAccGroup').val(),
+//                        //BUSTYPE: $('#txtCode').val(),
+//                        AGENT: $('#txtAgent').val(),
+//                        CREDITTERM: $('#txtCreditTerm').val(),
+//                        CREDITLIMIT: $('#txtCreditLimit').val(),
+//                        AGINGON: $('#txtAgingOn').val(),
+//                        CURRCODE: $('#txtCurrCode').val(),
+//                        ISGST: $("#chkIsGST").val(),
+//                        GSTCODEPURCHASE: $('#ddlGSTCodePurchase').val(),
+//                        GSTCODESUPPLY: $('#ddlGSTCodeSupply').val(),
+//                        GSTREGNO: $('#txtGSTRegNo').val(),
+//                        GSTINCLUSIVE: $('#chkGSTInclusive').val(),
+//                        recstatus: $("#chkrecstatus").val()  
+//                    },
+//                    dataType: 'json'
+//                    //success: function() {alert("add request SUCCESS");},
+//                    //error: function() {alert("add request FAILED");}
+//            });
+//                
+//            request.done(function (response) {
+//                $.showLoadingNoStatus();
+//                if (response.bool === true) {
+//                    $.hideLoadingNoStatus();
+//                    $.bigBoxSuccess({
+//                        title: "Create Item SUCCESS.",
+//                        content: "Item creation SUCCESS.",
+//                        timeout: 6000
+//                    });
+//                    location.href = "#/CompanyList"; 
+//                } else {
+//                    $.hideLoadingNoStatus();
+//                    $.bigBoxFail({
+//                        title: "Create Item FAIL.",
+//                        content: "There is some error during item creation.<br> Please try again...",
+//                        timeout: 6000
+//                    });
+//                }  
+//            });
+        } 
+ }//END OF FUNCTION ADD()
+    //c02
+    //Aaron
+    function addNew(){
+        $.ajax({
+                    type: "POST",
+                    url: "${pageContext.request.contextPath}/Servlet_Stock?SFC=UPDATE_COMPANY",
+                    data: { 
+                        FUNCTION: 'ADD',
+                        CODE: $('#txtCode').val(),
+                        NAME: $('#txtName').val(),
+                        ADD1: $('#txtAdd1').val(),
+                        ADD2: $('#txtAdd2').val(),
+                        ADD3: $('#txtAdd3').val(),
+                        POSTCODE: $('#txtPostcode').val(),
+                        AREA: $('#ddlArea').val(),
+                        //STATE: $('#txtState').val(),
+                        STATE: $('#ddlState').val(),
+                        COUNTRY: $('#ddlCountry').val(),
+                        TEL: $('#txtPhoneNo').val(),
+                        FAX: $('#txtFaxNo').val(),
+                        REMARKS: $('#txtRemarks').val(),
+                        CONTACTPER: $('#txtContactPerson').val(),
+                        ISACTIVE: $("#chkIsActive").val(), 
+                        BUSREGNO: $('#txtBusRegNo').val(),
+                        ACCGROUP: $('#txtAccGroup').val(),
+                        //BUSTYPE: $('#txtCode').val(),
+                        AGENT: $('#txtAgent').val(),
+                        CREDITTERM: $('#txtCreditTerm').val(),
+                        CREDITLIMIT: $('#txtCreditLimit').val(),
+                        AGINGON: $('#txtAgingOn').val(),
+                        CURRCODE: $('#txtCurrCode').val(),
+                        ISGST: $("#chkIsGST").val(),
+                        GSTCODEPURCHASE: $('#ddlGSTCodePurchase').val(),
+                        GSTCODESUPPLY: $('#ddlGSTCodeSupply').val(),
+                        GSTREGNO: $('#txtGSTRegNo').val(),
+                        GSTINCLUSIVE: $('#chkGSTInclusive').val(),
+                        recstatus: $("#chkrecstatus").val()  
+                    },
+            dataType: 'json',
+            beforeSend: function(xhr){
+                $.showLoadingNoStatus();
+            },
+            success: function(response,xhr,status){
+                if (response.bool === true) {
+                    $.bigBoxSuccess({
+                        title: "Company Setup SUCCESS.",
+                        content: "Company Setup successfully.",
+                        timeout: 6000
+                    });
+                }
+                else{
+                    $.bigBoxFail({
+                        title: "Company Setup FAIL.",
+                        content: "There is some error during company setup creation.<br> Please try again...",
+                        timeout: 6000
+                    });
+                }
+            },
+            error: function (xhr, status, error) {
+                    $.bigBoxFail({
+                    title: "Transaction ERROR",
+                    content: "There is some error occur during data transfer. Please try again later",
+                        timeout: 6000
+                    });
+            },
+            complete: function (xhr, status) {
+                if (xhr.status === 200) {
+                    $.hideLoadingNoStatus(function () {
+                       window.location.href = "#/CompanyList";
+                    }, 500);
+                } else {
+                    $.hideLoadingNoStatus(function () {
+                    }, 0);
+                }
+                }  
+            });
+        } 
+    //c02
+    
+    pagefunction();
+        
+</script>

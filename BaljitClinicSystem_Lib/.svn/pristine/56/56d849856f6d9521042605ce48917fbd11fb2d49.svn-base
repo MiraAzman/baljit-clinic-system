@@ -1,0 +1,25 @@
+package BusinessData;
+
+import BusinessData.BaseDAL;
+import BusinessLogic.BLL_Common;
+/**
+ *
+ * @author N0535
+ */
+public class DAL_GRN {
+   BaseDAL DAL = new BaseDAL();
+    
+    public BLL_Common.Common_Object DAL_GET_GRNLIST(String SiteName, String[] sIn)
+    {
+        return BaseDAL.Get_Multiple_QueryReturn("SP_GET_GRN(?,?,?,?,?,?,?,?)", sIn, new int[]{}, SiteName); //LLT 2016-05-24 add parameter for comp
+    }
+    
+    public BLL_Common.Common_Object DAL_ADDEDIT_GRN(String SiteName, String[] sStringIn) {
+        return BaseDAL.Get_Multiple_QueryReturn_No_Commit("SP_TRX_GRN(?,?,?,?,?,?,?,?,?,?,"
+                + "?,?,?,?,?,?,?,?,?,?,"
+                + "?,?,?,?,?,?,?,?,?,?,"
+                + "?,?,?,?,?,?,?,?,?,?,"
+                + "?,?,?,?,?,?,?,?"
+                + ")", sStringIn, new int[]{java.sql.Types.VARCHAR, java.sql.Types.VARCHAR, java.sql.Types.VARCHAR, java.sql.Types.VARCHAR}, SiteName);
+    } 
+}

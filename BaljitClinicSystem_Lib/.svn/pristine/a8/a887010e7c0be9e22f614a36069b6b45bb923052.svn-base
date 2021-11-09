@@ -1,0 +1,449 @@
+CREATE DEFINER=`root`@`localhost` PROCEDURE `SP_TRX_STOCK_BALANCE`(
+IN sMethod varchar(50),
+IN sBalCompanyCode VARCHAR(10),
+IN sBalLocation VARCHAR(10),
+IN sBalStockCode VARCHAR(16),
+IN sBalUOM VARCHAR(6),
+IN sQtyToAddDeduct VARCHAR(20),
+IN sBy VARCHAR(10),
+IN sRecStatus VARCHAR(4),
+OUT Result varchar(30),
+OUT Message varchar(30)
+
+)
+BEGIN
+     
+
+        IF sMethod = 'UPDATE_STOCK_BALANCE' THEN
+
+
+                set  @UOMFound = "";
+                set  @UOMFoundCount = 0;
+
+
+                
+
+
+                              SELECT uomc_convuomcode as UOM FROM stkm_uomconversion  where uomc_stockcode = sBalStockCode
+                              and uomc_convuomcode = sBalUOM
+                            union all
+                              SELECT uomc_baseuomcode as UOM FROM stkm_uomconversion  where uomc_stockcode = sBalStockCode
+                              and uomc_baseuomcode = sBalUOM
+                              limit 1 into @UOMFound;
+
+
+
+                if @UOMFound <> ""  THEN
+
+                         
+                         set @UOMFound = "";
+
+                        SELECT count(stkm_stockbalance.bal_uom) FROM  stkm_stockbalance
+                            WHERE stkm_stockbalance.bal_companycode = sBalCompanyCode
+                            AND stkm_stockbalance.bal_stockcode = sBalStockCode
+                            AND stkm_stockbalance.bal_location = sBalLocation
+                            AND stkm_stockbalance.bal_uom
+                            in (SELECT uomc_convuomcode as UOM FROM stkm_uomconversion  where uomc_stockcode = sBalStockCode
+                                    union all
+                              SELECT uomc_baseuomcode as UOM FROM stkm_uomconversion  where uomc_stockcode = sBalStockCode
+                            ) limit 1 INTO @UOMFoundCount;
+
+                        if @UOMFoundCount > 0 THEN
+
+                                SELECT stkm_stockbalance.bal_uom FROM  stkm_stockbalance
+                                    WHERE stkm_stockbalance.bal_companycode = sBalCompanyCode
+                                    AND stkm_stockbalance.bal_stockcode = sBalStockCode
+                                    AND stkm_stockbalance.bal_location = sBalLocation
+                                    AND stkm_stockbalance.bal_uom
+                                    in (SELECT uomc_convuomcode as UOM FROM stkm_uomconversion  where uomc_stockcode = sBalStockCode
+
+                                    union all
+                                      SELECT uomc_baseuomcode as UOM FROM stkm_uomconversion  where uomc_stockcode = sBalStockCode
+
+                                    ) limit 1 INTO @UOMFound;
+                        END IF;
+                END IF;
+                IF @UOMFound = ""  THEN
+					
+					IF (SELECT Count(*) FROM stkm_stockbalance WHERE 
+							stkm_stockbalance.bal_companycode = sBALCompanyCode
+                            AND stkm_stockbalance.bal_location = sBALLocation
+                            AND stkm_stockbalance.bal_stockcode = sBALStockCode
+                            AND stkm_stockbalance.bal_uom = sBALUOM) > 0 THEN
+						
+						UPDATE stkm_stockbalance
+						SET bal_balanceqty = bal_balanceqty + F_CONVERT_UOM(sQtyToAddDeduct,bal_uom,sBalUOM,bal_stockcode)
+                                                
+						,modifiedby = sBy, modifieddt = now(), recstatus = sRecStatus
+						WHERE stkm_stockbalance.bal_companycode = sBALCompanyCode
+						AND stkm_stockbalance.bal_location = sBALLocation
+						AND stkm_stockbalance.bal_stockcode = sBALStockCode
+						AND stkm_stockbalance.bal_uom = sBALUOM;
+                        
+                    ELSE
+
+						INSERT INTO stkm_stockbalance (
+                        bal_companycode,
+                        bal_location,
+                        bal_stockcode,
+                        bal_uom,
+                        bal_balanceqty,
+                        createdby,
+                        createddt,
+                        recstatus
+                        )
+                        VALUES
+						(
+                        sBALCompanyCode,
+                        sBALLocation,
+                        sBALStockCode,
+                        sBALUOM,
+                        sQtyToAddDeduct,
+                        sBy, NOW(), sRecStatus
+                        );
+
+					END IF;
+                  SELECT '00000' INTO Result;
+                  SELECT  'Success Inserted' INTO Message;
+
+            ELSE
+
+                    UPDATE stkm_stockbalance
+                    SET
+                        bal_balanceqty = bal_balanceqty + F_CONVERT_UOM(sQtyToAddDeduct,bal_uom,sBalUOM,bal_stockcode)
+                        
+
+                        ,modifiedby = sBy, modifieddt = now(), recstatus = sRecStatus
+
+
+                    WHERE stkm_stockbalance.bal_companycode = sBALCompanyCode
+                            AND stkm_stockbalance.bal_location = sBALLocation
+                            AND stkm_stockbalance.bal_stockcode = sBALStockCode
+                            AND stkm_stockbalance.bal_uom = @UOMFound;
+
+
+
+                  SELECT '00000' INTO Result;
+                  SELECT  'Success Updated' INTO Message;
+
+
+
+               END IF;
+
+
+        END IF;
+
+IF sMethod = 'UPDATE_TEMPORARY_STOCK_BALANCE' THEN
+        set  @UOMFound = "";
+                set  @UOMFoundCount = 0;
+
+
+                
+
+
+                              SELECT uomc_convuomcode as UOM FROM stkm_uomconversion  where uomc_stockcode = sBalStockCode
+                              and uomc_convuomcode = sBalUOM
+                            union all
+                              SELECT uomc_baseuomcode as UOM FROM stkm_uomconversion  where uomc_stockcode = sBalStockCode
+                              and uomc_baseuomcode = sBalUOM
+                              limit 1 into @UOMFound;
+
+
+
+                if @UOMFound <> ""  THEN
+
+                         
+                         set @UOMFound = "";
+
+                        SELECT count(stkm_stockbalance.bal_uom) FROM  stkm_stockbalance
+                            WHERE stkm_stockbalance.bal_companycode = sBalCompanyCode
+                            AND stkm_stockbalance.bal_stockcode = sBalStockCode
+                            AND stkm_stockbalance.bal_location = sBalLocation
+                            AND stkm_stockbalance.bal_uom
+                            in (SELECT uomc_convuomcode as UOM FROM stkm_uomconversion  where uomc_stockcode = sBalStockCode
+                                    union all
+                              SELECT uomc_baseuomcode as UOM FROM stkm_uomconversion  where uomc_stockcode = sBalStockCode
+                            ) limit 1 INTO @UOMFoundCount;
+
+                        if @UOMFoundCount > 0 THEN
+
+                                SELECT stkm_stockbalance.bal_uom FROM  stkm_stockbalance
+                                    WHERE stkm_stockbalance.bal_companycode = sBalCompanyCode
+                                    AND stkm_stockbalance.bal_stockcode = sBalStockCode
+                                    AND stkm_stockbalance.bal_location = sBalLocation
+                                    AND stkm_stockbalance.bal_uom
+                                    in (SELECT uomc_convuomcode as UOM FROM stkm_uomconversion  where uomc_stockcode = sBalStockCode
+
+                                    union all
+                                      SELECT uomc_baseuomcode as UOM FROM stkm_uomconversion  where uomc_stockcode = sBalStockCode
+
+                                    ) limit 1 INTO @UOMFound;
+                        END IF;
+                END IF;
+                IF @UOMFound = ""  THEN
+IF (SELECT Count(*) FROM stkm_stockbalance WHERE 
+							stkm_stockbalance.bal_companycode = sBALCompanyCode
+                            AND stkm_stockbalance.bal_location = sBALLocation
+                            AND stkm_stockbalance.bal_stockcode = sBALStockCode
+                            AND stkm_stockbalance.bal_uom = sBALUOM) > 0 THEN
+						
+						UPDATE stkm_stockbalance
+						SET bal_tempbalanceqty = bal_tempbalanceqty + F_CONVERT_UOM(sQtyToAddDeduct,bal_uom,sBalUOM,bal_stockcode)   
+						,modifiedby = sBy, modifieddt = now(), recstatus = sRecStatus
+						WHERE stkm_stockbalance.bal_companycode = sBALCompanyCode
+						AND stkm_stockbalance.bal_location = sBALLocation
+						AND stkm_stockbalance.bal_stockcode = sBALStockCode
+						AND stkm_stockbalance.bal_uom = sBALUOM;
+                        
+                    ELSE
+
+                 INSERT INTO stkm_stockbalance (
+                        bal_companycode,
+                        bal_location,
+                        bal_stockcode,
+                        bal_uom,
+                        bal_balanceqty,    
+                        bal_tempbalanceqty,
+                        createdby,
+                        createddt,
+                        recstatus
+                        )
+                        VALUES
+                         (
+                        sBALCompanyCode,
+                        sBALLocation,
+                        sBALStockCode,
+                        sBALUOM,
+                        0,       
+                        sQtyToAddDeduct,
+                        sBy, NOW(), sRecStatus
+                        );
+
+END IF;
+                  SELECT '00000' INTO Result;
+                  SELECT  'Success Inserted' INTO Message;
+
+            ELSE
+
+                    UPDATE stkm_stockbalance
+                    SET
+                        
+                        bal_tempbalanceqty = bal_tempbalanceqty + F_CONVERT_UOM(sQtyToAddDeduct,bal_uom,sBalUOM,bal_stockcode)   
+                        ,modifiedby = sBy, modifieddt = now(), recstatus = sRecStatus
+                        
+                    WHERE stkm_stockbalance.bal_companycode = sBALCompanyCode
+                            AND stkm_stockbalance.bal_location = sBALLocation
+                            AND stkm_stockbalance.bal_stockcode = sBALStockCode
+                            AND stkm_stockbalance.bal_uom = @UOMFound;
+
+
+
+                  SELECT '00000' INTO Result;
+                  SELECT  'Success Updated' INTO Message;
+
+
+
+               END IF;
+
+
+        END IF;
+                                                                
+        IF sMethod = 'UPDATE_TEMPORARY_STOCK_BALANCE_OLD' THEN
+        set  @UOMFound = "";
+                set  @UOMFoundCount = 0;
+
+
+                
+
+
+
+                              SELECT uomc_convuomcode as UOM FROM stkm_uomconversion  where uomc_stockcode = sBalStockCode
+                              and uomc_convuomcode = sBalUOM
+                            union all
+                              SELECT uomc_baseuomcode as UOM FROM stkm_uomconversion  where uomc_stockcode = sBalStockCode
+                              and uomc_baseuomcode = sBalUOM
+                              limit 1 into @UOMFound;
+
+
+
+                if @UOMFound <> ""  THEN
+
+                         
+                         set @UOMFound = "";
+
+                        SELECT count(stkm_stockbalance.bal_uom) FROM  stkm_stockbalance
+                            WHERE stkm_stockbalance.bal_companycode = sBalCompanyCode
+                            AND stkm_stockbalance.bal_stockcode = sBalStockCode
+                            AND stkm_stockbalance.bal_location = sBalLocation
+                            AND stkm_stockbalance.bal_uom
+                            in (SELECT uomc_convuomcode as UOM FROM stkm_uomconversion  where uomc_stockcode = sBalStockCode
+                                    union all
+                              SELECT uomc_baseuomcode as UOM FROM stkm_uomconversion  where uomc_stockcode = sBalStockCode
+                            ) limit 1 INTO @UOMFoundCount;
+
+                        if @UOMFoundCount > 0 THEN
+
+                                SELECT stkm_stockbalance.bal_uom FROM  stkm_stockbalance
+                                    WHERE stkm_stockbalance.bal_companycode = sBalCompanyCode
+                                    AND stkm_stockbalance.bal_stockcode = sBalStockCode
+                                    AND stkm_stockbalance.bal_location = sBalLocation
+                                    AND stkm_stockbalance.bal_uom
+                                    in (SELECT uomc_convuomcode as UOM FROM stkm_uomconversion  where uomc_stockcode = sBalStockCode
+
+                                    union all
+                                      SELECT uomc_baseuomcode as UOM FROM stkm_uomconversion  where uomc_stockcode = sBalStockCode
+
+                                    ) limit 1 INTO @UOMFound;
+                        END IF;
+                END IF;
+                IF @UOMFound = ""  THEN
+
+                 INSERT INTO stkm_stockbalance (
+
+                        bal_companycode,
+                        bal_location,
+                        bal_stockcode,
+                        bal_uom,
+                        bal_balanceqty,    
+                        bal_tempbalanceqty,
+                        createdby,
+                        createddt,
+                        recstatus
+                        )
+
+                        VALUES
+                         (
+
+                        sBALCompanyCode,
+                        sBALLocation,
+                        sBALStockCode,
+                        sBALUOM,
+                        0,       
+                        sQtyToAddDeduct,
+
+                        sBy, NOW(), sRecStatus
+                        );
+
+
+                  SELECT '00000' INTO Result;
+                  SELECT  'Success Inserted' INTO Message;
+
+
+            ELSE
+
+                    UPDATE stkm_stockbalance
+                    SET
+                        
+                        
+                        bal_tempbalanceqty = bal_tempbalanceqty + F_CONVERT_UOM(sQtyToAddDeduct,bal_uom,sBalUOM,bal_stockcode)
+                        
+                        ,modifiedby = sBy, modifieddt = now(), recstatus = sRecStatus
+                        
+                    WHERE stkm_stockbalance.bal_companycode = sBALCompanyCode
+                            AND stkm_stockbalance.bal_location = sBALLocation
+                            AND stkm_stockbalance.bal_stockcode = sBALStockCode
+                            AND stkm_stockbalance.bal_uom = @UOMFound;
+
+
+
+                  SELECT '00000' INTO Result;
+                  SELECT  'Success Updated' INTO Message;
+
+
+
+               END IF;
+
+
+        END IF;
+
+        IF sMethod = 'REINSERT_STOCK_BALANCE' THEN
+			IF (SELECT Count(*) FROM stkm_stockbalance WHERE 
+							stkm_stockbalance.bal_companycode = sBALCompanyCode
+                            AND stkm_stockbalance.bal_location = sBALLocation
+                            AND stkm_stockbalance.bal_stockcode = sBALStockCode
+                            AND stkm_stockbalance.bal_uom = sBALUOM) > 0 THEN
+						
+						UPDATE stkm_stockbalance
+						SET bal_balanceqty = sQtyToAddDeduct
+						,modifiedby = sBy, modifieddt = now(), recstatus = sRecStatus
+						WHERE stkm_stockbalance.bal_companycode = sBALCompanyCode
+						AND stkm_stockbalance.bal_location = sBALLocation
+						AND stkm_stockbalance.bal_stockcode = sBALStockCode
+						AND stkm_stockbalance.bal_uom = sBALUOM;
+                        
+			ELSE
+
+						INSERT INTO stkm_stockbalance (
+                        bal_companycode,
+                        bal_location,
+                        bal_stockcode,
+                        bal_uom,
+                        bal_balanceqty,
+                        createdby,
+                        createddt,
+                        recstatus
+                        )
+                        VALUES
+						(
+                        sBALCompanyCode,
+                        sBALLocation,
+                        sBALStockCode,
+                        sBALUOM,
+                        sQtyToAddDeduct,
+                        sBy, NOW(), sRecStatus
+                        );
+
+			END IF;
+                  SELECT '00000' INTO Result;
+                  SELECT  'Success Inserted' INTO Message;
+        END IF;
+
+         IF sMethod = 'PO_CREATE_STOCK_BALANCE' THEN
+
+                  IF NOT EXISTS(SELECT BAL_STOCKCODE FROM  stkm_stockbalance  WHERE BAL_STOCKCODE = sBALStockCode and BAL_COMPANYCODE = sBALCompanyCode ) THEN
+
+                      INSERT INTO stkm_stockbalance (BAL_STOCKCODE, bal_companycode, bal_location, bal_uom, bal_balanceqty, bal_tempbalanceqty, recstatus, createdby, createddt)
+                      VALUES
+                      (sBALStockCode, sBALCompanyCode, (SELECT LOC_CODE From stkm_location WHERE LOC_COMPANYCODE = sBALCompanyCode LIMIT 0,1), sBALUOM, 0,0,1,'SYSTEM', NOW());
+
+
+                       SELECT '00000' INTO Result;
+                  SELECT  'Success Inserted' INTO Message;
+
+                  END IF;
+
+         END IF;
+
+         IF sMethod = 'STKADJ_UPDATE_STOCK_BALANCE' THEN
+
+                 IF NOT EXISTS (SELECT bal_stockcode FROM stkm_stockbalance WHERE bal_stockcode = sBALStockCode AND bal_companycode = sBALCompanyCode AND bal_location = sBalLocation AND bal_uom = sBalUOM) THEN
+                
+                       INSERT INTO stkm_stockbalance (bal_companycode, bal_location, bal_stockcode, bal_uom, bal_balanceqty, createdby, createddt, recstatus)
+
+                       VALUES (sBALCompanyCode, sBALLocation, sBALStockCode, sBALUOM, sQtyToAddDeduct, sBy, NOW(), sRecStatus);
+
+                 ELSE
+
+                       UPDATE stkm_stockbalance
+                       SET bal_balanceqty = sQtyToAddDeduct, modifiedby = sBy, modifieddt = now(), recstatus = sRecStatus
+                       WHERE bal_companycode = sBALCompanyCode AND bal_location = sBALLocation AND bal_stockcode = sBALStockCode AND bal_uom = sBalUOM;
+
+                  END IF;
+
+                  DELETE FROM stkm_stockbalance
+                  WHERE bal_companycode = sBALCompanyCode AND bal_location = sBALLocation AND bal_balanceqty = 0;
+
+                  DELETE a FROM stkm_stockbalance AS a
+                        LEFT JOIN stkt_costqty AS b ON
+                                a.bal_companycode = b.scq_companycode AND
+                                a.bal_location = b.scq_locationcode AND
+                                a.bal_stockcode = b.scq_stockcode AND
+                                a.bal_uom = b.scq_uomcode
+                        WHERE b.scq_costqtyidx IS NULL AND a.bal_companycode = sBALCompanyCode AND a.bal_location = sBALLocation;
+
+                  SELECT '00000' INTO Result;
+                  SELECT  'Success Inserted' INTO Message;
+
+         END IF;
+
+END

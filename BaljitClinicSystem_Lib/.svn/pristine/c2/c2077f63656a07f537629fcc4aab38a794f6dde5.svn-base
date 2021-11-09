@@ -1,0 +1,209 @@
+CREATE DEFINER=`root`@`localhost` PROCEDURE `SP_TRX_PRODUCT`( IN sMethod            varchar(30),
+IN sStockCode         varchar(20),
+IN sStockDesc         varchar(100),
+IN sStockGrpCode      varchar(6),
+IN sStockTypeCode     varchar(6),
+IN sBaseUOMCode       varchar(6),
+IN sBarCode           varchar(50),
+IN sPrecautionCode    varchar(10),
+IN sInstructionCode   varchar(10),
+IN sIndicationCode    varchar(10),
+IN sIsActive          varchar(1),
+IN sIsRestrict        varchar(1),
+IN sIsPsychotropic    varchar(1),
+IN sDosageCode        varchar(10),
+IN sFrequencyCode     varchar(10),
+IN sBaseUOMIdx        varchar(10),
+IN sUnitCost          varchar(10),
+IN sPrintLabel        varchar(1),
+IN sConsumable        varchar(6),
+IN sIsOTC             varchar(1),
+IN sOTCGroup          varchar(6),
+IN sIsVCN             varchar(1),
+IN sShortName         varchar(50),
+IN sGSTPurCode        varchar(8),
+IN sGSTMedSupCode     varchar(8),
+IN sGSTOTCSupCode     varchar(8),
+IN sBy                varchar(10),
+IN sRecStatus         varchar(4),
+IN sConvTo            varchar(10),
+IN sFactor            varchar(10),
+IN sPrice1            varchar(10),
+IN sPrice2            varchar(10),
+IN sPrice3            varchar(10),
+IN sPrice4            varchar(10),
+IN sIDX               varchar(50),
+IN sFunction          varchar(20),
+IN sAccGrp            varchar(6),
+IN sBrandOwner        varchar(10),
+IN sPrdAPI      varchar(10000),
+IN sDurationCode      varchar(10),
+IN sBaseUOMCode2      varchar(6),
+IN sBaseUOMIdx2       varchar(10),
+IN sUnitCost2         varchar(10),
+OUT Result varchar(30),
+OUT Message varchar(30)
+)
+BEGIN
+
+     IF sMethod = 'ADD_PRODUCTMASTER' THEN
+           IF NOT EXISTS(SELECT SM.stk_stockcode FROM  stkm_stockmaster SM  WHERE SM.stk_stockcode = sStockCode) THEN
+
+                 INSERT INTO stkm_stockmaster (stk_stockcode, stk_desc, stk_groupcode, stk_typecode, stk_accountgroup, stk_baseuomcode,
+                                                                stk_barcode, stk_precautioncode, stk_instructioncode, stk_indicationcode, stk_isactive,
+                                                                stk_isrestrict, stk_ispsychotropic, stk_dosagecode, stk_frequencycode, stk_baseuomidx,
+                                                                stk_unitcost, stk_printlabel, stk_consumable, stk_isotc, stk_otcgroup,
+                                                                stk_isvcn, stk_shortname, stk_gstpurcode, stk_gstmedsupcode, stk_gstotcsupcode,
+											   stk_defaultbrandowner, stk_api, createdby, createddt, recstatus, stk_durationcode,
+											   stk_baseuomidx2, stk_baseuomcode2, stk_unitcost2)
+
+                    VALUES
+                    (sStockCode, sStockDesc, sStockGrpCode, sStockTypeCode, sAccGrp, sBaseUOMCode,
+                     sBarCode, sPrecautionCode, sInstructionCode, sIndicationCode, sIsActive,
+                     sIsRestrict, sIsPsychotropic, sDosageCode, sFrequencyCode, sBaseUOMIdx,
+                     sUnitCost, sPrintLabel, sConsumable, sIsOTC, sOTCGroup,
+                     sIsVCN, sShortName, sGSTPurCode, sGSTMedSupCode, sGSTOTCSupCode,
+                     sBrandOwner, sPrdAPI, sBy, NOW(), sRecStatus, sDurationCode,
+                     sBaseUOMIdx2, sBaseUOMCode2, sUnitCost2);
+
+                  SELECT '00000' INTO Result;
+                  SELECT  'Success Inserted' INTO Message;
+
+           END IF;
+
+     END IF;
+
+
+     IF sMethod = 'ADD_UOMCONV' THEN
+
+                  INSERT INTO stkm_uomconversion (uomc_stockcode, uomc_convuomcode, uomc_baseuomcode, uomc_convfactor,
+                                                                  createdby, createddt, recstatus)
+
+                    VALUES
+                    (sStockCode, sConvTo, sBaseUOMCode, sFactor,
+                     sBy, NOW(), sRecStatus);
+
+
+                  SELECT '00000' INTO Result;
+                  SELECT  'Success Inserted' INTO Message;
+
+      END IF;
+
+       IF sMethod = 'ADD_PRDPRICE' THEN
+
+                  INSERT INTO stkm_stockprices (sprc_stockcode, sprc_uomcode, sprc_factor,
+                                                                 sprc_unitprice, sprc_unitprice2, sprc_unitprice3, sprc_unitprice4,
+                                                                  createdby, createddt, recstatus)
+
+                    VALUES
+                    (sStockCode, sBaseUOMCode, sFactor,
+                     sPrice1, sPrice2, sPrice3, sPrice4,
+                     sBy, NOW(), sRecStatus);
+
+
+                  SELECT '00000' INTO Result;
+                  SELECT 'Success Inserted' INTO Message;
+
+      END IF;
+
+
+      IF sMethod = 'UPDATE_PRODUCTMASTER' THEN
+
+                  UPDATE stkm_stockmaster
+                  SET
+                  stk_groupcode = sStockGrpCode,
+                  stk_desc = sStockDesc,
+                  stk_typecode = sStockTypeCode,
+                  stk_accountgroup = sAccGrp,
+                  stk_baseuomcode = sBaseUOMCode,
+                  stk_baseuomcode2 = sBaseUOMCode2,
+                  stk_barcode = sBarCode,
+                  stk_precautioncode = sPrecautionCode,
+                  stk_instructioncode = sInstructionCode,
+                  stk_indicationcode = sIndicationCode,
+                  stk_dosagecode = sDosageCode,
+                  stk_frequencycode = sFrequencyCode,
+                  stk_consumable = sConsumable,
+                  stk_shortname = sShortName,
+                  stk_gstpurcode = sGSTPurCode,
+                  stk_gstmedsupcode= sGSTMedSupCode,
+                  stk_gstotcsupcode = sGSTOTCSupCode,
+                  stk_isactive = sIsActive,
+                  stk_defaultbrandowner = sBrandOwner,
+                  stk_api = sPrdAPI,
+                  stk_durationcode = sDurationCode,
+                  stk_unitcost = sUnitCost,
+                  stk_unitcost2 = sUnitCost2,
+                  recstatus =  sRecStatus,
+                  modifiedby = sBy,
+                  modifieddt = NOW()
+                  WHERE stk_stockcode =  sStockCode ;
+                        
+                  SELECT '00000' INTO Result;
+                  SELECT  'Success Updated' INTO Message;
+
+      END IF;
+
+      IF sMethod = 'UPDATE_UOMCONV' THEN
+
+
+                  UPDATE stkm_uomconversion
+                  SET
+                   uomc_convuomcode = sConvTo,
+                   uomc_baseuomcode = sBaseUOMCode,
+                   uomc_convfactor = sFactor,
+                   modifiedby = sBy,
+                   modifieddt = NOW()
+                   WHERE  uomc_stockcode = sStockCode and uomc_uomconvidx = sIDX ;
+
+                  SELECT '00000' INTO Result;
+                  SELECT  'Success Updated' INTO Message;
+
+      END IF;
+
+
+       IF sMethod = 'UPDATE_PRDPRICE' THEN
+
+                  UPDATE stkm_stockprices
+                  SET
+                  sprc_uomcode = sBaseUOMCode,
+                  sprc_factor = sFactor,
+                  sprc_unitprice = sPrice1,
+                  sprc_unitprice2 = sPrice2,
+                  sprc_unitprice3 = sPrice3,
+                  sprc_unitprice4 = sPrice4,
+                  modifiedby = sBy,
+                  modifieddt = NOW()
+                  WHERE sprc_stockcode = sStockCode and  sprc_priceidx = sIDX;
+
+                  SELECT '00000' INTO Result;
+                  SELECT 'Success Updated' INTO Message;
+
+      END IF;
+
+
+       IF sMethod = 'DEL_UOMCONV' THEN
+
+                  DELETE From stkm_uomconversion
+                  WHERE uomc_stockcode = sStockCode and uomc_uomconvidx = sIDX;
+       
+
+                  SELECT '00000' INTO Result;
+                  SELECT 'Success Remove' INTO Message;
+
+      END IF;
+
+      IF sMethod = 'DEL_PRDPRICE' THEN
+
+                  DELETE FROM stkm_stockprices
+                  WHERE sprc_stockcode = sStockCode and  sprc_priceidx = sIDX;
+
+                  SELECT '00000' INTO Result;
+                  SELECT 'Success Remove' INTO Message;
+
+      END IF;
+
+
+
+
+END

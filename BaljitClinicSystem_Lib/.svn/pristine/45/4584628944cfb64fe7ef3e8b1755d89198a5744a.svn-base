@@ -1,0 +1,24 @@
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package BusinessData;
+
+/**
+ *
+ * @author N3359
+ */
+
+import BusinessData.BaseDAL;
+import BusinessLogic.BLL_Common;
+
+public class DAL_Location {
+    BaseDAL DAL = new BaseDAL();
+  
+    
+    public BLL_Common.Common_Object DAL_GET_LOCATION(String SiteName, String[] sIn) {       
+       return BaseDAL.Get_Multiple_QueryReturn("SP_GET_LOCATION(?,?,?,?,?,?,?"
+           + ")", sIn, new int[]{}, SiteName); 
+    }
+}

@@ -1,0 +1,80 @@
+CREATE DEFINER=`root`@`localhost` PROCEDURE `SP_TRX_SUPPLIER`(
+IN sMethod            varchar(30),
+IN sSupCode           varchar(10),
+IN sSupName           varchar(100),
+IN sSupAdd1           varchar(50),
+IN sSupAdd2           varchar(50),
+IN sSupAdd3           varchar(50),
+IN sSupPostCode       varchar(10),
+IN sSupTelephone      varchar(20),
+IN sSupFax            varchar(20),
+IN sSupCountry        varchar(6),
+IN sSupArea           varchar(6),
+IN sSupState          varchar(6),
+IN sRemarks           varchar(100),
+IN sContactPerson     varchar(100),
+IN sIsActive          varchar(1),
+IN sBusinessRegNo     varchar(20),
+IN sAccountGroup      varchar(20),
+IN sBusinessType      varchar(20),
+IN sAgent             varchar(20),
+IN sCreditTerm        INTEGER,
+IN sCreditLimit       Numeric(15,3),
+IN sAgingOn           varchar(1),
+IN sCurrencyCode      varchar(6),
+IN sIsGST             varchar(1),
+IN sGSTCode           varchar(8),
+IN sGSTRegNo          varchar(20),
+IN sGSTInclusive      varchar(1),
+IN sProductGroup      varchar(6),
+IN sWebsite           varchar(50),
+IN sEmail             varchar(50),
+IN iInvoiceLimit      Numeric(15,3),
+IN sIsBrandOwner      varchar(10),
+IN sBy                varchar(10),
+IN sRecStatus         varchar(4),
+OUT Result varchar(30),
+OUT Message varchar(30)
+
+)
+BEGIN
+IF sMethod = 'ADD_SUPPLIERMASTER' THEN
+   IF NOT EXISTS(SELECT SM.sup_code FROM stkm_suppliermaster SM WHERE SM.sup_code = sSupCode) THEN
+    INSERT INTO stkm_suppliermaster
+    (sup_code, sup_name, sup_add1, sup_add2, sup_add3, SUP_PostCode, sup_telephone,
+     sup_fax, sup_countrycode, sup_areacode, sup_statecode, sup_remarks, sup_contactperson,
+     sup_isactive, sup_businessregno, sup_accountgroup, sup_businesstype, sup_agent,
+     sup_creditterm, sup_creditlimit, sup_agingon, sup_currencycode, sup_isgst, SUP_GSTCode,
+     SUP_GSTRegNo, SUP_GSTInclusive,  sup_productgroupcode, sup_website, sup_email, sup_invoicelimit,
+     sup_isbrandowner, createdby, createddt, recstatus)
+    VALUES
+    (sSupCode, sSupName, sSupAdd1, sSupAdd2, sSupAdd3, sSupPostCode, sSupTelephone,
+     sSupFax, sSupCountry, sSupArea, sSupState, sRemarks, sContactPerson,
+     sIsActive, sBusinessRegNo, sAccountGroup, sBusinessType, sAgent,
+     sCreditTerm, sCreditLimit, sAgingOn, sCurrencyCode, sIsGST, sGSTCode,
+     sGSTRegNo, sGSTInclusive, sProductGroup, sWebsite, sEmail, iInvoiceLimit,
+     sIsBrandOwner, sBy, NOW(), sRecStatus);
+
+    SELECT '00000' INTO Result;
+    SELECT  'Success Inserted' INTO Message;
+   END IF;
+END IF;
+
+IF sMethod = 'UPDATE_SUPPLIERMASTER' THEN
+   UPDATE stkm_suppliermaster
+   SET sup_name = sSupName, sup_add1 = sSupAdd1, sup_add2 = sSupAdd2, sup_add3 = sSupAdd3,
+     SUP_PostCode = sSupPostCode, sup_telephone = sSupTelephone, sup_fax = sSupFax, sup_countrycode = sSupCountry,
+     sup_areacode = sSupArea, sup_statecode = sSupState, sup_remarks = sRemarks, sup_contactperson = sContactPerson,
+     sup_isactive = sIsActive, sup_businessregno = sBusinessRegNo, sup_accountgroup = sAccountGroup,
+     sup_businesstype = sBusinessType, sup_agent = sAgent, sup_creditterm = sCreditTerm, sup_creditlimit = sCreditLimit,
+     sup_agingon = sAgingOn, sup_currencycode = sCurrencyCode, sup_isgst = sIsGST, SUP_GSTCode = sGSTCode,
+     SUP_GSTRegNo = sGSTRegNo, SUP_GSTInclusive = sGSTInclusive, sup_productgroupcode = sProductGroup,
+     sup_website = sWebsite, sup_email = sEmail, sup_invoicelimit = iInvoiceLimit, sup_isbrandowner = sIsBrandOwner, 
+     ModifiedBy = sBy, ModifiedDT = NOW()  ,recstatus = sRecStatus
+   WHERE sup_code = sSupCode;
+
+   SELECT '00000' INTO Result;
+   SELECT 'Success Updated' INTO Message;
+END IF;
+
+END

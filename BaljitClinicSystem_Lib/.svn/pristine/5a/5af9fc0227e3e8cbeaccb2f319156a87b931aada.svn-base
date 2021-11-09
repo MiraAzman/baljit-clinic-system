@@ -1,0 +1,118 @@
+CREATE DEFINER=`root`@`localhost` PROCEDURE `SP_TRX_COMPANY`(
+IN sMethod         varchar(30),
+IN sCode           varchar(10),
+IN sName           varchar(100),
+IN sAdd1           varchar(50),
+IN sAdd2           varchar(50),
+IN sAdd3           varchar(50),
+IN sPostcode       varchar(10),
+IN sTel            varchar(20),
+IN sFax            varchar(20),
+IN sCountry        varchar(6),
+IN sArea           varchar(6),
+IN sState          varchar(6),
+IN sRemarks        varchar(100),
+IN sContactPer     varchar(100),
+IN sIsActive       varchar(1),
+IN sBusRegNo       varchar(20),
+IN sAccGroup       varchar(20),
+IN sAgent          varchar(20),
+IN sCreditTerm     varchar(20),
+IN sCreditLimit    varchar(20),
+IN sAgingOn        varchar(1),
+IN sCurrCode       varchar(6),
+IN sIsGST          varchar(1),
+IN sGstCodePurchase  varchar(8),
+IN sGstCodeSupply    varchar(8),
+IN sGSTRegNo       varchar(20),
+IN sGSTInclusive   varchar(1),
+IN sBy             varchar(20),
+IN sRecStatus      varchar(10),
+OUT Result         varchar(30)
+)
+BEGIN
+
+
+
+
+
+
+ DECLARE _statement VARCHAR(8000);
+
+        IF sMethod = 'ADD_COMPANY' THEN
+
+
+                  IF NOT EXISTS(SELECT comp_code FROM  stkm_company  WHERE comp_code = sCode) THEN
+
+                          INSERT INTO stkm_company (comp_code, comp_name, comp_add1, comp_add2, comp_add3,
+
+                                                    comp_postcode, comp_telephone, comp_fax, comp_countrycode, comp_areacode,
+
+                                                    comp_statecode, comp_remarks, comp_contactperson, comp_isactive, comp_businessregno,
+
+                                                    comp_accountgroup, comp_agent, comp_creditterm, comp_creditlimit, comp_agingon,
+
+                                                    comp_currencycode, comp_isgst, comp_gstcode_purchase, comp_gstcode_supply, comp_gstregno, comp_gstinclusive,
+
+                                                    createdby, createddt, recstatus)
+
+                          VALUES (sCode, sName, sAdd1, sAdd2, sAdd3,
+
+                                  sPostcode, sTel, sFax, sCountry, sArea,
+
+                                  sState, sRemarks, sContactPer, sIsActive, sBusRegNo,
+
+                                  sAccGroup, sAgent, sCreditTerm, sCreditLimit, sAgingOn,
+
+                                  sCurrCode, sIsGST, sGstCodePurchase, sGstCodeSupply, sGSTRegNo, sGSTInclusive,
+
+                                  sBy, NOW(), sRecStatus);
+
+
+                          SELECT '00000' INTO Result;
+                  END IF;
+        END IF;
+
+
+        IF sMethod = 'EDIT_COMPANY_DETAIL' THEN
+
+                UPDATE stkm_company
+
+                SET comp_name = sName,
+                    comp_add1 = sAdd1,
+                    comp_add2 = sAdd2,
+                    comp_add3 = sAdd3,
+                    comp_postcode = sPostcode,
+                    comp_telephone = sTel,
+                    comp_fax = sFax,
+                    comp_countrycode = sCountry,
+                    comp_areacode = sArea,
+                    comp_statecode = sState,
+                    comp_remarks = sRemarks,
+                    comp_contactperson = sContactPer,
+                    comp_isactive = sIsActive,
+                    comp_businessregno = sBusRegNo,
+                    comp_accountgroup = sAccGroup,
+                    comp_agent = sAgent,
+                    comp_creditterm = sCreditTerm,
+                    comp_creditlimit = sCreditLimit,
+                    comp_agingon = sAgingOn,
+                    comp_currencycode = sCurrCode,
+                    comp_isgst = sIsGST,
+                    comp_gstcode_purchase = sGstCodePurchase,
+                    comp_gstcode_supply = sGstCodeSupply,
+                    comp_gstregno = sGSTRegNo,
+                    comp_gstinclusive = sGSTInclusive,
+                    recstatus = sRecStatus,
+                    modifiedby = sBy,
+                    modifieddt = NOW()
+
+                WHERE comp_code = sCode;
+
+
+                SELECT '00000' INTO Result;
+
+        END IF;
+
+
+END

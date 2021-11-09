@@ -1,0 +1,111 @@
+CREATE DEFINER=`root`@`localhost` PROCEDURE `SP_TRX_STOCK_REQUEST`(
+IN sMethod varchar(20),
+IN sStkCode VARCHAR(20),
+IN sCompCode VARCHAR(20),
+IN sLocation varchar(20),
+IN dFullfiledQty double,
+IN sUOM varchar(10))
+BEGIN
+
+
+
+        DECLARE done INT DEFAULT FALSE;
+
+
+
+
+        DECLARE _statement VARCHAR(8000);
+        DECLARE cursor_ID INT;
+          DECLARE cursor_VAL VARCHAR(200);
+
+        DECLARE vRQDTL_RequestIdx  int;
+        DECLARE vRQDTL_StockCode varchar(20);
+        DECLARE vREQUEST_QTY  double;
+        DECLARE vVERIFIED_QTY double;
+        DECLARE vAPPROVED_QTY double;
+        DECLARE vFULLFIED_QTY double;
+        DECLARE vUNFULLFIED_QTY double default 0;
+        DECLARE vORI_UOM varchar(20);
+        
+        DECLARE dTaken double;
+
+        DECLARE cursor_i CURSOR FOR SELECT rqdtl_requestidx, rqdtl_stockcode, F_CONVERT_UOM(rqdtl_requestqty,sUOM,rqdtl_uomcode,rqdtl_stockcode) AS REQUEST_QTY,
+                F_CONVERT_UOM(rqdtl_verifiedqty,sUOM,rqdtl_uomcode,rqdtl_stockcode) AS VERIFIED_QTY,
+                F_CONVERT_UOM(rqdtl_approvedqty,sUOM,rqdtl_uomcode,rqdtl_stockcode) AS APPROVED_QTY,
+                F_CONVERT_UOM(rqdtl_fulfilledqty,sUOM,rqdtl_uomcode,rqdtl_stockcode) AS FULLFIED_QTY,
+                F_CONVERT_UOM(rqdtl_approvedqty,sUOM,rqdtl_uomcode,rqdtl_stockcode) - F_CONVERT_UOM(rqdtl_fulfilledqty,sUOM,rqdtl_uomcode,rqdtl_stockcode)
+                AS UNFULLFIED_QTY, rqdtl_uomcode AS ORI_UOM
+                FROM stkt_stockrequestdetail left join stkt_stockrequestheader
+                on stkt_stockrequestdetail.rqdtl_requestidx = stkt_stockrequestheader.rqhdr_requestidx
+                where rqdtl_stockcode = sStkCode
+                AND stkt_stockrequestheader.rqhdr_statuscode in ("A","P")
+                 AND stkt_stockrequestheader.rqhdr_companycode = sCompCode
+                 AND stkt_stockrequestheader.rqhdr_locationcode = sLocation;
+
+        DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = TRUE;
+
+        IF sMethod = 'UPD_FULLFIELD_QTY' THEN
+                OPEN cursor_i;
+                read_loop: LOOP
+                FETCH cursor_i INTO vRQDTL_RequestIdx, vRQDTL_StockCode,vREQUEST_QTY,vVERIFIED_QTY,vAPPROVED_QTY,vFULLFIED_QTY,vUNFULLFIED_QTY,vORI_UOM;
+                        IF done THEN
+                                LEAVE read_loop;
+                        END IF;
+                        IF dFullfiledQty <= 0 THEN
+                                LEAVE read_loop;
+                        END IF;
+                
+                        IF vUNFULLFIED_QTY > 0 THEN
+                                IF vUNFULLFIED_QTY >= dFullfiledQty THEN
+
+                                        UPDATE stkt_stockrequestdetail SET rqdtl_fulfilledqty = rqdtl_fulfilledqty +  F_CONVERT_UOM(dFullfiledQty,vORI_UOM,sUOM,rqdtl_stockcode)
+                                         WHERE rqdtl_requestidx = vRQDTL_RequestIdx;
+                                        SET dFullfiledQty = 0;
+                                ELSE
+                                        SET dFullfiledQty = dFullfiledQty -  vUNFULLFIED_QTY;
+                                        UPDATE stkt_stockrequestdetail SET rqdtl_fulfilledqty = rqdtl_fulfilledqty +   F_CONVERT_UOM(vUNFULLFIED_QTY,vORI_UOM,sUOM,rqdtl_stockcode)
+                                        WHERE rqdtl_requestidx = vRQDTL_RequestIdx;
+
+                                END IF;
+                        END IF;
+
+                END LOOP;
+
+                CLOSE cursor_i;
+
+
+        END IF;
+
+        IF sMethod = 'UPD_FULLFIELD_QTY_EXCLUDE_NEGATIVE_STKBAL' THEN
+                OPEN cursor_i;
+                read_loop: LOOP
+                FETCH cursor_i INTO vRQDTL_RequestIdx, vRQDTL_StockCode,vREQUEST_QTY,vVERIFIED_QTY,vAPPROVED_QTY,vFULLFIED_QTY,vUNFULLFIED_QTY,vORI_UOM;
+                        IF done THEN
+                                LEAVE read_loop;
+                        END IF;
+                        IF dFullfiledQty <= 0 THEN
+                                LEAVE read_loop;
+                        END IF;
+                
+                        IF vUNFULLFIED_QTY > 0 THEN
+                                IF vUNFULLFIED_QTY >= dFullfiledQty THEN
+
+                                        UPDATE stkt_stockrequestdetail SET rqdtl_fulfilledqty = rqdtl_fulfilledqty +  F_CONVERT_UOM(dFullfiledQty,vORI_UOM,sUOM,rqdtl_stockcode)
+                                         WHERE rqdtl_requestidx = vRQDTL_RequestIdx;
+                                        SET dFullfiledQty = 0;
+                                ELSE
+                                        SET dFullfiledQty = dFullfiledQty -  vUNFULLFIED_QTY;
+                                        UPDATE stkt_stockrequestdetail SET rqdtl_fulfilledqty = rqdtl_fulfilledqty +   F_CONVERT_UOM(vUNFULLFIED_QTY,vORI_UOM,sUOM,rqdtl_stockcode)
+                                        WHERE rqdtl_requestidx = vRQDTL_RequestIdx;
+
+                                END IF;
+                        END IF;
+
+                END LOOP;
+
+                CLOSE cursor_i;
+
+
+        END IF;
+      
+END

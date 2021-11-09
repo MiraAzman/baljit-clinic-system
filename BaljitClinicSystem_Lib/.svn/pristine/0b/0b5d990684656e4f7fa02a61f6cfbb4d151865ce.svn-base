@@ -1,0 +1,281 @@
+CREATE DEFINER=`root`@`localhost` PROCEDURE `SP_TRX_PO`(
+IN pMethod            varchar(30),
+IN pCompCode          varchar(10),
+IN pPoGrpNo           varchar(20),
+IN pSuppCode          varchar(10),
+IN pPoNo              varchar(30),
+IN pPoDT              varchar(20),
+IN pDONo              varchar(30),
+IN pDODT              varchar(20),
+IN pInvNo             varchar(30),
+IN pInvDT             varchar(20),
+IN pRefNo             varchar(30),
+IN pRefDT             varchar(20),
+IN pLocCode           varchar(10),
+IN pTotalDiscAmt      varchar(15),
+IN pTotalNettAmt      varchar(15),
+IN pPurchaseOpt       varchar(2),
+IN pPOStatus          varchar(1),
+IN pPurchaser         varchar(10),
+IN pDelvCont          varchar(100),
+IN pDelAdd1           varchar(50),
+IN pDelAdd2           varchar(50),
+IN pDelAdd3           varchar(50),
+IN pDelPostCode       varchar(10),
+IN pDelTelNo          varchar(20),
+IN pDelFaxNo          varchar(20),
+IN pBillCont          varchar(100),
+IN pBillAdd1          varchar(50),
+IN pBillAdd2          varchar(50),
+IN pBillAdd3          varchar(50),
+IN pBillPostCode      varchar(10),
+IN pBillTelNo         varchar(20),
+In pBillFaxNo         varchar(20),
+IN pSuppCont          varchar(100),
+IN pCreditTerm        varchar(10),
+IN pDelDate           varchar(20),
+IN pFullFill          varchar(10),
+IN pRemarks           varchar(250),
+IN pGSTTotal           varchar(15),
+IN pGrossTotal        varchar(15),
+IN pGSTInc            varchar(1),
+IN pRecStatus         varchar(4),
+IN pPOIDX             varchar(10),
+IN pLineNo            varchar(10),
+IN pStkCode           varchar(16),
+IN pUOMCode           varchar(6),
+IN pUnitCost          varchar(15),
+IN pQty               varchar(15),
+IN pDiscAmt           varchar(15),
+IN pSubTotalAmt       varchar(15),
+IN pDiscPercent       varchar(15),
+IN pDiscOption        varchar(1),
+IN pQtyBonus          varchar(15),
+IN pRcvQty            varchar(15),
+IN pRcvQtyBonus       varchar(15),
+IN pDTLFullFill       varchar(10),
+IN pGSTPurCode        varchar(8),
+IN pGstTaxRates       varchar(15),
+IN pGstAmt            varchar(15),
+IN pGrossAmt          varchar(15),
+IN sBy                varchar(10),
+OUT Result varchar(30),
+OUT Message varchar(30),
+OUT IDXKEY varchar(10)
+    )
+BEGIN
+
+
+
+
+
+
+
+
+
+
+
+IF pMethod = 'ADD_PRODUCTMASTER' THEN
+
+          
+                   INSERT INTO stkt_poheader (pohdr_companycode, pohdr_pogrpno, pohdr_suppliercode, pohdr_pono, pohdr_podate,
+                                                             pohdr_totaldiscamt, pohdr_totalnetamt, pohdr_puchaseoption, pohdr_postatus, pohdr_purchaser,
+                                                             pohdr_gstamt, pohdr_grosstotal, pohdr_gstinclusive, createdby, createddt, recstatus,
+                                                             pohdr_refno)
+
+                    VALUES
+                    (pCompCode, pPoGrpNo, pSuppCode, pPoNo, pPoDT,
+                     pTotalDiscAmt, pTotalNettAmt, pPurchaseOpt, pPOStatus, pPurchaser,
+                     pGSTTotal, pGrossTotal, pGSTInc, sBy, NOW(), pRecStatus,
+                     pRefNo);
+
+
+
+                  SELECT '00000' INTO Result;
+                  SELECT  'Success Inserted' INTO Message;
+                  SELECT LAST_INSERT_ID() INTO IDXKEY;
+
+        
+
+END IF;
+
+
+IF pMethod = 'ADD_PRODUCTDETAIL' THEN
+
+            INSERT INTO stkt_podetail (podtl_poidx, podtl_lineno, podtl_stockcode, podtl_uomcode, podtl_unitcost,
+                                                        podtl_qty, podtl_discamt, podtl_subtotalamt, podtl_discpercent, podtl_discoption,
+                                                        podtl_qtybonus, podtl_gstpurcode, podtl_gsttaxrates, podtl_gstamt, podtl_grosstotal,
+                                                        createdby, createddt, recstatus, podtl_gstinclusive)
+
+            VALUES
+            (pPOIDX, pLineNo, pStkCode, pUOMCode, pUnitCost,
+             pQty, pDiscAmt, pSubTotalAmt, pDiscPercent, pDiscOption,
+             pQtyBonus, pGSTPurCode, pGstTaxRates, pGstAmt, pGrossAmt,
+             sBy, NOW(), pRecStatus, pGSTInc);
+
+
+           SELECT '00000' INTO Result;
+           SELECT  'Success Inserted' INTO Message;
+
+
+ END IF;
+
+
+ IF pMethod = 'ADD_POITEM' THEN
+
+             set @LineNo = 0;
+                 Select MAX(podtl_lineno) + 1 From stkt_podetail Where podtl_poidx = pPOIDX
+             into @LineNo ;
+
+
+            INSERT INTO stkt_podetail (podtl_poidx, podtl_lineno, podtl_stockcode, podtl_uomcode, podtl_unitcost,
+                                                        podtl_qty, podtl_discamt, podtl_subtotalamt, podtl_discpercent, podtl_discoption,
+                                                        podtl_qtybonus, podtl_gstpurcode, podtl_gsttaxrates, podtl_gstamt, podtl_grosstotal,
+                                                        createdby, createddt, recstatus, podtl_gstinclusive, modifiedby, modifieddt)
+
+            VALUES
+            (pPOIDX, @LineNo, pStkCode, pUOMCode, pUnitCost,
+             pQty, pDiscAmt, pSubTotalAmt, pDiscPercent, pDiscOption,
+             pQtyBonus, pGSTPurCode, pGstTaxRates, pGstAmt, pGrossAmt,
+             sBy, NOW(), pRecStatus, pGSTInc, sBy, NOW());
+
+
+             Update stkt_poheader
+             SET  pohdr_totaldiscamt = pohdr_totaldiscamt  +  pDiscAmt,
+                  pohdr_totalnetamt = pohdr_totalnetamt +  pSubTotalAmt,
+                  pohdr_gstamt = pohdr_gstamt + pGstAmt,
+                  pohdr_grosstotal = pohdr_grosstotal +  pGrossAmt,
+                  modifiedby =  sBy,
+                  modifieddt = NOW()
+             Where  pohdr_poidx =  pPOIDX;
+
+
+
+           SELECT '00000' INTO Result;
+           SELECT  'Success Inserted' INTO Message;
+
+
+ END IF;
+
+
+ IF pMethod = 'UPDATE_POITEM' THEN
+
+
+            Update stkt_poheader POH
+            Left outer join stkt_podetail POD on POD.podtl_poidx = POH.pohdr_poidx
+            Set  POH.pohdr_totalnetamt = POH.pohdr_totalnetamt -  POD.podtl_subtotalamt ,
+                 POH.pohdr_grosstotal = POH.pohdr_grosstotal - POD.podtl_grosstotal,
+                 POH.pohdr_totaldiscamt =  POH.pohdr_totaldiscamt - POD.podtl_discamt,
+                 POH.pohdr_gstamt = POH.pohdr_gstamt - POD.podtl_gstamt
+            Where POD.podtl_idx = pPOIDX;
+
+            Update stkt_podetail
+            SET
+            podtl_unitcost = pUnitCost,
+            podtl_qty = pQty,
+            podtl_discamt = pDiscAmt,
+            podtl_subtotalamt = pSubTotalAmt,
+            podtl_discpercent = pDiscPercent,
+            podtl_discoption = pDiscOption,
+            podtl_qtybonus =  pQtyBonus,
+            podtl_gstpurcode = pGSTPurCode,
+            podtl_gsttaxrates = pGstTaxRates,
+            podtl_gstamt = pGstAmt,
+            podtl_grosstotal = pGrossAmt,
+            modifiedby = sBy,
+            modifieddt = NOW()
+            WHERE podtl_idx = pPOIDX;
+
+            Update stkt_poheader POH
+            Left outer join stkt_podetail POD on POD.podtl_poidx = POH.pohdr_poidx
+            Set  pohdr_totalnetamt = POH.pohdr_totalnetamt +  pSubTotalAmt,
+                 POH.pohdr_grosstotal = POH.pohdr_grosstotal + pGrossAmt,
+                 POH.pohdr_totaldiscamt =  POH.pohdr_totaldiscamt + pDiscAmt,
+                 POH.pohdr_gstamt = POH.pohdr_gstamt + pGstAmt
+            Where POD.podtl_idx = pPOIDX;
+
+
+           SELECT '00000' INTO Result;
+           SELECT  'Success Updated' INTO Message;
+
+
+ END IF;
+
+ IF pMethod = 'VOID_PO' THEN
+
+
+            Update stkt_poheader
+            Set  pohdr_postatus = pPOStatus,
+            modifiedby = sBy,
+            modifieddt = NOW()
+            Where pohdr_pono = pPoNo;
+
+
+           SELECT '00000' INTO Result;
+           SELECT  'Success VOID' INTO Message;
+
+
+ END IF;
+ 
+ IF pMethod = 'UPDATE_FULFILL_DTL' THEN
+
+ SET @poIdx = '';
+    SET @stkCode = '';
+ SELECT sgrd_poidx INTO @poIdx FROM stkt_grndetail WHERE sgrd_grnhdrdtlidx = pPOIDX AND sgrd_stockidx = pStkCode;
+ SELECT stk_stockcode INTO @stkCode FROM stkm_stockmaster WHERE stk_stockidx = pStkCode LIMIT 1;
+
+ UPDATE stkt_podetail 
+    SET 
+        podtl_fulfill = pDTLFullFill,
+        modifiedby = sBy,
+        modifieddt = NOW()
+    WHERE podtl_poidx = @poIdx AND podtl_stockcode = @stkCode;
+
+    SELECT '00000' INTO Result;
+
+ END IF;
+
+ IF pMethod = 'UPDATE_FULFILL_HDR' THEN
+
+ SET @poIdx = '';
+    SET @fulfill = '';
+    
+ SELECT sgrd_poidx INTO @poIdx FROM stkt_grndetail WHERE sgrd_grnhdrdtlidx = pPOIDX AND sgrd_stockidx = pStkCode;
+
+ -- count partial po dtl
+ SELECT IF(COUNT(podtl_poidx) <> '', COUNT(podtl_poidx), 0) INTO @cntPartial
+    FROM stkt_podetail
+ WHERE podtl_poidx = @poIdx AND podtl_fulfill <> 'Full'
+    GROUP BY podtl_poidx;
+    
+    IF ((@cntPartial <> '') AND (@cntPartial > 0)) THEN -- has partial   
+       SET @fulfill = 'Partial';
+ ELSE -- FULL
+  SET @fulfill = 'Full';
+ END IF;
+    
+    UPDATE stkt_poheader 
+ SET 
+  pohdr_postatus = IF(@fulfill = 'Full', 'C', 'P'),
+  pohdr_fulfill = @fulfill,
+  modifiedby = sBy,
+  modifieddt = NOW()
+ WHERE pohdr_poidx = @poIdx;
+
+ SELECT '00000' INTO Result;
+
+ END IF;
+ 
+  IF pMethod = 'GET_RECV_QTY' THEN
+  
+    SELECT sgrd_poidx INTO @poIdx FROM stkt_grndetail WHERE sgrd_grnhdrdtlidx = pPOIDX AND sgrd_stockidx = pStkCode;
+
+ SELECT SUM(sgrd_qty) INTO Message FROM stkt_grndetail
+ WHERE sgrd_poidx = @poIdx AND sgrd_stockidx = pStkCode 
+    GROUP BY sgrd_poidx, sgrd_stockidx;
+
+    SELECT '00000' INTO Result; 
+
+ END IF;
+
+END

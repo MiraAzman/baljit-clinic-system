@@ -1,0 +1,90 @@
+CREATE DEFINER=`root`@`localhost` PROCEDURE `SP_TRX_LOCATION`(
+IN sMethod         varchar(30),
+IN sCompCode       varchar(10),
+IN sCode           varchar(10),
+IN sName           varchar(100),
+IN sAdd1           varchar(50),
+IN sAdd2           varchar(50),
+IN sAdd3           varchar(50),
+IN sPostcode       varchar(10),
+IN sTel            varchar(20),
+IN sFax            varchar(20),
+IN sCountry        varchar(6),
+IN sArea           varchar(6),
+IN sState          varchar(6),
+IN sRemarks        varchar(100),
+IN sContactPer     varchar(100),
+IN sIsActive       varchar(1),
+IN sBy             varchar(10),
+IN sRecStatus      varchar(4),
+IN sIsMainStore    varchar(1),
+OUT Result         varchar(30)
+)
+BEGIN
+
+
+
+
+
+
+ IF sMethod = 'ADD_LOCATION' THEN
+
+             IF NOT EXISTS(SELECT loc_code FROM  stkm_location  WHERE loc_code = sCode) THEN
+
+                   INSERT INTO stkm_location (loc_code, loc_companycode, loc_name, loc_add1, loc_add2, loc_add3,
+
+                                              loc_postcode, loc_telephone, loc_fax, loc_countrycode, loc_areacode,
+
+                                              loc_statecode, loc_remarks, loc_contactperson, loc_isactive,
+
+                                              loc_ismainstore,
+
+                                              createdby, createddt, recstatus)
+
+                   VALUES (sCode, sCompCode, sName, sAdd1, sAdd2, sAdd3,
+
+                           sPostcode, sTel, sFax, sCountry, sArea,
+
+                           sState, sRemarks, sContactPer, sIsActive,
+
+                           sIsMainStore,
+
+                           sBy, NOW(), sRecStatus);
+
+
+                   SELECT '00000' INTO Result;
+
+              END IF;
+
+ END IF;
+
+
+ IF sMethod = 'EDIT_LOCATION_DETAIL' THEN
+
+            UPDATE stkm_location
+
+            SET loc_name = sName,
+                    loc_add1 = sAdd1,
+                    loc_add2 = sAdd2,
+                    loc_add3 = sAdd3,
+                    loc_postcode = sPostcode,
+                    loc_telephone = sTel,
+                    loc_fax = sFax,
+                    loc_countrycode = sCountry,
+                    loc_areacode = sArea,
+                    loc_statecode = sState,
+                    loc_remarks = sRemarks,
+                    loc_contactperson = sContactPer,
+                    loc_isactive = sIsActive,
+                    recstatus = sRecStatus,
+                    loc_ismainstore = sIsMainStore,
+                    modifiedby = sBy,
+                    modifieddt = NOW()
+
+            WHERE loc_code = sCode AND loc_companycode = sCompCode;
+
+            SELECT '00000' INTO Result;
+
+ END IF;
+
+END

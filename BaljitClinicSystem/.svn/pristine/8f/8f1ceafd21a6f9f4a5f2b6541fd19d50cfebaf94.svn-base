@@ -1,0 +1,1130 @@
+<%@taglib prefix="jstl" uri="http://java.sun.com/jsp/jstl/core" %>
+<jsp:useBean id="DDL" scope="page" class="BusinessLogic.Servlet_PopulateData" />
+<style type="text/css">
+    .ui-jqgrid tr.jqgrow td {
+        word-wrap: break-word; /* IE 5.5+ CSS3 see http://www.w3.org/TR/css3-text/#text-wrap */
+        white-space: pre-wrap; /* CSS3 */
+        white-space: -moz-pre-wrap; /* Mozilla, since 1999 */
+        white-space: -pre-wrap; /* Opera 4-6 */
+        white-space: -o-pre-wrap; /* Opera 7 */
+        overflow: hidden;
+        height: auto;
+        vertical-align: middle;
+        padding-top: 3px;
+        padding-bottom: 3px 
+    }
+
+    .centered {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        margin-top: -50px;
+        margin-left: -200px;
+    }
+    div.errorContainer, div.errorContainer2{
+        display:none;
+        width:100%;
+    }
+    div.errorContainer, div.errorContainer2 ol li{
+        list-style-type:disc;
+        margin-left: 20px;
+    }
+    select:disabled{
+        background: #dddddd;
+    }
+    li{
+        list-style:none;
+    }
+    .disabledTab{
+        pointer-events: none;
+    }
+    input[type="text"].error { border: 1px solid #A94444; background-color:#FFF0F0; }
+    select.error { border: 1px solid #A94444; background-color:#FFF0F0; }
+    textarea.error { border: 1px solid #A94444; background-color:#FFF0F0; }
+</style>
+<link rel="stylesheet" type="text/css" href="css/your_style.css" />
+<link rel="stylesheet" type="text/css" href="js/plugin/jqgrid/ui.multiselect.css" />
+<section id="widget-grid" class="">
+    <!--<span>{{params}}</span>-->
+    <input type="hidden" value={{params}} id="hidHospCode">
+
+    <div class="col-xs-12 col-sm-7 col-md-7 col-lg-12">
+        <h1 class="page-title txt-color-blueDark">
+            <!-- PAGE HEADER -->
+            <i class="fa-fw fa fa-file fa-2x"></i> 
+            Acknowledge Receive of Dispatched Stock
+            <input type="hidden" id="ControlDateTime" value="DT" />
+        </h1>
+    </div>
+    <div class="widget-body row">
+         <article class="col-sm-12 col-md-12 col-lg-12">
+                        <div class="jarviswidget jarviswidget-color-blueDark" id="wid-id-1"  data-widget-editbutton="false" data-widget-custombutton="false"
+                             data-widget-deletebutton="false" data-widget-colorbutton="false" data-widget-fullscreenbutton="false" data-widget-togglebutton="false">
+                            <header>
+                                <span class="widget-icon"> <i class="fa fa-file"></i></span>
+                                <span><h2>&nbsp;Stock Dispatch</h2></span>
+                            </header>
+                            <div class="row">
+                                <div class="widget-body">
+
+                                    <table id="tbDespatchHeader" class="table table-bordered table-striped" style="clear:both;">
+                                        <tbody>
+                                            <tr>
+                                                <td width="12%">Dispatch Number</td>
+                                                <td width="1%">:</td>
+                                                <td width="25%"> 
+                                                    <input type="text" id="lblDocNo" name="lblDocNo"  readonly class="tboxreadonly" rel="popover-hover" data-original-title="Dispatch Number"  />    
+                                                </td>
+                                                <td width="12%">Date</td>
+                                                <td width="1%">:</td>
+                                                <td width="75%">       
+                                                    <input type="text" id="lblDocDate" name="lblDocDate" readonly  class="tboxreadonly" rel="popover-hover" data-original-title="Date"  />    
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td width="12%">Status</td>
+                                                <td width="1%">:</td>
+                                                <td width="25%">     
+                                                    <input type="text" id="lblStatus" name="lblStatus" readonly class="tboxreadonly" />
+                                                    
+                                                </td>
+                                                <td width="12%">Remarks</td>
+                                                <td width="1%">:</td>
+                                                <td width="75%">   
+                                                    <input type="text" id="lblRemarks" name="lblRemarks" readonly class="tboxreadonly" />    
+                                                    
+                                                </td>
+                                            </tr>
+                                            
+                                             <tr>
+                                                <td width="12%">Company</td>
+                                                <td width="1%">:</td>
+                                                <td  colspan="4">     
+                                                    <input type="text" id="lblCompany" name="lblCompany" readonly class="tboxreadonly" />
+                                                    
+                                                </td>
+                                                
+                                                
+                                            </tr>
+                                            <tr>
+                                                 <td width="12%">Issue</td>
+                                                <td width="1%">:</td>
+                                                <td width="25%">     
+                                                    <input type="text" id="lblIssue" name="lblIssue" readonly class="tboxreadonly" />
+                                                    
+                                                </td>
+                                                <td width="12%">Receive</td>
+                                                <td width="1%">:</td>
+                                                <td width="75%">   
+                                                    <input type="text" id="lblRecv" name="lblRecv" readonly class="tboxreadonly" />    
+                                                    
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td width="12%">Dispatcher ID</td>
+                                                <td width="1%">:</td>
+                                                <td width="25%"> 
+                                                    <input type="text" id="lblDespatcherID" name="lblDespatcherID" class="tboxreadonly" readonly/>
+                                                   
+                                                </td>
+                                                <td width="12%">Dispatcher Name</td>
+                                                <td width="1%">:</td>
+                                                <td width="75%">
+                                                    <input type="text" id="lblDespatcherName" name="lblDespatcherName" class="tboxreadonly" readonly/>
+                                                    
+
+                                                </td>
+                                            </tr>
+                                             
+                                            
+
+                                        </tbody>
+                                    </table>
+
+                                </div>
+                            </div>
+                        </div>
+                    </article>
+        
+        <article class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+<!--            <div class="row" style="padding-bottom:10px;padding-left:10px;padding-right:10px;">
+                <div class="errorContainer alert alert-danger alert-block">
+                    <h4 class="alert-heading">There were some field left out or invalid inputs. Please brief through the form and reenter necessarily.</h4>
+                    <ol>
+                    </ol>
+                </div>
+            </div>-->
+            <div class="row">
+                <form id="form_DespDetail" name="form_DespDetail">
+                    
+                    <article class="col-sm-12 col-md-12 col-lg-12">
+                        <div class="jarviswidget jarviswidget-color-blueDark" id="wid-id-4"  data-widget-editbutton="false" data-widget-custombutton="false"
+                             data-widget-deletebutton="false" data-widget-colorbutton="false" data-widget-fullscreenbutton="false" data-widget-togglebutton="false">
+                            <header>
+                                <span class="widget-icon"> <i class="fa fa-file"></i></span>
+                                <span><h2>&nbsp;Stock Dispatch Details</h2></span>
+                            </header>
+                            <div class="padding-10">
+
+                               
+
+                       
+
+                                <div id="gridDespatchDetail" class="" >
+                                    <!--<div id="bar-chart" class="chart"></div>-->
+
+                                    <table  class="table table-striped" id="tbItems" >
+                                        <thead>
+                                         
+                                        <th>Action</th>
+                                        <th id="PROD">Product</th>                                        
+                                        <th id="UOM">UOM</th>
+                                        <th id="DESPQTY">Dispatched</th>
+                                        <!--<th id="PREVACCPQTY">Prev. Accepted Qty</th>-->
+                                        <th id="ACCPQTY">Qty to Accept</th>
+                                        
+                                        <th id="REJQTY">Rejected</th>
+                                        <th id="PREVACCPTQTY">Accepted</th>
+                                        
+                                        <th id="REMARKS">Remarks</th>
+                                        <th id="XFRDTLIDX" style="display:none;">XFRDTLIDX</th>
+                                        <th id="DESPDTLIDX" style="display:none;">DESPDTLIDX</th>
+                                        <!--<th id="FUNCTION" style="display:none;">FUNCTION</th>-->
+
+                                        </thead>
+                                        <tbody id="DespatchDetailGrid" >
+
+                                        </tbody>
+                                    </table>
+
+                                </div>
+                            </div>
+                        </div>
+
+
+
+                    </article>
+
+                    <div hidden>
+                        <input type="hidden" id="hidDespItems" name="hidDespItems"/>
+                        <input type="hidden" id="hidDESPHDRIDX" name="hidDESPHDRIDX"/>
+
+                    </div>
+
+                </form>
+            </div>
+
+        </article>
+        <div>
+            <div class="row">
+                <div class="col-sm-12">
+                    <div align="center" class="padding-5" >
+                    <input type="text" id="lblURLStatus" name="lblRecv" readonly class="tboxreadonly"  />    
+                </div>
+            </div>
+                </div>
+            <div class="row">
+                <div class="col-sm-12">
+                    <div align="center" class="padding-5" >
+                        <!--<input type="button" class="btn btn-default bg-color-blueDark txt-color-white form-btn" id="btnEdit" name="btnEdit" value="Edit Detail" onclick="enableEdit()" style="margin-right:20px;"/>-->
+                        
+                        <input type="button" Id="btnSave"  class="btn btn-default bg-color-blueDark txt-color-white" value="Confirm"  onclick="confirm();"  />
+                        <!--<input type="button" class="btn btn-default bg-color-blueDark txt-color-white form-btn" id="btnReject" name="btnReject" value="Reject All"  style="margin-right:20px;"/>-->
+                        <input type="button" Id="btnCancel"  class="btn btn-default bg-color-blueDark txt-color-white"  value="Cancel" onclick="location.href = '#/StockDespatchList'" />
+                        <!--<button type='button' class='DeleteSummaryGrid'><span class='glyphicon glyphicon-trash'></span>Undo</button>-->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<jsp:include page="../../includes/loading-no-status.jsp"/>
+  <jsp:include page="../../../includes/PopUpInitPage.jsp"/>
+  <jsp:include page="../../../includes/yes-no.jsp"/>
+<!--<script src="js/buttonset.js"></script>-->
+<script type="text/javascript">
+    
+    var SaveDisabled = false;
+    var RejectDisabled = false;
+    var recvloc = "";
+    var bServerOK = false;
+    pageSetUp();
+    getCurrDateTime();
+    $("#btnSave").prop("disabled",true);
+    $("#btnReject").prop("disabled",true);
+//2016Jun06 CPK
+        $.get('${pageContext.request.contextPath}/Servlet_Role', {SFC: 'GET_MENU_BY_ROLE', MNUCODE: "MNU000015", ROLECODE:'<%= session.getAttribute("UsrRole")%>' }, function (data) {
+            var arrData = JSON.parse(data);
+            if (arrData.rows[0].AllowApprove === '0'){                 
+                  $("#btnSave").css("display", "none");
+                  $("#btnReject").css("display", "none");
+            }            
+            
+            
+            
+        });
+        
+         function getCurrDateTime()
+        {    
+            $.get('${pageContext.request.contextPath}/Servlet_SystemEnvironmentSettings', {SFC: 'GET_CURRENTDATETIME'}, function (data) {
+                var arrData = String(data);
+    //          alert(data);
+                $("#ControlDateTime").val(arrData);            
+            });
+        };
+        
+         function CheckServerAvailability()
+        {    
+//            alert(recvloc);
+            $.get('${pageContext.request.contextPath}/Servlet_ApplicationSetting', {SFC: 'GET_LOCATION_URL_STATUS', LOCATION:recvloc}, function (data) {
+            var arrData = String(data);
+            
+            if (arrData === 'N'){                 
+                 
+                bServerOK = false;      
+                               
+            }     
+            else
+            {
+                bServerOK = true;
+            }
+            
+//            alert(bServerOK);
+            
+            
+             if (bServerOK === false){                 
+                  $("#btnSave").prop('disabled', true);
+                $("#btnReject").prop('disabled', true);
+                  var sMsg = "Web Server for " + $("#lblRecv").val() + " is not available, please contact System Administrator!!!";
+                  $("#lblURLStatus").val(sMsg);
+ 
+                  
+                   $.bigBoxFail({
+                        title: "Unabe to connect Web Server",
+                        content: sMsg,
+                        timeout: 6000
+                       
+                        });
+                         
+                               
+            }     
+            else
+            {
+                $("#lblURLStatus").val("");
+               
+                $("#btnSave").prop('disabled', SaveDisabled);
+                $("#btnReject").prop('disabled', RejectDisabled);
+
+            }
+
+
+            
+            
+        });
+            
+        };
+        
+  function bindData(sParam) {
+        
+        $(document).ready(function() {
+
+            $.ajaxSetup({ error: AjaxError });
+            
+            var headerID = sParam.DESPHDRIDX;
+            $("#hidDESPHDRIDX").val(headerID);
+    //alert(headerID);
+            
+            $.ajax({
+                type:'POST',
+                url:"${pageContext.request.contextPath}/Servlet_StockDespatch",
+                data:  {
+                    SFC: 'GET_STKDESPATCH_HEADER', 
+                    DESPHDRIDX: headerID,
+                    DESPDTLIDX: '', 
+                    STKCODE: '',
+                    COMPCODE: '',
+                    LOCATION: '',
+                    PERSON: '',
+                    DOCDATE: ''
+                    
+                },
+                dataType: 'json',
+                success: function(data) {               
+                             
+                            
+                        var arrItemData = data;  
+                        
+                     
+                        if (arrItemData.rows.length> 0) 
+                        {             
+                            var i = 0;
+                            $("#lblDocNo").val(arrItemData.rows[i].desh_docno);
+                            $("#lblDocDate").val(arrItemData.rows[i].desh_docdate);
+//                            $("#lblStatus").val(arrItemData.rows[i].desh_status);
+                            var sStatusDesc = "";
+                            
+                            if (arrItemData.rows[i].desh_status === "C")
+                            {
+                                sStatusDesc = "Confirmed";                                
+                            }
+                            else if (arrItemData.rows[i].desh_status === "O")
+                            {
+                                sStatusDesc = "Open";
+                            }
+                            else if (arrItemData.rows[i].desh_status === "P")
+                            {
+                                sStatusDesc = "Partially Accepted";
+                            }
+                            else if (arrItemData.rows[i].desh_status === "R")
+                            {
+                                sStatusDesc = "Rejected";
+                            }
+                            $("#lblStatus").val(sStatusDesc);
+
+                            $("#lblRemarks").val(arrItemData.rows[i].desh_remark);
+                            $("#lblCompany").val(arrItemData.rows[i].desh_company);
+                            $("#lblIssue").val(arrItemData.rows[i].desh_issuelocation);
+                            $("#lblRecv").val(arrItemData.rows[i].desh_recievelocation);
+recvloc = arrItemData.rows[i].desh_recievelocation;
+//alert(recvloc + " first");
+
+CheckServerAvailability();
+//alert(bServerOK);                            
+$("#lblDespatcherID").val(arrItemData.rows[i].desh_personid);
+                            $("#lblDespatcherName").val(arrItemData.rows[i].desh_personname);
+
+                            if (arrItemData.rows[i].desh_status === "R"
+                                    || arrItemData.rows[i].desh_status === "C"
+                                    || arrItemData.rows[i].desh_status === "A")
+                            {
+                                $("#btnSave").prop("disabled",true);
+                                $("#btnReject").prop("disabled",true);
+                                SaveDisabled = true;
+                                RejectDisabled = true;
+                                
+                            }
+                            
+                            
+//                               alert($("#btnSave").prop('disabled'));
+//            alert($("#btnReject").prop('disabled'));
+//            
+//            alert($('#btnSave').is(':disabled'));
+//            alert($('#btnReject').is(':disabled'));
+                        }                                                                        
+        
+        
+                        }     
+                //error:  AjaxError
+            });
+            
+            
+            //alert('headerIdx: ' + headerID + '\ndetailIdx : ' + detailID );
+            var request = $.ajax({
+                type:'POST',
+                url:"${pageContext.request.contextPath}/Servlet_StockDespatch",
+                data:  {
+                    SFC: 'GET_STKDESPATCH_ITEMS', 
+                    DESPHDRIDX: headerID,
+                    DESPDTLIDX: '', 
+                    STKCODE: '',
+                    COMPCODE: '',
+                    LOCATION: '',
+                    PERSON: '',
+                    DOCDATE: ''
+                    
+                },
+                dataType: 'json',
+                success: function(data) {               
+                             
+                            
+                        var arrItemData = data;  
+                        var j = 0;
+//alert(arrItemData.rows.length);                        
+                        for (var i = 0; i < arrItemData.rows.length; i++) 
+                        {             
+//"<td><input type='checkbox' class='form-control' checked ID='chkSelect" + j + "' name='chkSelect" + j + "'  /></td>" +
+                             j= j+1;
+                             
+//                             alert(arrItemData.rows[i].desd_qty);
+//                             alert(arrItemData.rows[i].desd_accepted_qty);
+                             var max =  parseFloat(arrItemData.rows[i].desd_qty)
+                             - parseFloat(arrItemData.rows[i].desd_accepted_qty);
+                             var readonly = '';
+                             var remreadonly = '';
+                             var dropdowndisable = '';
+                            if (arrItemData.rows[i].Status === 'O')
+                            {
+                               readonly = '';
+                               dropdowndisable = '';
+                               remreadonly = '';
+                            }
+                            else if (arrItemData.rows[i].Status === 'A')
+                            {
+                               readonly = '';
+                               dropdowndisable = 'disabled';
+                               remreadonly = '';
+                            }
+                            else if (arrItemData.rows[i].Status === 'R')
+                            {
+                                readonly = 'readonly';
+                               remreadonly = 'readonly';
+                               dropdowndisable = 'disabled';
+                               max = 0;
+                            }
+                            else if (arrItemData.rows[i].Status === 'P')
+                            {
+                                readonly = '';
+                               remreadonly = '';
+                               dropdowndisable = 'disabled';
+                            }
+                            
+                            if (max === 0)
+                            {
+                                readonly = 'readonly';
+                               remreadonly = 'readonly';
+                               dropdowndisable = 'disabled';
+                            }
+//                            $("#tbItems tbody").append("<tr id=tr" + j + ">" +
+//
+//                                
+//                                "<td> <select class='form-control' " + dropdowndisable +  " ID='cboStatus" + j + "' name='cboStatus" + j + "'> <option value='O'></option><option value='A'>Accept</option><option value='R'>Reject</option>  </select></td>" +                                    
+//                                "<td><input type='text' class='form-control' readonly ID='txtPROD" + j + "' name='txtPROD" + j + "' style='width:300px'   /></td>" +
+//                                "<td><input type='text' class='form-control' readonly ID='txtUOM" + j + "' name='txtUOM" + j + "' style='width:100px'   /></td>" +
+//                                "<td><input type='text' class='form-control' readonly ID='txtDESPQTY" + j + "' name='txtDESPQTY" + j + "' style='width:100px' value='0'  /></td>" +
+//"<td><input type='text' class='form-control' readonly ID='txtPREVACCPQTY" + j + "' name='txtPREVACCPQTY" + j + "' style='width:100px' /></td>" +                                
+//                                "<td><input type='text' class='form-control' " + readonly + " ID='txtACCPQTY" + j + "' name='txtACCPQTY" + j + "' style='width:100px' value='0' max = '" + max + "'  /></td>" +
+//                                "<td><input type='text' class='form-control'  readonly   ID='txtREJQTY" + j + "' name='txtREJQTY" + j + "' style='width:100px' value='0'  /></td>" +
+//                                "<td><input type='text' class='form-control' " + remreadonly + " ID='txtRemarks" + j + "' name='txtRemarks" + j + "' style='width:200px' /></td>" +
+//                                "<td><input type='hidden' class='form-control' ID='hidXfrDetailIdx" + j + "' name='hidXfrDetailIdx" + j + "' style='width:100px' /></td>" +
+//                                "<td><input type='hidden' class='form-control' ID='hidDespDetailIdx" + j + "' name='hidDespDetailIdx" + j + "' style='width:100px'  /></td>" +
+//                                
+//                                "<td><input type='hidden' class='form-control' ID='hidPRODCODE" + j + "' name='hidPRODCODE" + j + "'   /></td>" +
+//                                "</tr>"
+//                            );
+                            
+                            
+                            $("#tbItems tbody").append("<tr id=tr" + j + ">" +
+
+                                
+                                "<td> <select class='form-control' " + dropdowndisable +  " ID='cboStatus" + j + "' name='cboStatus" + j + "'> <option value='O'></option><option value='A'>Accept</option><option value='R'>Reject</option>  </select></td>" +                                    
+                                "<td><input type='text' class='form-control' readonly ID='txtPROD" + j + "' name='txtPROD" + j + "' style='width:150px'   /></td>" +
+                                "<td><input type='text' class='form-control' readonly ID='txtUOM" + j + "' name='txtUOM" + j + "' style='width:100px'   /></td>" +
+                                "<td><input type='text' class='form-control' readonly ID='txtDESPQTY" + j + "' name='txtDESPQTY" + j + "' style='width:100px' value='0'  /></td>" +
+
+                                "<td><input type='text' class='form-control' " + dropdowndisable + " ID='txtACCPQTY" + j + "' name='txtACCPQTY" + j + "' style='width:100px' value='0' max = '" + max + "'  /></td>" +
+                                "<td><input type='text' class='form-control'  readonly   ID='txtREJQTY" + j + "' name='txtREJQTY" + j + "' style='width:100px' value='0'  /></td>" +
+                            "<td><input type='text' class='form-control' readonly ID='txtPREVACCPQTY" + j + "' name='txtPREVACCPQTY" + j + "' style='width:100px' /></td>" +                                
+                                "<td><input type='text' class='form-control' " + dropdowndisable + " ID='txtRemarks" + j + "' name='txtRemarks" + j + "' style='width:100px' /></td>" +
+                                "<td><input type='hidden' class='form-control' ID='hidXfrDetailIdx" + j + "' name='hidXfrDetailIdx" + j + "' style='width:100px' /></td>" +
+                                "<td><input type='hidden' class='form-control' ID='hidDespDetailIdx" + j + "' name='hidDespDetailIdx" + j + "' style='width:100px'  /></td>" +
+                                
+                                "<td><input type='hidden' class='form-control' ID='hidPRODCODE" + j + "' name='hidPRODCODE" + j + "'   /></td>" +
+                                "</tr>"
+                            );
+                    
+                            $("#cboStatus"+ j).val(arrItemData.rows[i].Status);
+                            var currstatus = arrItemData.rows[i].Status;
+                            if (currstatus === 'P')
+                            {
+                                $("#cboStatus"+ j).val('A');
+                            }
+//                alert(currstatus);            
+                            
+                            $("#txtPROD"+ j).val(arrItemData.rows[i].StockDesc);
+                            $("#hidPRODCODE"+ j).val(arrItemData.rows[i].StockCode);
+                            $("#txtUOM"+ j).val(arrItemData.rows[i].desd_uomcode);
+                            $("#txtDESPQTY"+ j).val(parseFloat(arrItemData.rows[i].desd_qty));
+                            $("#txtACCPQTY"+ j).val(arrItemData.rows[i].desd_qty);
+                             
+                            $("#txtPREVACCPQTY"+ j).val(parseFloat(arrItemData.rows[i].desd_accepted_qty));
+                            if (parseFloat(arrItemData.rows[i].desd_accepted_qty) > 0)
+                            {
+                                $("#txtACCPQTY"+ j).val(0);
+                            }
+                            else
+                            {
+                                $("#txtACCPQTY"+ j).val(max);
+                            }
+                            var rejqty = parseFloat($("#txtDESPQTY"+ j).val()) -  parseFloat($("#txtPREVACCPQTY"+ j).val()) -  parseFloat($("#txtACCPQTY"+ j).val());
+                            $("#txtREJQTY"+ j).val(rejqty);
+                            
+                            $("#txtRemarks"+ j).val(arrItemData.rows[i].desd_remarks);
+                            $("#hidXfrDetailIdx"+ j).val(arrItemData.rows[i].desd_stockxfrdtlidx);
+                            $("#hidDespDetailIdx"+ j).val(arrItemData.rows[i].desd_despatchdtlidx);
+                            
+                            
+                        }                                                                        
+        
+//                        //
+                        
+                        var o = 0;
+                        for (var i = 0; i < arrItemData.rows.length; i++) 
+                        { 
+                            var currstatus = arrItemData.rows[i].Status;
+                            if (currstatus === 'O')                             
+                            {
+                                o=o+1;
+                            }
+//                             alert(arrItemData.rows[i].Status);
+                        }
+                        
+                        if (o===0)
+                        {
+                            $("#btnSave").prop('disabled', true);
+                            $("#btnReject").prop('disabled', true);
+                            SaveDisabled = true;
+                            RejectDisabled = true;
+                            
+                        }
+                        
+//                                            alert($("#btnSave").prop('disabled'));
+//            alert($("#btnReject").prop('disabled'));
+//            
+//            alert($('#btnSave').is(':disabled'));
+//            alert($('#btnReject').is(':disabled'));
+//            
+                        
+                            //
+                        }     
+                //error:  AjaxError
+                
+                
+                
+
+            
+            });         
+            
+            
+            
+//            SaveDisabled = false;
+//    var RejectDisabled
+            
+            
+//            alert($("#lblStatus").val());
+//         $("#lblRecv").val()
+//if ($("#lblStatus").val() === 'O')
+//{
+
+         //$.get('${pageContext.request.contextPath}/Servlet_ApplicationSetting', {SFC: 'GET_LOCATION_URL_STATUS', LOCATION:$("#lblRecv").val()}, function (data) {
+//         $.get('${pageContext.request.contextPath}/Servlet_ApplicationSetting', {SFC: 'GET_LOCATION_URL_STATUS', LOCATION:recvloc}, function (data) {
+//            var arrData = String(data);
+//            
+//            
+//            
+//            
+//            
+//            if (arrData === 'N'){                 
+//                  $("#btnSave").prop('disabled', true);
+//                $("#btnReject").prop('disabled', true);
+//                  var sMsg = "Web Server for " + $("#lblRecv").val() + " is not available, please contact System Administrator!!!";
+//                  $("#lblURLStatus").val(sMsg);
+// 
+//                  
+//                   $.bigBoxFail({
+//                        title: "Unabe to connect Web Server",
+//                        content: sMsg,
+//                        timeout: 6000
+//                       
+//                        });
+//                         
+//                               
+//            }     
+//            else
+//            {
+//                $("#lblURLStatus").val("");
+//               
+//                $("#btnSave").prop('disabled', SaveDisabled);
+//                $("#btnReject").prop('disabled', RejectDisabled);
+//
+//            }
+//        });
+
+        }); 
+    }
+    
+    function AjaxError(x, e) {
+      if (x.status === 0) {
+        alert(' Check Your Network.');
+      } else if (x.status === 404) {
+        alert('Requested URL not found.');
+      } else if (x.status === 500) {
+        alert('Internal Server Error.');
+      }  else {
+         alert('Unknown Error.\n' + x.responseText);
+      }
+    }
+
+    $("#btnReject").click(function () {
+        var bToContinue = true;
+        $('#tbItems tr').each(function (row, th) {
+                if (row > 0)
+                {
+                    var rowid = $(this).closest('tr').attr('id');
+                    var rowno = rowid.substring(2);
+                     
+                  
+                    var selectedstatus = $('#cboStatus'  + rowno).val();
+                     
+                    if ((selectedstatus ==="R" || selectedstatus ==="O" || selectedstatus ==="") && $('#txtRemarks' + rowno).val() === "" 
+                            && !$('#txtRemarks' + rowno).prop('disabled'))
+                    {
+                      $.bigBoxFail({
+                        title: "Update Stock Dispatch FAIL.",
+                        content: "Please enter your reason(s) for REJECT.",
+                        timeout: 6000
+                       
+                        });
+                        bToContinue = false;
+                      return false;
+                    }
+                    
+                }
+            });
+    if (!bToContinue)
+    {
+        return;
+    }
+//-----
+        var rowCount = $('#tbItems tr').length;
+                   
+        var sStatus = "";            
+        
+            var RejectStatusNos = 0;
+        
+            var DespItemData = new Array();
+            var rowDesp = 0;
+           
+            $('#tbItems tr').each(function (row, th) {
+                if (row > 0)
+                {
+                    var rowid = $(this).closest('tr').attr('id');
+                    var rowno = rowid.substring(2);
+                    var selectedstatus = $('#cboStatus'  + rowno).val();
+                    
+                        if (selectedstatus ==="R")
+                        {
+                        RejectStatusNos = RejectStatusNos + 1;
+                        }
+                    else if (selectedstatus ==="O" || selectedstatus ==="P")
+                        {
+                        RejectStatusNos = RejectStatusNos + 1;
+                        var comp = $('#txtCompany' + rowno).val();
+                       $("#txtACCPQTY"+ rowno).val(0);
+                            DespItemData[rowDesp] = {
+                                FUNCTION: 'UPDATE',
+                                "COMPCODE": comp
+                                ,"PRODCODE": $('#hidPRODCODE' + rowno).val()  
+                                ,"LOCATION_FROM":  $('#lblIssue').val() 
+                                ,"LOCATION_TO": $('#lblRecv').val()                   
+                                , "UOM": $('#txtUOM' + rowno).val()
+                                , "DESPDTLIDX": $('#hidDespDetailIdx' + rowno).val()                             
+                                , "QTY":  parseFloat($('#txtDESPQTY' + rowno).val())
+                                , "ACCPQTY": parseFloat($('#txtACCPQTY' + rowno).val())
+                                , "PREVACCPQTY": parseFloat($('#txtPREVACCPQTY' + rowno).val())
+                            , "STATUS": 'R'
+                                , "REMARKS": $('#txtRemarks' + rowno).val()
+                                , "XFERIDX" : $('#hidXfrDetailIdx' + rowno).val()
+                                ,"CONTROL_DATETIME":  $('#ControlDateTime').val()
+
+                            };
+
+                            rowDesp = rowDesp + 1;
+                        }
+                    }
+            });
+    
+             
+            var ItemToSend = JSON.stringify(DespItemData);
+            $('#hidDespItems').load().val(ItemToSend).valid();
+             
+            rowCount = rowCount - 1;
+ 
+            if (RejectStatusNos === 0)
+            {
+                $.bigBoxFail({
+                        title: "Reject Dispatch FAIL",
+                        content: "No Items for Reject.",
+                        timeout: 6000
+                    });
+                      
+                    $("#btnSave").prop("disabled",true);
+                    $("#btnReject").prop("disabled",true);
+                    //$('#btnCancel').trigger('click');
+                    return;
+            }
+         
+            if (RejectStatusNos === rowCount)
+            {
+                sStatus = "R";
+            }
+            else
+            {
+                sStatus = "P";
+            } 
+
+
+
+            var request = $.ajax({
+                type: "POST",
+                url: "${pageContext.request.contextPath}/Servlet_StockDespatch?SFC=UPDATE_STOCK_DESPATCH",
+                data: {
+                    
+                    ITEMS: $('#hidDespItems').val(),
+                    COMPCODE: $('#lblCompany').val(),
+                    ISSUE: $('#lblIssue').val(),
+                    RECIEVE: $('#lblRecv').val(),
+                    PERSON_ID: $('#lblDespatcherID').val(),
+                    PERSON_NAME: $('#lblDespatcherName').val(),
+                    REMARKS: $('#lblRemarks').val(),
+                    FUNCTION: 'UPDATE',
+                    STATUS: sStatus,
+                    DESPHDRIDX:  $('#hidDESPHDRIDX').val()
+                    ,"CONTROL_DATETIME":  $('#ControlDateTime').val()
+                },
+                dataType: 'json',
+                beforeSend: function () {
+                    //  $.showLoadingNoStatus();
+                }
+            });
+        
+        
+
+            request.done(function (response) {
+ 
+
+                if (response.bool === true) {
+                    $.bigBoxSuccess({
+                        title: "Update Stock Dispatch Successful.",
+                        content: "Stock Dispatch Updated Successfully.",
+                        timeout: 6000
+                    });
+                    $("#btnSave").prop("disabled",true);
+                    $("#btnReject").prop("disabled",true);
+//                    $('#btnCancel').trigger('click');
+                    
+                    // location.href = "#/ProductDetail/" + $('#lblPrdCode').val();
+                } else {
+                    $.bigBoxFail({
+                        title: "Update Stock Dispatch FAIL.",
+                        content: "There is some error during Stock Dispatch creation.<br> Please try again...",
+                        timeout: 6000
+                    });
+                }
+
+
+            });
+
+
+
+    });
+
+    
+    function confirm()
+    {   
+        var bToContinue = true;
+       
+        $('#tbItems tr').each(function (row, th) {
+                if (row > 0)
+                {
+                    var rowid = $(this).closest('tr').attr('id');
+                    var rowno = rowid.substring(2);
+                     
+                  
+                    var selectedstatus = $('#cboStatus'  + rowno).val();
+                     
+                if (selectedstatus ==="R" && $('#txtRemarks' + rowno).val() === "" )
+                    {
+                      $.bigBoxFail({
+                        title: "Update Stock Dispatch FAIL.",
+                        content: "Please enter your reason(s) for REJECT.",
+                        timeout: 6000
+                       
+                        });
+                      bToContinue = false;
+                      return false;
+                    }
+                var DespQty = parseFloat($('#txtDESPQTY' + rowno).val()); 
+                var AccQty =parseFloat($('#txtACCPQTY' + rowno).val()); 
+                var PrvQty =parseFloat($('#txtPREVACCPQTY' + rowno).val()); 
+                if (selectedstatus ==="A" && (DespQty !== AccQty + PrvQty) &&  $('#txtRemarks' + rowno).val() === "")
+                {
+                  $.bigBoxFail({
+                    title: "Update Stock Dispatch FAIL.",
+                    content: "Please enter your reason(s) for REJECT.",
+                    timeout: 6000
+
+                    });
+                    bToContinue = false;
+                  return false;
+                }                      
+            }
+        });
+        
+                                    
+         document.getElementById("btnSave").disabled = true;
+         if (bToContinue)
+         {
+              showYesNo({
+                title: "Acknowledge Received Dispatched Stock...",
+                width: 420,
+                noClose: true,
+                isModal: true,
+                body: [
+                    "<br><h4>Are you sure to proceed to Acknowledged received stock?<h4><br>"
+                ],
+                show: function () {
+                },
+                Yes: {
+                     text: "Yes",
+                    opt: function () {           
+                        addDispatch();
+                        hideYesNo();
+                    }
+                },
+                No: {
+                    text: "No",
+                    opt: function () {
+                        document.getElementById("btnSave").disabled = false;
+                        hideYesNo();
+                    }
+                }
+            });       
+         }else
+            {
+              $.bigBox({
+                title: "Warning!",
+                content: "Unable to Acknowledge Received Dispatched Stock.",
+                color: "#C46A69",
+                icon: "fa fa-warning shake animated",
+                timeout: 6000
+            });
+            document.getElementById("btnSave").disabled = false;
+            }
+                  
+    }
+        
+             
+    function addDispatch()
+    {
+        var rowCount = $('#tbItems tr').length;           
+        var sStatus = "";            
+        var R_Status = 0;
+        var A_Status = 0;
+        var eqQtyNos = 0;
+        var difQtyNos = 0;
+        var dtlStatus = "A";
+            var DespItemData = new Array();
+            var rowDesp = 0;
+            $('#tbItems tr').each(function (row, th) {
+                if (row > 0)
+                {
+                    var rowid = $(this).closest('tr').attr('id');
+                    var rowno = rowid.substring(2);                     
+                    var selectedstatus = $('#cboStatus'  + rowno).val();
+                  
+                if (selectedstatus ==="R" || selectedstatus ==="A")
+                {
+                    var DespQty = parseFloat($('#txtDESPQTY' + rowno).val()); 
+                    var AccQty =parseFloat($('#txtACCPQTY' + rowno).val()); 
+
+
+                    if (selectedstatus === "R")
+                    {
+                        $("#txtACCPQTY"+ rowno).val(0);
+                        AccQty = 0;
+                        dtlStatus = "R";
+                        difQtyNos = difQtyNos + 1;
+                        R_Status = R_Status + 1;
+                    }
+                    else
+                    {
+                        if (DespQty !== AccQty)
+                        {
+                            difQtyNos = difQtyNos + 1;
+                            dtlStatus = "P";
+
+                    }
+                        else  if (DespQty === AccQty)
+                    {
+                            eqQtyNos = eqQtyNos + 1;
+                            dtlStatus = "A";
+                             A_Status = A_Status + 1;
+                        }
+                    }
+
+
+                        var comp = $('#txtCompany' + rowno).val();
+
+                    if (AccQty === 0 && dtlStatus !== "R")
+                    {
+                    }
+                    else
+                    {
+                        DespItemData[rowDesp] = {
+                            FUNCTION: 'UPDATE',
+                            "COMPCODE": comp
+                            ,"PRODCODE": $('#hidPRODCODE' + rowno).val()  
+                            ,"LOCATION_FROM":  $('#lblIssue').val() 
+                            ,"LOCATION_TO": $('#lblRecv').val()                   
+                            , "UOM": $('#txtUOM' + rowno).val()
+                            , "DESPDTLIDX": $('#hidDespDetailIdx' + rowno).val()                             
+                            , "QTY":  parseFloat($('#txtDESPQTY' + rowno).val())
+                            , "ACCPQTY": parseFloat($('#txtACCPQTY' + rowno).val())
+                            , "PREVACCPQTY": parseFloat($('#txtPREVACCPQTY' + rowno).val())
+                            , "STATUS": dtlStatus
+                            , "REMARKS": $('#txtRemarks' + rowno).val()
+                            , "XFERIDX" : $('#hidXfrDetailIdx' + rowno).val()
+                            ,"CONTROL_DATETIME":  $('#ControlDateTime').val()
+
+                            };
+                            rowDesp = rowDesp + 1;
+                    }
+                }
+            }
+            });
+                
+            var ItemToSend = JSON.stringify(DespItemData);
+            $('#hidDespItems').load().val(ItemToSend).valid();
+             
+            if (DespItemData.length === 0)
+            {
+                $.bigBoxFail({
+                        title: "Update Stock Dispatch FAIL.",
+                        content: "No item was selected for Update.",
+                        timeout: 6000
+                    });
+                 
+                    return;
+            }
+            rowCount = rowCount - 1;
+            
+            if (difQtyNos > 0)
+            {
+                sStatus = "P";
+            }
+            else if (eqQtyNos === rowCount)
+            {
+                sStatus = "C";
+            }
+            if ( R_Status === rowCount)
+            {
+                sStatus = "R";
+            }
+            else if ( A_Status === rowCount)
+            {
+                sStatus = "C";
+            } 
+            else if ( (A_Status + R_Status )=== rowCount)
+            {   
+                sStatus = "C";
+            }
+             
+            var stkcode = JSON.parse($('#hidDespItems').val());        
+            var stkcode_array = [];
+            for (var i=0 ; i<stkcode.length ; i++){
+                stkcode_array.push(stkcode[i].PRODCODE);
+            }
+            
+            $.ajax({
+                type: "POST",
+                url: "${pageContext.request.contextPath}/Servlet_Stock?SFC=CHECK_STOCK_HIS",
+                data: {
+                    STOCK: JSON.stringify(stkcode_array),
+                    COMPANY: $('#lblCompany').val(),
+                    LOCATION: $('#lblRecv').val()
+                },
+                dataType: 'json',
+                beforeSend: function () {
+                },
+                 success: function (response, status, xhr) {
+                 },
+                  complete: function (xhr, status) {
+                      $.ajax({
+                type: "POST",
+                url: "${pageContext.request.contextPath}/Servlet_StockDespatch?SFC=UPDATE_STOCK_DESPATCH",
+                data: {                   
+                    ITEMS: $('#hidDespItems').val(),
+                    COMPCODE: $('#lblCompany').val(),
+                    ISSUE: $('#lblIssue').val(),
+                    RECIEVE: $('#lblRecv').val(),
+                    PERSON_ID: $('#lblDespatcherID').val(),
+                    PERSON_NAME: $('#lblDespatcherName').val(),
+                    REMARKS: $('#lblRemarks').val(),
+                    FUNCTION: 'UPDATE',
+                    STATUS: sStatus,
+                            DESPHDRIDX:  $('#hidDESPHDRIDX').val(),
+                            CONTROL_DATETIME:  $('#ControlDateTime').val()
+                },
+                dataType: 'json',
+                beforeSend: function () {
+                             $.showLoadingNoStatus();
+                        },
+                        success: function (response, status, xhr) {
+                if (response.bool === true) {
+                            LoadPrintPreview($("#hidDESPHDRIDX").val());
+                    $.bigBoxSuccess({
+                                title: "Acknowledge Received Dispatched Stock...",
+                                content: "Received Dispatched Stock Successfully.",
+                        timeout: 6000
+                    });
+                } else {
+                    $.bigBoxFail({
+                        title: "Update Stock Dispatch FAIL.",
+                        content: "There is some error during Stock Dispatch creation.<br> Please try again...",
+                        timeout: 6000
+                    });
+                }
+                        },
+                        error: function (xhr, status, error) {
+                            $.bigBoxFail({
+                                title: "Acknowledge Received Dispatched Stock ERROR",
+                                content: "There is some error occur during acknowledgement of dispatch process. Please try again later",
+                                timeout: 6000
+                            });
+                        },
+                        complete: function (xhr, status) {
+                            if (xhr.status === 200) {
+                                $.hideLoadingNoStatus(function () {
+                                   window.location.href = "#/StockDespatchList";
+                                }, 500);
+                            } else {
+                                $.hideLoadingNoStatus(function () {
+                                }, 0);
+                            }
+                        }
+                    });
+                }
+            });
+
+    }
+    function LoadPrintPreview(sDespHdrIdx) {
+
+        loadScript("js/print-preview.js", function () {
+            var jObj = {
+                1: "GET_STOCK_DESPATCH_DTL_REPORT",
+                2: sDespHdrIdx,
+                3: "",
+                4: "",
+                5: "",
+                6: "",
+                7: "",
+                8: "",
+                9: "",
+                10: "",
+                11: ""
+            };           
+            var param = {};
+
+            // alert(JSON.stringify(jObj));               
+            var object = {};
+            object.procParam = jObj;
+            object.jasperName = 'Stk_Despatch_Dtl_Report';
+            object.procString = 'SP_GET_STOCK_DESPATCH(?,?,?,?,?,?,?,?,?,?,?)';
+            object.fixParam = param;
+            printToPage(object);                                               
+    });
+    };
+   
+
+</script>

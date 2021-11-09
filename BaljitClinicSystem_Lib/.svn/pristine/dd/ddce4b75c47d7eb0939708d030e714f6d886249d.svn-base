@@ -1,0 +1,184 @@
+CREATE DEFINER=`root`@`localhost` PROCEDURE `SP_GET_STOCK_DESPATCH`(
+IN sMethod varchar(50),
+IN sDespHdrIdx varchar(10),
+IN sDespDtlIdx varchar(10),
+IN sStkCode VARCHAR(50),
+IN sCompCode VARCHAR(200),
+IN sRecLocation varchar(10),
+IN sDocDate  varchar(20),
+IN sPerson  varchar(20),
+IN sOrderBy varchar(30),
+IN sPage varchar(10),
+IN sPerPage varchar(10)
+
+)
+BEGIN
+      DECLARE _statement VARCHAR(8000);
+
+         SET _statement = "";
+
+           
+
+         IF sMethod = 'GET_STOCK_DESPATCH' THEN
+
+
+            SET _statement = 'SELECT desh_despatchhdridx as Idx, desh_company as Company,desh_docno as DocNo,
+                desh_docdate as DocDate, desh_remark as Remarks, desh_status as Status, desh_personname as DespName,
+                desh_personid as DespID, desh_issuelocation as Issue, desh_recievelocation as Recieve ,
+                CASE
+                                   WHEN desh_status = ''O'' THEN ''Open''
+                                   WHEN desh_status = ''P'' THEN ''Partially Accepted''
+                                   WHEN desh_status = ''C'' THEN ''Confirmed''
+                                   WHEN desh_status = ''R'' THEN ''Rejected''
+                             END AS StatusDesc
+                FROM stkt_stockdespatchheader ';
+            
+            SET _statement = CONCAT(_statement, ' where desh_status like ', "'", '%', "'");
+
+            IF (sCompCode <> '') THEN
+                    SET _statement = CONCAT(_statement, ' and desh_company = ', "'", sCompCode, "'" );
+            END IF;
+
+
+            IF (sRecLocation <> '') THEN
+                    SET _statement = CONCAT(_statement, ' and desh_recievelocation = ', "'", sRecLocation, "'" );
+            END IF;
+
+
+            IF (sDocDate <> '') THEN
+                    SET _statement = CONCAT(_statement, ' and desh_docdate like ', "'", sDocDate, "%'" );
+            END IF;
+
+            IF (sPerson <> '') THEN
+
+                    SET _statement = CONCAT(_statement, ' and (desh_personname like ', "'%", sPerson, "%'", ' or desh_personid like ', "'%" , sPerson, "%'", ')');
+
+            END IF;
+
+            IF (sStkCode <> '') THEN
+
+                    SET _statement = CONCAT(_statement, ' and desh_despatchhdridx in (select desd_despatchhdridx from stkt_stockdespatchdetail
+                    where stkt_stockdespatchdetail.desd_stockcode like ', "'%", sStkCode, "')" );
+
+            END IF;
+             SET _statement = CONCAT(_statement, ' order by desh_despatchhdridx desc' );
+            SET _statement = CONCAT(_statement, ' LIMIT ',  (sPage - 1) * sPerPage, ",", sPerPage );
+
+
+
+         END IF;
+
+         IF sMethod = 'COUNT_STOCK_DESPATCH' THEN
+
+
+            SET _statement = 'SELECT count(desh_despatchhdridx) as Total FROM stkt_stockdespatchheader ';
+            SET _statement = CONCAT(_statement, ' where desh_status in (', "'", 'O', "'", ',', "'", 'P', "'", ')' );
+            IF (sCompCode <> '') THEN
+                    SET _statement = CONCAT(_statement, ' and desh_company = ', "'", sCompCode, "'" );
+            END IF;
+
+
+            IF (sRecLocation <> '') THEN
+                    SET _statement = CONCAT(_statement, ' and desh_recievelocation = ', "'", sRecLocation, "'" );
+            END IF;
+
+
+            IF (sDocDate <> '') THEN
+                    SET _statement = CONCAT(_statement, ' and desh_docdate like ', "'", sDocDate, "%'" );
+            END IF;
+
+            IF (sPerson <> '') THEN
+
+                    SET _statement = CONCAT(_statement, ' and (desh_personname like ', "'%", sPerson, "%'", ' or desh_personid like ', "'%" , sPerson, "%'", ')');
+
+            END IF;
+
+            IF (sStkCode <> '') THEN
+
+                    SET _statement = CONCAT(_statement, ' and desh_despatchhdridx in (select desd_despatchhdridx from stkt_stockdespatchdetail
+                    where stkt_stockdespatchdetail.desd_stockcode like ', "'%", sStkCode, "')" );
+
+            END IF;
+
+            
+
+
+
+         END IF;
+
+         IF sMethod = 'GET_STOCK_DESPATCH_ITEMS' THEN
+
+
+            SET _statement = 'select stkt_stockdespatchdetail.desd_status as Status, stkt_stockdespatchdetail.desd_stockcode as StockCode, stkm_stockmaster.stk_desc as StockDesc, stkt_stockdespatchdetail.*  from stkt_stockdespatchdetail
+                        left join stkm_stockmaster on stkm_stockmaster.stk_stockcode = stkt_stockdespatchdetail.desd_stockcode ';
+
+
+            SET _statement = CONCAT(_statement, ' where stkt_stockdespatchdetail.desd_despatchhdridx = ', "'", sDespHdrIdx, "'"  );
+
+         END IF;
+
+         IF sMethod = 'GET_STOCK_DESPATCH_HEADER' THEN
+
+
+            SET _statement = 'select *  from stkt_stockdespatchheader';
+
+
+            SET _statement = CONCAT(_statement, ' where desh_despatchhdridx = ', "'", sDespHdrIdx, "'"  );
+
+
+
+         END IF;
+         IF sMethod = 'GET_STOCK_DESPATCH_HEADER' THEN
+
+
+            SET _statement = 'select *  from stkt_stockdespatchheader';
+
+
+            SET _statement = CONCAT(_statement, ' where desh_despatchhdridx = ', "'", sDespHdrIdx, "'"  );
+
+             
+
+         END IF;
+
+ IF sMethod = 'GET_STOCK_DESPATCH_DTL_REPORT' THEN
+
+
+            SET _statement = 'SELECT desh_docno AS DocNo, DATE(desh_docdate) AS DocDate, desh_company AS CompCode, desh_issuelocation AS IssueLoc, desh_recievelocation AS RecieveLoc,
+                              desh_personid AS DispID, desh_personname AS DispName, desh_remark AS HdrRemark, desd_stockcode AS StkCode, desh_status AS HdrStatus,
+                              stk_desc AS StkDesc, desd_uomcode AS UOMCode, TRUNCATE(desd_qty,2) AS Qty, TRUNCATE(desd_accepted_qty,2) AS AccpQty, desd_remarks AS DtlRemarks,
+                              desd_status AS DtlStatus, ';
+
+            SET _statement = CONCAT(_statement, '
+                             CASE
+                                   WHEN desh_status = ''O'' THEN ''Open''
+                                   WHEN desh_status = ''P'' THEN ''Partially Accepted''
+                                   WHEN desh_status = ''C'' THEN ''Confirmed''
+                                   WHEN desh_status = ''R'' THEN ''Rejected''
+                             END AS HdrStatusDesc,
+                             CASE
+                                   WHEN desd_status = ''A'' THEN ''Accepted''
+                                   WHEN desd_status = ''R'' THEN ''Rejected''
+                                   WHEN desd_status = ''O'' THEN ''Open''
+                             END AS DtlStatusDesc ' );
+
+            SET _statement = CONCAT(_statement,'FROM stkt_stockdespatchheader
+                                                JOIN stkt_stockdespatchdetail ON desh_despatchhdridx = desd_despatchhdridx
+                                                JOIN stkm_stockmaster ON desd_stockcode = stk_stockcode
+                                                WHERE desh_despatchhdridx IS NOT NULL' );
+
+            IF (sDespHdrIdx <> '') THEN
+                    SET _statement = CONCAT(_statement, ' AND desh_despatchhdridx = ',"'",sDespHdrIdx,"'" );
+            END IF;
+
+            SET _statement = CONCAT(_statement, ' ORDER BY StkCode' );
+
+
+         END IF;
+
+
+SET @statement = _statement;
+PREPARE dynquery FROM @statement;
+EXECUTE dynquery;
+DEALLOCATE PREPARE dynquery;
+
+END

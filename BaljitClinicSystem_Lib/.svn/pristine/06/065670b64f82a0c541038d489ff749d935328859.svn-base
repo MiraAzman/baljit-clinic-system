@@ -1,0 +1,459 @@
+CREATE DEFINER=`root`@`localhost` PROCEDURE `SP_TRX_GRN`(
+IN sMethod    varchar(30),
+IN sGRNIDX        varchar(10),
+IN sGRNCompany    varchar(10),
+IN sGRNLocation   varchar(10),
+IN sGRNSuppCode   varchar(10),
+
+IN sGRNDate    varchar(30),
+IN sGRNRefNo   varchar(30),
+/* IN sGRNRefDate   varchar(30), */
+IN sGRNRefDateTxt   varchar(30),
+IN sGRNInvNo   varchar(30),
+IN sGRNInvDate   varchar(30),
+IN sGRNDONo    varchar(30),
+IN sGRNDODate   varchar(30),
+IN sGRNRemark   varchar(100),
+IN sGRNGSTInc   varchar(1),
+IN sGRNRecStatus  varchar(4),
+
+IN sGRNLine       varchar(10),
+IN sStockCode   varchar(30),
+IN sUOMCode    varchar(6),
+IN sUnitCost   varchar(15),
+IN sQty     varchar(15),
+IN sDiscAmt    varchar(15),
+IN sSubTotal   varchar(15),
+IN sDiscPercent   varchar(15),
+IN sDiscOpt    varchar(1),
+IN sExpiryDate   varchar(30),
+IN sBatchNo    varchar(10),
+IN sPONo    varchar(30),
+IN sPOQty    varchar(15),
+IN sBonusQty   varchar(15),
+IN sPOBonusQty   varchar(15),
+IN sPOLine    varchar(15),
+IN sGSTPurCode   varchar(8),
+IN sGSTTaxRates   varchar(15),
+IN sGSTAmt    varchar(15),
+IN sGrossTotal   varchar(15),
+IN sBy            varchar(10),
+IN sInSupplier   varchar(10), 
+IN sInGSTSupCode  varchar(8), 
+IN sInLocation   varchar(10), 
+IN GRNDIDX     VARCHAR(10), 
+
+IN sConvQty    varchar(20),
+IN sConvUnitCost  varchar(20),
+IN sConvUom    varchar(6),
+
+IN sControlDateTime   VARCHAR(20),
+
+OUT Result        varchar(30),
+OUT Message    varchar(30),
+OUT IDXKEY    varchar(10),
+OUT IDNO    varchar(10)
+)
+BEGIN
+
+DECLARE sGRNRefDate datetime;
+
+DECLARE state CHAR(5) DEFAULT "00000";
+DECLARE msg TEXT;
+DECLARE errno int;
+DECLARE done INT DEFAULT 0;
+DECLARE COUNT INT DEFAULT 0;
+DECLARE BASEUOM VARCHAR(30);
+DECLARE STOCKIDX VARCHAR(30);
+DECLARE POIDX VARCHAR(10);
+DECLARE POD_ID VARCHAR(10);
+DECLARE POD_UOM VARCHAR(10);
+DECLARE OutResult VARCHAR(30);
+DECLARE OutMessage VARCHAR(30);
+DECLARE OutIDX INTEGER;
+DECLARE InterSubTotal DECIMAL(15,3);
+DECLARE InterGrossTotal DECIMAL(15,3);
+DECLARE InterGSTAmt DECIMAL(15,3);
+DECLARE InterGSTRates DECIMAL(15,3);
+DECLARE DumpOut1 VARCHAR(10);
+DECLARE invalid_value CONDITION FOR SQLSTATE '45000';
+DECLARE curGRN CURSOR FOR
+ SELECT sgrd_qty, sgrd_uomcode, stk_stockcode, stk_baseuomcode, stk_stockidx, sgrd_unitcost,
+    sgrd_location, sgrd_pono, sgrd_bonusqty, sgrd_polineno, sgrd_batchno, LEFT(sgrd_expirydate, 10), sgrd_grddtlidx,
+    sgrd_discamt, sgrd_subtotalamt, sgrd_discpercent, sgrd_discoption, sgrd_poqty, sgrd_bonusqty, sgrd_pobonusqty,
+    sgrd_gstpurcode, sgrd_gsttaxrates, sgrd_gstamt, sgrd_grosstotal, sgrd_poidx, sgrd_gstsupcode
+    FROM stkt_grndetail GRND
+    LEFT OUTER JOIN stkm_stockmaster SM ON GRND.sgrd_stockidx = SM.stk_stockidx
+    WHERE GRND.sgrd_grnhdrdtlidx = sGRNIDX
+    ORDER BY sgrd_lineno;
+/* DECLARE curPOL CURSOR FOR 
+ SELECT podtl_idx, podtl_uomcode
+    FROM stkt_poheader poh LEFT JOIN stkt_podetail pod ON poh.pohdr_poidx = pod.podtl_poidx
+    WHERE podtl_stockcode = sStockCode AND podtl_qty - podtl_fulfill <> 0 AND pohdr_companycode = sGRNCompany
+    ORDER BY podtl_idx; */
+DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = 1;
+DECLARE exit handler for sqlexception
+  BEGIN
+    
+    
+ GET DIAGNOSTICS CONDITION 1 state = RETURNED_SQLSTATE, msg = MESSAGE_TEXT, errno = MYSQL_ERRNO;
+ SET @sError = CONCAT("ERROR ", errno, " (", state, "): ", msg);
+ SELECT @sError;
+    ROLLBACK;
+  END;
+DECLARE EXIT HANDLER FOR invalid_value 
+  BEGIN
+ RESIGNAL SET MESSAGE_TEXT = msg;
+    SET @sError = msg;
+    SELECT @sError;
+    ROLLBACK;
+  END;
+
+
+START TRANSACTION;
+
+
+if (sGRNRefDateTxt = "null" || sGRNRefDateTxt = "")  THEN
+        set sGRNRefDate = null;
+else
+        set sGRNRefDate = sGRNRefDateTxt;
+end IF;
+
+ IF sMethod = 'ADD_GRNHEADER' THEN  
+  CALL SP_GET_DOCNO('GET_NUMBER_FROMSP','GRN','');
+  SELECT NewNumber from tempRN into @GRNNo;
+        
+  INSERT INTO stkt_grnheader
+  (sgrh_company, sgrh_location, sgrh_suppliercode, sgrh_grnno, sgrh_grndate, sgrh_refno, sgrh_refdate, 
+        sgrh_invno, sgrh_invdate, sgrh_dono, sgrh_dodate, sgrh_remark, sgrh_isgstinclusive, sgrh_intersupplier,
+        sgrh_status, createdby, createddt, recstatus)
+  VALUES
+  (sGRNCompany, sInLocation, sGRNSuppCode, @GRNNo, sGRNDate, sGRNRefNo, sGRNRefDate,
+        sGRNInvNo, sGRNInvDate, sGRNDONo, sGRNDODate, sGRNRemark, sGRNGSTInc, sInSupplier,
+        'SAVED', sBy, NOW(), sGRNRecStatus);
+        
+  SELECT '00000' INTO Result;
+  SELECT  'Success Inserted' INTO Message;
+        SELECT LAST_INSERT_ID() INTO IDXKEY;
+        SELECT @GRNNo INTO IDNO;
+ END IF;
+    
+    
+    IF sMethod = 'UPD_GRNHEADER' THEN
+  UPDATE stkt_grnheader
+        SET sgrh_company = sGRNCompany, sgrh_location = sInLocation, sgrh_suppliercode = sGRNSuppCode, 
+        sgrh_grndate = sGRNDate, sgrh_refno = sGRNRefNo, sgrh_refdate = sGRNRefDate, sgrh_invno = sGRNInvNo, 
+        sgrh_invdate = sGRNInvDate, sgrh_dono = sGRNDONo, sgrh_dodate = sGRNDODate, sgrh_remark = sGRNRemark, 
+        sgrh_isgstinclusive = sGRNGSTInc, sgrh_intersupplier = sInSupplier, modifiedby = sBy, modifieddt = NOW(),
+        sgrh_grnno = @GRNNo := sgrh_grnno
+        WHERE sgrh_grnhdridx = sGRNIDX;
+        
+        SELECT '00000' INTO Result;
+  SELECT  'Success Updated' INTO Message;
+        SELECT sGRNIDX INTO IDXKEY;
+        SELECT @GRNNo INTO IDNO;
+    END IF;
+
+
+    IF sMethod = 'ADD_GRNDETAIL' THEN        
+  INSERT INTO stkt_grndetail
+        (sgrd_grnhdrdtlidx, sgrd_lineno, sgrd_stockidx, sgrd_uomcode, sgrd_uomidx, sgrd_unitcost, sgrd_qty, 
+        sgrd_discamt, sgrd_subtotalamt, sgrd_discpercent, sgrd_discoption, sgrd_expirydate, sgrd_batchno, 
+        sgrd_pono, sgrd_poqty, sgrd_bonusqty, sgrd_pobonusqty, sgrd_polineno, sgrd_poidx, sgrd_convuomidx, 
+        sgrd_convqty, sgrd_convunitcost, sgrd_convuomcode, sgrd_unitprice, sgrd_gstpurcode, sgrd_gsttaxrates,
+        sgrd_gstamt, sgrd_grosstotal, sgrd_location, sgrd_gstsupcode, 
+        createdby, createddt, recstatus)
+        SELECT sGRNIDX, sGRNLine, stk_stockidx, sUOMCode, 0, sUnitCost, sQty,
+        sDiscAmt, sSubTotal, sDiscPercent, sDiscOpt, sExpiryDate, sBatchNo,
+        sPONo, sPOQty, sBonusQty, sPOBonusQty, sPOLine, IFNULL(pohdr_poidx,0), 0, 
+  sConvQty, sConvUnitCost, sConvUom, 0, sGSTPurCode, sGSTTaxRates, 
+        sGSTAmt, sGrossTotal, sGRNLocation, sInGSTSupCode, 
+        sBy, NOW(), sGRNRecStatus
+        FROM stkm_stockmaster SM 
+        LEFT OUTER JOIN stkt_poheader ON pohdr_pono = sPONo
+        WHERE SM.stk_stockcode = sStockCode;   
+        
+        SELECT '00000' INTO Result;
+    END IF;
+    
+    
+    IF sMethod = 'UPD_GRNDETAIL' THEN
+  UPDATE stkt_grndetail LEFT JOIN stkt_poheader
+        ON pohdr_pono = sPONo
+        SET sgrd_lineno = sGRNLine, sgrd_uomcode = sUOMCode, sgrd_unitcost = sUnitCost, sgrd_qty = sQty, 
+        sgrd_discamt = sDiscAmt, sgrd_subtotalamt = sSubTotal, sgrd_discoption = sDiscOpt, sgrd_discpercent = sDiscPercent, 
+        sgrd_expirydate = sExpiryDate, sgrd_batchno = sBatchNo, sgrd_pono = sPONo, sgrd_poqty = sPOQty, 
+        sgrd_bonusqty = sBonusQty, sgrd_pobonusqty = sPOBonusQty, sgrd_polineno = sPOLine, sgrd_poidx = IFNULL(pohdr_poidx,0), 
+        sgrd_gstpurcode = sGSTPurCode, sgrd_gsttaxrates = sGSTTaxRates, sgrd_gstamt = sGSTAmt, sgrd_grosstotal = sGrossTotal, 
+        sgrd_location = sGRNLocation, sgrd_gstsupcode = sInGSTSupCode, 
+        sgrd_convuomcode = sConvUom, sgrd_convqty = sConvQty, sgrd_convunitcost = sConvUnitCost, 
+        stkt_grndetail.modifiedby = sBy, stkt_grndetail.modifieddt = NOW()
+        WHERE sgrd_grddtlidx = GRNDIDX;
+        
+        SELECT '00000' INTO Result;
+    END IF;
+    
+    
+ IF sMethod = 'DEL_GRNDETAIL' THEN
+  DELETE FROM stkt_grndetail WHERE sgrd_grddtlidx = GRNDIDX;
+        
+        SELECT '00000' INTO Result;
+  SELECT  'Success Deleted' INTO Message;
+ END IF;
+    
+    
+    IF sMethod = 'CONFIRM_GRNDETAIL' THEN
+  
+        SET @GRNNO = 0;
+        SET @SLHIDX = 0;
+        SET @SLDIDX = 0;
+        SET @SLHIDX2 = 0;
+        SET @SLDIDX2 = 0;
+        SELECT sgrh_company, sgrh_suppliercode, sgrh_grnno, LEFT(sgrh_grndate, 10), sgrh_refno, LEFT(sgrh_refdate, 10), sgrh_invno, LEFT(sgrh_invdate, 10),
+        sgrh_dono, LEFT(sgrh_dodate, 10), sgrh_isgstinclusive, sgrh_intersupplier, sgrh_location
+        INTO sGRNCompany, sGRNSuppCode, @GRNNO, sGRNDate, sGRNRefNo, sGRNRefDate, sGRNInvNo, sGRNInvDate, 
+        sGRNDONo, sGRNDODate, sGRNGSTInc, sInSupplier, sInLocation
+        FROM stkt_grnheader
+        WHERE sgrh_grnhdridx = sGRNIDX;
+        
+        CALL SP_TRX_STOCK_LEDGER('ADD_STOCKLEDGERHEADER', 0, 0, sGRNCompany, '', year(now()), month(now()),
+        'GRN','GRN', sGRNSuppCode, sInSupplier, @GRNNO, sGRNDate, sGRNRefNo, sGRNRefDate, sGRNInvNo, sGRNInvDate, sGRNDONo, sGRNDODate,
+        '', sGRNGSTInc, 0, 0, '', '', 0, 0, 0, 0, 0, 0, 0, '', '', '', '', 0, 0, 0, 0, 0, 0, 0, 0, '', 0, '', 0, 0, 0, 'PORTAL',
+  sBy, sGRNRecStatus, 'I', '-99999', sControlDateTime, OutResult, OutMessage, @SLHIDX, @SLDIDX);
+         
+         IF sInSupplier = 'Y' THEN
+   CALL SP_TRX_STOCK_LEDGER('ADD_STOCKLEDGERHEADER', 0, 0, sGRNSuppCode, sInLocation, year(now()), month(now()),
+   'SALE','SALE', '', sInSupplier, @GRNNO, sGRNDate, sGRNRefNo, sGRNRefDate, sGRNInvNo, sGRNInvDate, sGRNDONo, sGRNDODate,
+   '', sGRNGSTInc, 0, 0, '', '', 0, 0, 0, 0, 0, 0, 0, '', '', '', '', 0, 0, 0, 0, 0, 0, 0, 0, '', 0, '', 0, 0, 0, 'PORTAL',
+   sBy, sGRNRecStatus, 'I', '-99999', sControlDateTime, OutResult, OutMessage, @SLHIDX2, @SLDIDX2);
+         END IF;
+         
+
+  
+  SET done = 0;
+        SET COUNT = 0;
+        OPEN CurGRN;
+        
+        Loop_GRN : LOOP   
+   FETCH CurGRN INTO sQTY, sUOMCode, sStockCode, BASEUOM, STOCKIDX, sUnitCost, sGRNLocation,
+   sPONo, sBonusQty, sPOLine, sBatchNo, sExpiryDate, GRNDIDX,
+            sDiscAmt, sSubTotal, sDiscPercent, sDiscOpt, sPOQty, sBonusQty, sPOBonusQty,
+            sGSTPurCode, sGSTTaxRates, sGSTAmt, sGrossTotal, POIDX, sInGSTSupCode;
+            
+            SET @UOMFound = '';
+            SET @UOMFound2 = BASEUOM;
+            
+            
+            IF BASEUOM <> sUOMCode THEN
+    SET @UOMFound2 = '';
+                
+    SELECT STKUOM.uomc_convfactor
+    FROM stkm_uomconversion STKUOM
+    Left outer join stkm_stockuom BaseUOM on STKUOM.uomc_baseuomcode = BaseUOM.UOM_UOMCODE
+    Left outer join stkm_stockuom ConvUOM on STKUOM.UOMC_ConvUOMCODE = ConvUOM.UOM_UOMCODE
+    Left outer join stkm_stockmaster SM on SM.stk_stockcode = STKUOM.uomc_stockcode
+    WHERE STKUOM.uomc_stockcode IS NOT NULL AND (STKUOM.uomc_stockcode = sStockCode OR sStockCode = '')
+    AND STKUOM.uomc_baseuomcode = BASEUOM AND STKUOM.UOMC_ConvUOMCODE = sUOMCode
+    UNION ALL
+    SELECT STKUOM.uomc_convfactor
+    FROM stkm_uomconversion STKUOM
+    Left outer join stkm_stockuom BaseUOM on STKUOM.uomc_baseuomcode = BaseUOM.UOM_UOMCODE
+    Left outer join stkm_stockuom ConvUOM on STKUOM.UOMC_ConvUOMCODE = ConvUOM.UOM_UOMCODE
+    Left outer join stkm_stockmaster SM on SM.stk_stockcode = STKUOM.uomc_stockcode
+    WHERE STKUOM.uomc_stockcode IS NOT NULL AND (STKUOM.uomc_stockcode = sStockCode OR sStockCode = '')
+    AND STKUOM.uomc_baseuomcode = sUOMCode AND STKUOM.UOMC_ConvUOMCODE = BASEUOM
+    limit 1 into @UOMFound2;
+            END IF;
+    
+            
+            
+            
+            IF @UOMFound2 = '' THEN
+    SET msg = CONCAT('Conversion Factor Not Found For Stock ', sStockCode, ' FROM UOM Code ', sUOMCode, ' to ', BASEUOM, '.');
+    SIGNAL invalid_value;
+            END IF;
+
+   IF done = 1 OR @UOMFound2 = '' THEN 
+    LEAVE Loop_GRN;
+   END IF;
+            
+            SET @QTYBAL = sQTY;
+   SET @RCVQTY = 0;
+   SET @PONo = 0;
+   SET @CURUOM = sUOMCode;
+   SET @BASEUOMQTY = 0;        
+   SET @UOMUNITCOST = 0;
+   SET @UOMIDX = 0;
+            SET COUNT = COUNT + 1;
+            
+    -- AMIRA 20181218
+	IF ((sQty <> 0) AND (sQty <> '')) THEN
+
+		SET @BASEUOMQTY = F_CONVERT_UOM(sQty, BASEUOM, @CURUOM, sStockCode);
+        
+		IF ((sUnitCost <> 0) AND (sUnitCost <> '')) THEN
+
+			SET @UOMUNITCOST = (sQty * sUnitCost)/@BASEUOMQTY;
+    
+		END IF;
+    END IF; 
+    -- AMIRA 20181218
+            
+            UPDATE stkt_grndetail GRN
+   SET sgrd_convuomidx = @UOMIDX :=
+    CASE WHEN BASEUOM <> @CURUOM THEN 
+    (SELECT uomc_uomconvidx FROM stkm_uomconversion WHERE uomc_stockcode = sStockCode 
+    AND ((UOMC_ConvUOMCODE = @CURUOM AND uomc_baseuomcode = BASEUOM) OR (UOMC_ConvUOMCODE = BASEUOM AND uomc_baseuomcode = @CURUOM))) 
+    ELSE 0 END,
+             sgrd_convqty = @BASEUOMQTY, 
+             sgrd_convunitcost = @UOMUNITCOST, 
+			 -- sgrd_convqty = @BASEUOMQTY := F_CONVERT_UOM(sQty, BASEUOM, @CURUOM, sStockCode), 
+			 -- sgrd_convunitcost = @UOMUNITCOST := ((sQty * sUnitCost)/@BASEUOMQTY), 
+            sgrd_convuomcode = BASEUOM 
+   WHERE sgrd_grddtlidx = GRNDIDX;
+            
+            
+            CALL SP_TRX_STOCK_BALANCE('UPDATE_STOCK_BALANCE', sGRNCompany, sGRNLocation, sStockCode, BASEUOM, @BASEUOMQTY + F_CONVERT_UOM(sBonusQty, BASEUOM, @CURUOM, sStockCode), sBy, sGRNRecStatus, OutResult, OutMessage);
+   
+   CALL SP_TRX_STOCK_COSTQTY('ADD_COSTQTY', 0, sGRNCompany, sGRNLocation, sStockCode, STOCKIDX, sBatchNo, sExpiryDate, @UOMUNITCOST, BASEUOM, @UOMIDX, @BASEUOMQTY+ F_CONVERT_UOM(sBonusQty, BASEUOM, @CURUOM, sStockCode), 
+   sGRNDate, 0, sBy, sGRNRecStatus, 'I', @BASEUOMQTY+ F_CONVERT_UOM(sBonusQty, BASEUOM, @CURUOM, sStockCode), OutResult, OutMessage, OutIDX);   
+            
+            CALL SP_TRX_STOCK_LEDGER('ADD_STOCKLEDGERDETAIL', @SLHIDX, 0, sGRNCompany, sGRNLocation, year(now()), month(now()),
+   'GRN','GRN', sGRNSuppCode, '', @GRNNO, sGRNDate, sGRNRefNo, sGRNRefDate, sGRNInvNo, sGRNInvDate, sGRNDONo, sGRNDODate,
+   '', sGRNGSTInc, COUNT, STOCKIDX, sStockCode, @CURUOM, 0, sUnitCost, sQty, sDiscAmt, sSubTotal, sDiscPercent, sDiscOpt, 
+            sExpiryDate, sBatchNo, sPONo, sGRNLocation, sPOQty, sBonusQty, sPOBonusQty, sPOLine, POIDX, @UOMIDX, @BASEUOMQTY, @UOMUNITCOST,
+            BASEUOM, 0, sGSTPurCode, sGSTTaxRates, sGSTAmt, sGrossTotal, 'PORTAL',
+   sBy, sGRNRecStatus, 'I', '-99999', sControlDateTime, OutResult, OutMessage, DumpOut1, @SLDIDX);
+            
+            CALL SP_TRX_STOCKREQ('UPD_FULFILLED_QTY', '', sGRNCompany, sGRNLocation, '', '', '', '', '', sStockCode, @CURUOM, '0', '0', '0', sQty,
+            '0', '', '', sBy, OutResult, OutMessage, OutIDX);
+            
+            
+            IF sInSupplier = 'Y' THEN
+    CALL SP_TRX_STOCK_BALANCE('UPDATE_STOCK_BALANCE', sGRNSuppCode, sInLocation, sStockCode, BASEUOM, CAST((@BASEUOMQTY+ F_CONVERT_UOM(sBonusQty, BASEUOM, @CURUOM, sStockCode))*-1 as decimal(15,3)), sBy, sGRNRecStatus, OutResult, OutMessage);
+   
+    CALL SP_TRX_STOCK_COSTQTY('UPDATE_COSTQTY', 0, sGRNSuppCode, sInLocation, sStockCode, STOCKIDX, sBatchNo, sExpiryDate, @UOMUNITCOST, BASEUOM, @UOMIDX, (@BASEUOMQTY+ F_CONVERT_UOM(sBonusQty, BASEUOM, @CURUOM, sStockCode))*-1, 
+    sGRNDate, 0, sBy, sGRNRecStatus, 'I', (@BASEUOMQTY+ F_CONVERT_UOM(sBonusQty, BASEUOM, @CURUOM, sStockCode))*-1, OutResult, OutMessage, OutIDX);
+            
+    
+                SET InterSubTotal = 0;
+    SET InterGrossTotal = 0;
+    SET InterGSTAmt = 0;
+                SET InterGSTRates = 0;
+                
+                SELECT CASE WHEN COUNT(gst_taxrate) = 0 THEN 0 else gst_taxrate END INTO InterGSTRates
+                FROM stkm_gstcodemalaysia 
+                WHERE gst_code = sInGSTSupCode AND gst_type = 'SUPPLY';
+                
+    IF sGRNGSTInc = 'Y' THEN
+                    SET InterSubTotal = sSubTotal;
+                    SET InterGrossTotal = InterSubTotal * (100/(100 + InterGSTRates));
+                    SET InterGSTAmt = InterSubTotal - InterGrossTotal;
+                ELSE
+     SET InterGrossTotal = sGrossTotal;
+                    SET InterGSTAmt = InterGrossTotal * (InterGSTRates/100);
+                    SET InterSubTotal = InterGrossTotal + InterGSTAmt;
+                END IF;
+                
+                
+    CALL SP_TRX_STOCK_LEDGER('ADD_STOCKLEDGERDETAIL', @SLHIDX2, 0, sGRNSuppCode, sInLocation, year(now()), month(now()),
+    'SALE','SALE', '', '', @GRNNO, sGRNDate, sGRNRefNo, sGRNRefDate, sGRNInvNo, sGRNInvDate, sGRNDONo, sGRNDODate,
+    '', sGRNGSTInc, COUNT, STOCKIDX, sStockCode, @CURUOM, 0, sUnitCost, sQty*-1, sDiscAmt, InterSubTotal, sDiscPercent, sDiscOpt, 
+    sExpiryDate, sBatchNo, sPONo, sInLocation, sPOQty, sBonusQty, sPOBonusQty, sPOLine, POIDX, @UOMIDX, @BASEUOMQTY*-1, @UOMUNITCOST,
+    BASEUOM, 0, sInGSTSupCode, InterGSTRates, InterGSTAmt, InterGrossTotal, 'PORTAL',
+    sBy, sGRNRecStatus, 'I', '-99999', sControlDateTime, OutResult, OutMessage, DumpOut1, @SLDIDX2);
+            END IF;
+            
+   
+            
+            
+   UPDATE stkt_poheader poh LEFT JOIN stkt_podetail pod
+   ON poh.pohdr_poidx = pod.podtl_poidx AND poh.pohdr_pono = sPONo AND poh.pohdr_companycode = sGRNCompany
+   SET pohdr_refdono = CASE WHEN ifnull(FIND_IN_SET(sGRNDONo, pohdr_refdono),0) = 0 AND ifnull(LENGTH(sGRNDONo),0) <> 0 THEN 
+         CASE WHEN ifnull(LENGTH(pohdr_refdono),0) = 0 THEN sGRNDONo ELSE CONCAT(pohdr_refdono, ',', sGRNDONo) END 
+        ELSE pohdr_refdono END,
+   pohdr_refdodate = CASE WHEN ifnull(FIND_IN_SET(sGRNDONo, pohdr_refdono),0) = 0 AND ifnull(LENGTH(sGRNDODate),0) <> 0 THEN
+          CASE WHEN ifnull(LENGTH(pohdr_refdodate),0) = 0 THEN sGRNDODate ELSE CONCAT(pohdr_refdodate, ',', sGRNDODate) END 
+         ELSE pohdr_refdodate END,
+   pohdr_refinvno = CASE WHEN ifnull(FIND_IN_SET(sGRNInvNo, pohdr_refinvno),0) = 0 AND ifnull(LENGTH(sGRNInvNo),0) <> 0 THEN
+         CASE WHEN ifnull(LENGTH(pohdr_refinvno),0) = 0 THEN sGRNInvNo ELSE CONCAT(pohdr_refinvno, ',', sGRNInvNo) END
+        ELSE pohdr_refinvno END,
+   pohdr_refinvdate = CASE WHEN ifnull(FIND_IN_SET(sGRNInvNo, pohdr_refinvno),0) = 0 AND ifnull(LENGTH(sGRNInvDate),0) <> 0 THEN
+           CASE WHEN ifnull(LENGTH(pohdr_refinvdate),0) = 0 THEN sGRNInvDate ELSE CONCAT(pohdr_refinvdate, ',', sGRNInvDate) END
+          ELSE pohdr_refinvdate END,     
+   
+         
+        
+   
+        
+       
+   pohdr_locationcode = CASE WHEN ifnull(FIND_IN_SET(sGRNLocation, pohdr_locationcode),0) = 0 AND ifnull(LENGTH(sGRNLocation),0) <> 0 THEN
+          CASE WHEN ifnull(LENGTH(pohdr_locationcode),0) = 0 THEN sGRNLocation ELSE CONCAT(pohdr_locationcode, ',', sGRNLocation) END
+         ELSE pohdr_locationcode END,
+   podtl_rcvqty = CASE WHEN podtl_qty - podtl_rcvqty >= (@QTYBAL := F_CONVERT_UOM(@QTYBAL, podtl_uomcode, @CURUOM, podtl_stockcode)) THEN
+        (@RCVQTY := @QTYBAL) + podtl_rcvqty 
+         ELSE (@RCVQTY := podtl_qty - podtl_rcvqty) + podtl_rcvqty END,
+   -- podtl_fulfill = @RCVQTY + podtl_fulfill,
+   -- pohdr_fulfill = @RCVQTY + pohdr_fulfill,
+   podtl_rcvqtybonus = sBonusQty + podtl_rcvqtybonus,
+   podtl_uomcode = CASE WHEN @QTYBAL <> 0 THEN @CURUOM := podtl_uomcode ELSE podtl_uomcode END
+   WHERE pod.podtl_lineno = sPOLine OR (sPOLine = '' AND podtl_stockcode = sStockCode);
+   
+   IF @QTYBAL = 0 THEN
+    
+    SET @QTYBAL = sQTY;
+   ELSE
+    SET @QTYBAL = @QTYBAL - @RCVQTY; 
+   END IF;
+            
+            
+    /*IF @QTYBAL > 0 THEN
+    SET done = 0;
+    OPEN curPOL;
+    
+    Loop_PO: LOOP    
+     FETCH curPOL INTO POD_ID, POD_UOM;
+     
+     IF done = 1 OR @QTYBAL = 0 THEN
+      LEAVE Loop_PO;
+     END IF;
+     
+     IF (@TMPQTY := F_CONVERT_UOM(@QTYBAL, POD_UOM, @CURUOM, sStockCode)) > 0 THEN    
+      UPDATE stkt_poheader poh LEFT JOIN stkt_podetail pod
+      ON poh.pohdr_poidx = pod.podtl_poidx
+      SET /* podtl_fulfill = CASE WHEN podtl_qty - podtl_fulfill >= (@QTYBAL := @TMPQTY) THEN
+            (@RCVQTY := @QTYBAL) + podtl_fulfill 
+            ELSE (@RCVQTY := podtl_qty - podtl_fulfill) + podtl_fulfill END, 
+      -- pohdr_fulfill = @RCVQTY + pohdr_fulfill, 
+      pohdr_pono = @PONo := pohdr_pono,
+      podtl_uomcode = @CURUOM := podtl_uomcode
+      WHERE podtl_idx = POD_ID;
+     
+      UPDATE stkt_grndetail
+      SET sgrd_pono = CONCAT(sgrd_pono, ',', @PONo)
+      WHERE sgrd_grddtlidx = GRNDIDX;
+     
+      SET @QTYBAL = @QTYBAL - @RCVQTY;
+     END IF;
+    END LOOP Loop_PO;
+    
+    close curPOL;
+    SET done = 0;
+   END IF; */
+   
+        END LOOP Loop_GRN;
+        
+        CLOSE CurGRN;
+        SET done = 0;
+        
+        
+        UPDATE stkt_grnheader
+        SET sgrh_status = 'CONFIRMED', modifiedby = sBy, modifieddt = now()
+        WHERE sgrh_grnhdridx = sGRNIDX;
+        
+        SELECT '00000' INTO Result;
+  SELECT  'Success Confirmed' INTO Message;
+    END IF;
+
+COMMIT;
+END

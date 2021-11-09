@@ -1,0 +1,76 @@
+CREATE DEFINER=`root`@`localhost` PROCEDURE `SP_TRX_STOCK_SUPPLIER`(
+IN sMethod         varchar(30),
+IN sStockCode      varchar(16),
+IN sSupplierCode   varchar(10),
+IN sUOMCode        varchar(6),
+IN sUnitCost       varchar(10),
+IN sCompanyCode    varchar(10),
+IN sBy             varchar(20),
+IN sRecStatus      varchar(4),
+OUT Result         varchar(30)
+)
+BEGIN
+
+
+
+
+
+
+
+      IF sMethod = 'ADD_STOCK_SUPPLIER' THEN
+
+             IF NOT EXISTS(SELECT stsp_stockcode FROM stkm_stocksupplier
+
+                            WHERE stsp_stockcode = sStockCode AND stsp_supcode = sSupplierCode AND stsp_companycode = sCompanyCode AND stsp_uomcode = sUOMCode) THEN
+
+
+                     INSERT INTO stkm_stocksupplier (stsp_stockcode, stsp_supcode, stsp_uomcode, stsp_unitcost,
+
+                                        stsp_companycode, createdby, createddt, recstatus)
+
+                     VALUES (sStockCode, sSupplierCode, sUOMCode, sUnitCost,
+
+                                sCompanyCode, sBy, NOW(), sRecStatus);
+
+                     SELECT '00000' INTO Result;
+             ELSE
+
+                     SELECT 'DUPLICATE_ENTRY' INTO Result;
+                     
+             END IF;
+
+     END IF;
+
+
+      IF sMethod = 'UPDATE_STOCK_SUPPLIER' THEN
+
+
+                  UPDATE stkm_stocksupplier
+                  SET
+                   stsp_unitcost = sUnitCost,
+                   modifiedby = sBy,
+                   modifieddt = NOW()
+                   WHERE  stsp_stockcode = sStockCode and stsp_uomcode = sUOMCode and stsp_supcode = sSupplierCode and stsp_companycode = sCompanyCode;
+
+                  SELECT '00000' INTO Result;
+
+      END IF;
+
+
+       IF sMethod = 'DEL_STOCK_SUPPLIER' THEN
+
+                  DELETE From stkm_stocksupplier
+                  WHERE stsp_stockcode = sStockCode and stsp_uomcode = sUOMCode and stsp_supcode = sSupplierCode and stsp_companycode = sCompanyCode;
+
+                  SELECT '00000' INTO Result;
+
+      END IF;
+
+
+      IF sMethod = 'NO' THEN
+
+           SELECT '00000' INTO Result;
+
+      END IF;
+
+END

@@ -1,0 +1,50 @@
+CREATE DEFINER=`root`@`localhost` PROCEDURE `SP_TRX_CODETYPE`(
+IN sMethod         varchar(30),
+IN sType           varchar(20),
+IN sCode           varchar(20),
+IN sDesc           varchar(40),
+IN sBy             varchar(20),
+IN sRecStatus      varchar(10),
+OUT Result varchar(30)
+)
+BEGIN
+
+
+
+
+
+
+        DECLARE _statement VARCHAR(8000);
+
+        IF sMethod = 'ADD_CODETYPE' THEN
+
+           
+                  IF NOT EXISTS(SELECT SC.cd_cdcode FROM  stkc_codedesc SC  WHERE SC.cd_cdtype = sType AND SC.cd_cdcode = sCode) THEN
+
+                          INSERT INTO stkc_codedesc (cd_cdtype, cd_cdcode, cd_cddesc, createdby, createddt, recstatus)
+
+                          VALUES (sType, sCode, sDesc, sBy, NOW(), sRecStatus);
+
+
+                          SELECT '00000' INTO Result;
+                  END IF;
+        END IF;
+        
+
+        IF sMethod = 'EDIT_CODETYPE_DETAIL' THEN
+
+                UPDATE stkc_codedesc
+
+                SET recstatus = sRecStatus,
+                    cd_cddesc = sDesc,
+                    modifiedby = sBy,
+                    modifieddt = NOW()
+
+                WHERE cd_cdcode = sCode AND cd_cdtype = sType;
+
+                SELECT '00000' INTO Result;
+
+        END IF;
+
+
+END

@@ -1,0 +1,127 @@
+CREATE DEFINER=`root`@`localhost` PROCEDURE `SP_GET_STKTRANSFER`(
+IN sMethod      varchar(20),
+IN sCompCode    varchar(10),
+IN sIssueLoc    varchar(10),
+IN sReceiveLoc  varchar(10),
+IN sStkCode     varchar(16),
+IN sDocDate     varchar(20),
+IN sHeaderID    varchar(20),
+IN sDetailID    varchar(20),
+IN sOrderBy     varchar(30),
+IN sPage        varchar(10),
+IN sPerPage     varchar(10))
+BEGIN                                       
+
+        DECLARE _statement VARCHAR(8000);                            
+
+        IF sMethod = 'GET_STKXFR_LIST' THEN
+
+                SET _statement = ' SELECT header.xfrh_company, header.xfrh_docno, date(xfrh_docdate), header.xfrh_stockxfrhdridx, detail.xfrd_stockxfrdtlidx
+, detail.xfrd_stockcode, detail.xfrd_uomcode, TRUNCATE(detail.xfrd_qty,2) AS xfrd_qty, detail.xfrd_issuelocation, detail.xfrd_recievelocation
+
+                                   FROM stkt_stocktransferheader AS header
+                                   INNER JOIN stkt_stocktransferdetail AS detail
+                                   ON header.xfrh_stockxfrhdridx = detail.xfrd_stockxfrhdridx
+                                   WHERE header.xfrh_stockxfrhdridx IS NOT NULL';
+
+                                                                                                        
+                IF (sCompCode <> '') THEN
+                        SET _statement = CONCAT(_statement, ' AND header.xfrh_company = ',"'",sCompCode ,"'", ' ');
+                END IF;
+
+
+                IF (sStkCode <> '') THEN
+                        SET _statement = CONCAT(_statement, ' AND detail.xfrd_stockcode LIKE ',"'%",sStkCode ,"%'", ' ');
+                END IF;
+
+
+                IF (sIssueLoc <> '') THEN
+                        SET _statement = CONCAT(_statement, ' AND detail.xfrd_issuelocation = ',"'",sIssueLoc ,"'", ' ');
+                END IF;
+
+
+                IF (sReceiveLoc <> '') THEN
+                        SET _statement = CONCAT(_statement, ' AND detail.xfrd_recievelocation = ',"'",sReceiveLoc ,"'", ' ');
+                END IF;
+
+
+                IF (sDocDate <> '') THEN
+                        SET _statement = CONCAT(_statement, ' AND header.xfrh_docdate LIKE ',"'%",sDocDate ,"%'", ' ');
+                END IF;
+
+
+                IF (sOrderBy <> '')  THEN
+                        SET _statement = CONCAT(_statement, ' ORDER BY ', sOrderBy);
+                ELSE
+                        SET _statement = CONCAT(_statement, ' ORDER BY header.xfrh_company');
+                END IF;
+
+
+                SET _statement = CONCAT(_statement, ' LIMIT ',  (sPage - 1) * sPerPage, ",", sPerPage );
+
+        END IF;
+
+
+        IF sMethod = 'COUNT_STKXFR_LIST' THEN
+
+                SET _statement = ' SELECT Count(header.xfrh_stockxfrhdridx) as Total
+                                   FROM stkt_stocktransferheader AS header
+                                   INNER JOIN stkt_stocktransferdetail AS detail
+                                   ON header.xfrh_stockxfrhdridx = detail.xfrd_stockxfrhdridx
+                                   WHERE header.xfrh_stockxfrhdridx IS NOT NULL';
+
+
+                IF (sCompCode <> '') THEN
+                        SET _statement = CONCAT(_statement, ' AND header.xfrh_company = ',"'",sCompCode ,"'", ' ');
+                END IF;
+
+
+                IF (sStkCode <> '') THEN
+                        SET _statement = CONCAT(_statement, ' AND detail.xfrd_stockcode LIKE ',"'%",sStkCode ,"%'", ' ');
+                END IF;
+
+
+                IF (sIssueLoc <> '') THEN
+                        SET _statement = CONCAT(_statement, ' AND detail.xfrd_issuelocation = ',"'",sIssueLoc ,"'", ' ');
+                END IF;
+
+
+                IF (sReceiveLoc <> '') THEN
+                        SET _statement = CONCAT(_statement, ' AND detail.xfrd_recievelocation = ',"'",sReceiveLoc ,"'", ' ');
+                END IF;
+
+
+                IF (sDocDate <> '') THEN
+                        SET _statement = CONCAT(_statement, ' AND header.xfrh_docdate LIKE ',"'%",sDocDate ,"%'", ' ');
+                END IF;
+
+        END IF;
+
+        IF sMethod = 'STK_TRANSFER_DETAIL' THEN
+
+                SET _statement = ' SELECT header.xfrh_company, detail.xfrd_stockcode, detail.xfrd_uomcode,
+                                          header.xfrh_docno, date(xfrh_docdate) as docDate, TRUNCATE(detail.xfrd_qty,2) AS xfrd_qty,
+                                          detail.xfrd_issuelocation, detail.xfrd_recievelocation
+                                          
+                                          ,header.xfrh_remark, header.xfrh_status, header.xfrh_xfrtype
+                                          ,stkm_stockmaster.stk_desc
+
+                                   FROM stkt_stocktransferheader AS header
+                                   INNER JOIN stkt_stocktransferdetail AS detail
+                                   ON header.xfrh_stockxfrhdridx = detail.xfrd_stockxfrhdridx
+                                   left join stkm_stockmaster on stkm_stockmaster.stk_stockcode = detail.xfrd_stockcode' ;
+
+
+                SET _statement = CONCAT(_statement, ' WHERE xfrd_stockxfrhdridx = ', "'",sHeaderID, "'");
+
+
+                
+
+        END IF;
+
+
+        SET @statement = _statement;
+        PREPARE dynquery FROM @statement;
+        EXECUTE dynquery;
+        DEALLOCATE PREPARE dynquery;
+END

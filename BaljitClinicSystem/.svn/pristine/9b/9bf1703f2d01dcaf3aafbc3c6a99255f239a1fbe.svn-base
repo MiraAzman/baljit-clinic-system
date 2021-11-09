@@ -1,0 +1,354 @@
+<%@taglib prefix="jstl" uri="http://java.sun.com/jsp/jstl/core" %>
+<jsp:useBean id="DDL" scope="page" class="BusinessLogic.Servlet_PopulateData" />
+<style type="text/css">
+    .ui-jqgrid tr.jqgrow td {
+        word-wrap: break-word; /* IE 5.5+ CSS3 see http://www.w3.org/TR/css3-text/#text-wrap */
+        white-space: pre-wrap; /* CSS3 */
+        white-space: -moz-pre-wrap; /* Mozilla, since 1999 */
+        white-space: -pre-wrap; /* Opera 4-6 */
+        white-space: -o-pre-wrap; /* Opera 7 */
+        overflow: hidden;
+        height: auto;
+        vertical-align: middle;
+        padding-top: 3px;
+        padding-bottom: 3px
+    }    
+</style>
+<link rel="stylesheet" type="text/css" href="css/your_style.css" />
+<link rel="stylesheet" type="text/css" href="js/plugin/jqgrid/ui.multiselect.css" />
+<section id="widget-grid" class="">
+    <!--<input type="text" id="lblUserCode" value="<%= session.getAttribute("s_usercode")%>"  class="tboxreadonlyShort"/>-->
+    <input type="hidden" id="lblCompCode" value="<%= session.getAttribute("CompCode")%>"  class="tboxreadonlyShort"/>
+    <input type="hidden" id="lblLocCode" value="<%= session.getAttribute("LocCode")%>"  class="tboxreadonlyShort"/>
+    <div class="col-xs-12 col-sm-7 col-md-7 col-lg-4">
+        <h1 class="page-title txt-color-blueDark">
+            <!-- PAGE HEADER -->
+            <i class="fa-fw fa fa-file fa-2x"></i> 
+            GST Input Listing Report                                   
+        </h1>
+    </div>
+    <div class="row">
+        <form id='form_GSTInputListing'>
+        <article class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+            <div class="jarviswidget jarviswidget-color-blueDark" id="wid-id-2"  data-widget-editbutton="false" data-widget-colorbutton="false" data-widget-fullscreenbutton="false" data-widget-custombutton="false" data-widget-deletebutton="false">
+                <header>
+                    <span class="widget-icon"> <i class="fa fa-search"></i></span>
+                    <span><h2>&nbsp;Generate GST Input Tax Listing Report</h2></span>
+                </header>
+                <div class="no-padding">
+                    <div class="widget-body">
+                        <div id="selectCriTab" class="tab-content">
+                            <div class="tab-pane fade active in padding-5 no-padding-bottom" id="selectCriTab_s1">
+                                <table id="tblSearch" class="selection-criteria">
+                                    <tr>
+                                        <td width="15%">GRN Date:</td>
+                                        <td width="20%"><input id="txtGRNDateFrom" name="txtGRNDateFrom" placeholder="GRN Date From" class="searchbox-date" style="width:300px"/></td>
+                                        <td width="5%" align="center">To</td>
+                                        <td width="60%"><input id="txtGRNDateTo" name="txtGRNDateTo" placeholder="GRN Date To" class="searchbox-date" style="width:300px"/></td>                                           
+                                    </tr>                                                                                                          
+                                    <tr>
+                                        <td>Company:</td>
+                                        <td>                                            
+                                            <label id="selectCompany" class="searchbox">
+                                            <select class="form-control" id="ddlComp" name="ddlComp" rel="popover-hover" data-original-title="Company" data-content="Select Company." style="width:300px;">
+                                                <option value="">- Select Company -</option>
+                                                <jstl:forEach var="ddl_Comp" items="${DDL.ddlGet('GET_COMP', '', '', sessionScope.SiteName)}">
+                                                    <option value="${ddl_Comp.VALUE}">${ddl_Comp.VALUE}</option>
+                                                </jstl:forEach>     
+                                            </select>    
+                                            </label>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>Supplier:</td>
+                                        <td>                                            
+                                            <label id="selectSupplier" class="searchbox">
+                                            <select class="form-control" id="ddlSupplier" name="ddlSupplier" rel="popover-hover" data-original-title="Supplier" data-content="Select Supplier." style="width:300px;cursor:default;">
+                                                <option value="">- Select Supplier -</option>
+                                            </select>    
+                                            </label>
+                                        </td>   
+                                    </tr> 
+<!--                                    <tr>    
+                                        <th>Supplier Invoice</th>
+                                        <td colspan="4">
+                                            <div id="rdSupInv">       
+                                                <input type="radio" id="rdSupInv1" name="rdSupInv"  value="" checked="checked" /><label for="rdSupInv1" class="label-option btn">Both</label>
+                                                <input type="radio" id="rdSupInv2" name="rdSupInv" value="Y"/><label for="rdSupInv2" class="label-option btn">Yes</label>
+                                                <input type="radio" id="rdSupInv3" name="rdSupInv" value="N"/><label for="rdSupInv3" class="label-option btn">No</label>
+                                            </div>
+                                        </td>
+                                    </tr>                                                                                                    -->
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>                            
+        </article>
+        </form>                             
+    </div>
+    <div class="row">
+        <form id='form_GSTInputListing'>
+        <article class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+            <div class="jarviswidget jarviswidget-color-blueDark" id="wid-id-2"  data-widget-editbutton="false" data-widget-colorbutton="false" data-widget-fullscreenbutton="false" data-widget-custombutton="false" data-widget-deletebutton="false">
+                <header>
+                    <span class="widget-icon"> <i class="fa fa-search"></i></span>
+                    <span><h2>&nbsp;Generate GST Input Tax Listing Report</h2></span>
+                </header>
+                <div class="no-padding">
+                    <div class="widget-body">
+                        <div id="selectCriTab" class="tab-content">
+                            <div class="tab-pane fade active in padding-5 no-padding-bottom" id="selectCriTab_s1">
+                                <table id="tblSearch" class="selection-criteria">                                      
+                                    <tr>
+                                        <td width="15%">Stock/Product:</td>
+                                        <td width="20%">                                            
+                                           <label id="selectStkFrom" class="searchbox">
+                                            <select class="form-control" id="ddlStkFrom" name="ddlStkFrom" rel="popover-hover" data-original-title="Stock/Product" data-content="Select Stock/Product." style="width:300px;">
+                                                <option value="">- Select Stock/Product -</option>
+                                                <jstl:forEach var="ddl_StkFrom" items="${DDL.ddlGet('GET_STOCK', '', '', sessionScope.SiteName)}">
+                                                    <option value="${ddl_StkFrom.VALUE}">${ddl_StkFrom.TEXT}</option>
+                                                </jstl:forEach>                                             
+                                            </select>    
+                                            </label>
+                                        </td>
+                                        <td width="5%" align="center">To</td>
+                                        <td width="60%">                                            
+                                            <label id="selectStkTo" class="searchbox">
+                                            <select class="form-control" id="ddlStkTo" name="ddlStkTo" rel="popover-hover" data-original-title="Stock/Product" data-content="Select Stock/Product." style="width:300px;">
+                                                <option value="">- Select Stock/Product -</option>
+                                                <jstl:forEach var="ddl_StkTo" items="${DDL.ddlGet('GET_STOCK', '', '', sessionScope.SiteName)}">
+                                                    <option value="${ddl_StkTo.VALUE}">${ddl_StkTo.TEXT}</option>
+                                                </jstl:forEach>     
+                                            </select>    
+                                        </label>
+                                        </td>                                           
+                                    </tr>
+                                    <tr>
+                                        <td>Product Type:</td>
+                                        <td>                                            
+                                            <label id="selectStkTypeFrom" class="searchbox">
+                                            <select class="form-control" id="ddlStkTypeFrom" name="ddlStkTypeFrom" rel="popover-hover" data-original-title="Product Type" data-content="Select Product Type." style="width:300px;">
+                                                <option value="">- Select Product Type -</option>
+                                                <jstl:forEach var="ddl_StkTypeFrom" items="${DDL.ddlGet('GET_CODEDESC', 'STKTYP', '', sessionScope.SiteName)}">
+                                                    <option value="${ddl_StkTypeFrom.VALUE}">${ddl_StkTypeFrom.TEXT}</option>
+                                                </jstl:forEach>  
+                                            </select>    
+                                            </label>
+                                        </td>
+                                        <td align="center">To</td>
+                                        <td>                                            
+                                            <label id="selectStkTypeTo" class="searchbox">
+                                            <select class="form-control" id="ddlStkTypeTo" name="ddlStkTypeTo" rel="popover-hover" data-original-title="Product Type" data-content="Select Product Type." style="width:300px;">
+                                                <option value="">- Select Product Type -</option>
+                                                <jstl:forEach var="ddl_StkTypeTo" items="${DDL.ddlGet('GET_CODEDESC', 'STKTYP', '', sessionScope.SiteName)}">
+                                                    <option value="${ddl_StkTypeTo.VALUE}">${ddl_StkTypeTo.TEXT}</option>
+                                                </jstl:forEach>  
+                                            </select>    
+                                            </label>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>Product Group:</td>
+                                        <td>                                            
+                                            <label id="selectStkGrpFrom" class="searchbox">
+                                            <select class="form-control" id="ddlStkGrpFrom" name="ddlStkGrpFrom" rel="popover-hover" data-original-title="Product Group" data-content="Select Product Group." style="width:300px;">
+                                                <option value="">- Select Product Group -</option>
+                                                <jstl:forEach var="ddl_StkGrpFrom" items="${DDL.ddlGet('GET_CODEDESC', 'STKGRP', '', sessionScope.SiteName)}">
+                                                    <option value="${ddl_StkGrpFrom.VALUE}">${ddl_StkGrpFrom.TEXT}</option>
+                                                </jstl:forEach>                                             
+                                            </select>    
+                                            </label>
+                                        </td>
+                                        <td align="center">To</td>
+                                        <td>                                            
+                                            <label id="selectStkGrpTo" class="searchbox">
+                                            <select class="form-control" id="ddlStkGrpTo" name="ddlStkGrpTo" rel="popover-hover" data-original-title="Product Group" data-content="Select Product Group." style="width:300px;">
+                                                <option value="">- Select Product Group -</option>
+                                                <jstl:forEach var="ddl_StkGrpTo" items="${DDL.ddlGet('GET_CODEDESC', 'STKGRP', '', sessionScope.SiteName)}">
+                                                    <option value="${ddl_StkGrpTo.VALUE}">${ddl_StkGrpTo.TEXT}</option>
+                                                </jstl:forEach>     
+                                            </select>    
+                                            </label>
+                                        </td>
+                                    </tr>
+                                    <tr>    
+                                        <th>Product Category</th>
+                                        <td colspan="4">
+                                            <div id="rdPrdCat">       
+                                                <input type="radio" id="rdPrdCat1" name="rdPrdCat"  value="" checked="checked" /><label for="rdPrdCat1" class="label-option btn">All</label>
+                                                <input type="radio" id="rdPrdCat2" name="rdPrdCat" value="0"/><label for="rdPrdCat2" class="label-option btn">Drug</label>
+                                                <input type="radio" id="rdPrdCat3" name="rdPrdCat" value="1"/><label for="rdPrdCat3" class="label-option btn">Product</label>
+                                                <input type="radio" id="rdPrdCat4" name="rdPrdCat" value="2"/><label for="rdPrdCat4" class="label-option btn">Consumable</label>
+                                            </div>
+                                        </td>
+                                    </tr>                                      
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>                            
+        </article>
+        </form>                             
+    </div>
+    <div class="row" style="padding-left:20px;padding-bottom:20px;">
+        <div align="center" class="padding-5" >
+            <input type="button" class="btn btn-default bg-color-blueDark txt-color-white" id="btnPrintPrev" name="btnPrintPrev" onclick="LoadPrintPreview();" data-toggle='modal' data-target='#printPreview' value="Print Preview" style="margin-right:20px;"/>
+            <input type="button" class="btn btn-default bg-color-blueDark txt-color-white" id="btnExport" name="btnExport" onclick="location.href = '#/dashboard'" value="Export" style="margin-right:20px; display:none;"/>
+            <input type="button" class="btn btn-default bg-color-blueDark txt-color-white" id="btnCancel" name="btnCancel" onclick="location.href = '#/dashboard'" value="Cancel" style="margin-right:20px"/>
+        </div>
+    </div>
+</section>
+<jsp:include page="../../../includes/loading-no-status.jsp"/>  
+<jsp:include page="../../../includes/PopUpInitPage.jsp"/>
+<script src="js/buttonset.js"></script>
+<script type="text/javascript">
+   
+    pageSetUp();
+    
+    $.get('${pageContext.request.contextPath}/Servlet_PopulateData', {SFC: 'GET_DLL', METHOD: 'GET_COMP', P1: '<%= session.getAttribute("CompCode")%>', P2: ''}, function (data) {
+            var arrData = data;
+            createCompOption($("#ddlComp"), arrData, '- Select Company -'); 
+             if ($("#lblCompCode").val() !== "")
+            {
+                 
+                    $("#ddlComp").trigger("change");                
+                 
+                 
+            }
+        });
+
+    
+    function createCompOption(ddl, arrData, stext) {
+        ddl.html('');
+        if(arrData.length > 1){
+            
+        ddl.append($("<option>"). 
+        attr("value",'').
+        data("sel", 0).
+        text(stext));
+        }
+       
+        if(arrData.length > 0){
+            for(var i=0; i < arrData.length; i++){
+                ddl.append($("<option>"). 
+                attr("value",arrData[i].VALUE).
+                data("sel", 0).
+                text(arrData[i].TEXT));
+            }
+        }
+    }
+    
+    
+//    $('#rdSupInv').buttonset();
+    $('#rdPrdCat').buttonset();
+    
+    $().ready(function(){
+        
+        loadScript("js/buttonset.js", function () {
+            loadScript("js/excel-export.js", function () {
+            });
+        });
+    
+        var tempDate = new Date();
+        $("#txtGRNDateFrom").datepicker({
+            numberOfMonths: 2,
+            changeMonth: true,
+            changeYear: true,
+            dateFormat: "yy-mm-dd",
+            onSelect: function (selected) {
+                $("#txtGRNDateTo").datepicker("option", "minDate", selected);
+            }
+        });       
+        var fromDate = $.datepicker.formatDate('yy-mm-dd', new Date(tempDate.getFullYear(), tempDate.getMonth() - 2, tempDate.getDate()));
+        $("#txtGRNDateFrom").val(fromDate);
+        $("#txtGRNDateTo").datepicker({
+            numberOfMonths: 2,
+            changeMonth: true,
+            changeYear: true,
+            dateFormat: "yy-mm-dd",
+            onSelect: function (selected) {
+                $("#txtGRNDateFrom").datepicker("option", "maxDate", selected);
+            }
+        });
+        $("#txtGRNDateTo").datepicker("option", "minDate", fromDate);
+        $("#txtGRNDateTo").val($.datepicker.formatDate('yy-mm-dd', tempDate));
+        $("#txtGRNDateFrom").datepicker("option", "maxDate", tempDate);
+                
+        $("#ddlSupplier").prop("disabled", true);    
+        $("#ddlComp").change(function(){             
+            $('#ddlSupplier').empty();   
+            var sCompany = this.value;
+            if (sCompany !== "") { 
+                var ddlSup = $("#ddlSupplier");
+                $.get('${pageContext.request.contextPath}/Servlet_PopulateData',{
+                    SFC: 'GET_DLL', 
+                    METHOD: 'GET_GRN_SUPPLIER', 
+                    P1: $("#ddlComp").val(), 
+                    P2: ''
+                }, function (data) {
+                    var arrData2 = data;
+                    createOption(ddlSup, arrData2, '- Select Supplier -'); 
+                });                            
+                $("#ddlSupplier").prop("disabled", false); 
+            } else { 
+                $("select#ddlSupplier").append( $("<option>").val("").html("- Select Supplier -")); 
+                $("#ddlSupplier").prop("disabled", true); 
+            }
+        });
+    });
+    
+    function createOption(ddl, arrData, stext) {
+        ddl.html('');
+        ddl.append($("<option>"). 
+            attr("value",'').
+            data("sel", 0).
+            text(stext)
+        );
+        
+        if(arrData.length > 0){
+            for(var i=0; i < arrData.length; i++){
+                ddl.append($("<option>"). 
+                attr("value",arrData[i].SUPPLIER).
+                data("sel", 0).
+                text(arrData[i].SUPPLIER));
+            }
+        }
+    }
+
+    function LoadPrintPreview() {
+        loadScript("js/print-preview.js", function () {          
+            var jObj = {              
+                1: "GET_GSTINPUT_REPORT",
+                2: $('#txtGRNDateFrom').val(), 
+                3: $('#txtGRNDateTo').val(), 
+                4: $('#ddlComp').val(), 
+                5: $('#ddlSupplier').val(), 
+                6: "N", 
+                7: $('#ddlStkFrom').val(), 
+                8: $('#ddlStkTo').val(), 
+                9: $('#ddlStkTypeFrom').val(), 
+                10: $('#ddlStkTypeTo').val(), 
+                11: $('#ddlStkGrpFrom').val(), 
+                12: $('#ddlStkGrpTo').val(), 
+                13: $('input[name=rdPrdCat]:checked').val(),
+                14: ""
+            }; 
+            
+            var param = {     
+                // PO_NO: sPoNo               
+            };           
+            //alert(JSON.stringify(jObj));               
+            var object = {};
+            object.procParam = jObj;
+            object.jasperName = 'GSTInput_Report';
+            object.procString = 'SP_GET_GRN_RPT(?,?,?,?,?,?,?,?,?,?,?,?,?,?)';
+            object.fixParam = param;
+            //alert(JSON.stringify(funcIn));
+            printToPage(object);                                           
+        });      
+    };
+        
+</script>

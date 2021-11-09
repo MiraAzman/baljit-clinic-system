@@ -1,0 +1,60 @@
+CREATE DEFINER=`root`@`localhost` PROCEDURE `SP_GET_DOCNO`(
+IN sMethod varchar(30),
+IN sValue1 varchar(20),
+IN sValue2 varchar(20)
+)
+BEGIN
+
+
+
+
+
+DECLARE _statement VARCHAR(8000);
+
+        IF sMethod = 'GET_NUMBER' THEN
+
+             SET _statement = ' SELECT CONCAT(docn_prefix, LPAD(docn_lastnumber, 8, ''0'')) as NewNumber
+                                FROM stkm_documentnumbers
+                                WHERE  recstatus = 1 ' ;
+
+
+           IF (sValue1 <> '') THEN
+                    SET _statement = CONCAT(_statement, ' AND DOCN_TYPE = ',"'",sValue1 ,"'", ' ');
+           END IF;
+
+
+        Update  stkm_documentnumbers
+        Set   docn_lastnumber = docn_lastnumber + 1
+        Where  DOCN_TYPE =  sValue1 ;
+
+
+     END IF;
+
+     IF sMethod = 'GET_NUMBER_FROMSP' THEN
+
+           SET _statement = ' SELECT CONCAT(docn_prefix, LPAD(docn_lastnumber, 8, ''0'')) as NewNumber
+                                FROM stkm_documentnumbers
+                                WHERE  recstatus = 1 ' ;
+
+
+           IF (sValue1 <> '') THEN
+                    SET _statement = CONCAT(_statement, ' AND DOCN_TYPE = ',"'",sValue1 ,"'", ' ');
+           END IF;
+
+
+           Update  stkm_documentnumbers
+           Set   docn_lastnumber = docn_lastnumber + 1
+           Where  DOCN_TYPE =  sValue1 ;
+
+          SET _statement = CONCAT('CREATE TEMPORARY TABLE tempRN ', _statement);
+          DROP TEMPORARY TABLE IF EXISTS tempRN;
+     END IF;
+
+
+SET @statement = _statement;
+PREPARE dynquery FROM @statement;
+EXECUTE dynquery;
+DEALLOCATE PREPARE dynquery;
+
+
+END

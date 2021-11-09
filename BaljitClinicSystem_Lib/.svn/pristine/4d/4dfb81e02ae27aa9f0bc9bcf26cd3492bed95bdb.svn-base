@@ -1,0 +1,423 @@
+CREATE DEFINER=`root`@`localhost` PROCEDURE `SP_TRX_STOCK_COSTQTY`(
+IN sMethod varchar(20),
+IN sSCQCostQtyIdx Integer,
+IN sSCQCompanyCode varchar(10),
+IN sSCQLocationCode varchar(10),
+IN sSCQStockCode varchar(16),
+IN sSCQStockIdx Integer,
+IN sSCQBatchNo varchar(10),
+IN sSCQExpiryDate varchar(30),
+IN sSCQUnitCost varchar(20),
+IN sSCQUOMCode varchar(6),
+IN sSCQUOMIdx Integer,
+IN sSCQQty DECIMAL(12,3),
+IN sSCQReceivedDate varchar(30),
+IN sSCQXfrDtlIdx varchar(50),
+IN sBy varchar(10),
+IN sRecStatus varchar(4),
+
+IN sDataExchangeStatus varchar(2),   
+IN sDataExchangeQty varchar(20),
+
+OUT Result varchar(30),
+OUT Message varchar(30),
+OUT retSCQCostQtyIdx Integer
+)
+BEGIN
+
+     
+DECLARE dtExpiry DATETIME;
+DECLARE dtReceive DATETIME;
+
+SET dtExpiry = NULL;
+SET dtReceive = NULL;
+
+IF sSCQReceivedDate <> '' THEN
+        set @L =  instr(sSCQReceivedDate, '.');
+        if ( @L > 0) THEN
+                SET dtReceive  = STR_TO_DATE(REPLACE(LEFT(sSCQReceivedDate, @L -1),"'",''), '%Y-%m-%d %H:%i:%s'); 
+        ELSE
+ SET dtReceive  = STR_TO_DATE(REPLACE(sSCQReceivedDate,"'",''), '%Y-%m-%d %H:%i:%s'); 
+END IF;
+END IF;
+
+IF sSCQExpiryDate <> '' THEN
+        set @L2 =  instr(sSCQExpiryDate, '.');
+        if ( @L2 > 0) THEN
+                SET dtExpiry  = STR_TO_DATE(REPLACE(LEFT(sSCQExpiryDate, @L2 -1),"'",''), '%Y-%m-%d %H:%i:%s'); 
+        ELSE
+ SET dtExpiry  = STR_TO_DATE(REPLACE(sSCQExpiryDate,"'",''), '%Y-%m-%d %H:%i:%s'); 
+END IF;
+
+
+END IF;
+
+         IF sMethod = 'ADD_COSTQTY' THEN
+
+
+                 INSERT INTO stkt_costqty (
+
+                        scq_companycode,
+                        scq_locationcode,
+                        scq_stockcode,
+                        scq_stockidx,
+                        scq_batchno,
+                        scq_expirydate,
+                        scq_unitcost,
+                        scq_uomcode,
+                        scq_uomidx,
+                        scq_qty,
+
+
+                        systemname,
+                        scq_receiveddate,
+
+                        scq_xfrdtlidx,
+
+                        dataexchangestatus,
+                        dataexchangeqty,
+                        dataexchangelocked,
+
+                        createdby,
+                        createddt,
+                        recstatus
+                 )
+
+                    VALUES
+                 (
+
+                        sSCQCompanyCode,
+                        sSCQLocationCode,
+                        sSCQStockCode,
+                        sSCQStockIdx,
+                        sSCQBatchNo,
+                        dtExpiry, 
+                        sSCQUnitCost,
+                        sSCQUOMCode,
+                        sSCQUOMIdx,
+                        sSCQQty,
+
+                        'PORTAL',
+                        dtReceive, 
+
+                        sSCQXfrDtlIdx,
+
+                        sDataExchangeStatus,
+                        sDataExchangeQty,
+                        null,
+
+                        sBy, NOW(), sRecStatus);
+
+
+                  SELECT '00000' INTO Result;
+                  SELECT  'Success Inserted' INTO Message;
+
+                  SELECT LAST_INSERT_ID() INTO retSCQCostQtyIdx;
+                   
+
+
+
+     END IF;
+
+     IF sMethod = 'UPDATE_COSTQTY' THEN
+
+
+                 
+                 set @ConvVal = 0;
+                 set @work = 1;
+                 if (sSCQQty <> 0) THEN
+                         set @work = sSCQQty;
+                 END IF;
+
+                 select F_CONVERT_UOM(@work,sSCQUOMCode,scq_uomcode,scq_stockcode)
+                                from stkt_costqty where scq_costqtyidx=sSCQCostQtyIdx into @ConvVal;
+                 
+                 set @DE_Status = '';
+                 set @DE_Qty = 0;
+                 set @DE_Locked = null;
+
+                 select distinct dataexchangestatus,dataexchangeqty, dataexchangelocked
+                         from stkt_costqty
+                where scq_costqtyidx = sSCQCostQtyIdx
+                        into @DE_Status,  @DE_Qty,  @DE_Locked;
+
+
+                IF !(@DE_Locked IS NULL) THEN
+                
+
+
+                           INSERT INTO stkt_costqty (
+
+                                 scq_companycode,
+                                 scq_locationcode,
+                                 scq_stockcode,
+                                 scq_stockidx,
+                                 scq_batchno,
+                                 scq_expirydate,
+                                 scq_unitcost,
+                                 scq_uomcode,
+                                 scq_uomidx,
+                                 scq_qty,
+
+                                 systemname,
+                                 scq_receiveddate,
+                                 scq_xfrdtlidx,
+
+                                 dataexchangestatus,
+                                 dataexchangeqty,
+                                 dataexchangelocked,
+
+                                 createdby,
+                                 createddt,
+                                 recstatus
+                                 )
+
+                                 VALUES
+                                 (
+
+                                 sSCQCompanyCode,
+                                 sSCQLocationCode,
+                                 sSCQStockCode,
+                                 sSCQStockIdx,
+                                 sSCQBatchNo,
+                                 dtExpiry, 
+                                 sSCQUnitCost,
+                                 sSCQUOMCode,
+                                 sSCQUOMIdx,
+                                 sDataExchangeQty, 
+                                 'PORTAL',
+                                 dtReceive, 
+                                 sSCQXfrDtlIdx,
+
+                                 sDataExchangeStatus,
+                                 sDataExchangeQty,
+                                 NULL,
+
+                                 sBy, NOW(), sRecStatus);
+
+
+
+                           SELECT '00000' INTO Result;
+                           SELECT  'Success Inserted' INTO Message;
+
+                           SELECT LAST_INSERT_ID() INTO retSCQCostQtyIdx;
+
+
+                ELSE     
+                         IF @ConvVal <> 0 THEN   
+
+
+                                 UPDATE stkt_costqty
+                                 SET
+                                 scq_companycode = sSCQCompanyCode,
+                                 scq_locationcode = sSCQLocationCode,
+                                 scq_stockcode = sSCQStockCode,
+                                 scq_stockidx = sSCQStockIdx,
+                                 scq_batchno = sSCQBatchNo,
+                                 scq_expirydate = dtExpiry, 
+                                 scq_unitcost = sSCQUnitCost,
+
+                                 scq_uomidx = sSCQUOMIdx,
+                                 
+								  scq_qty =  scq_qty + F_CONVERT_UOM(sDataExchangeQty,scq_uomcode,sSCQUOMCode,scq_stockcode),
+                                --  scq_qty =  F_CONVERT_UOM(sSCQQty,scq_uomcode,sSCQUOMCode,scq_stockcode), 
+                                 scq_receiveddate = dtReceive, 
+
+                                 scq_xfrdtlidx = sSCQXfrDtlIdx,
+                                 modifiedby = sBy,
+                                 modifieddt = NOW(),
+
+                                 dataexchangestatus =  sDataExchangeStatus,
+                                 dataexchangeqty = dataexchangeqty + F_CONVERT_UOM(sDataExchangeQty, scq_uomcode, sSCQUOMCode, scq_stockcode),
+
+                                 recstatus = sRecStatus
+                                 WHERE  scq_costqtyidx =  sSCQCostQtyIdx;
+
+                                 SELECT '00000' INTO Result;
+                                 SELECT  'Success Updated' INTO Message;
+                                 SET retSCQCostQtyIdx = sSCQCostQtyIdx;
+
+                         ELSE 
+                                 INSERT INTO stkt_costqty (
+
+                                 scq_companycode,
+                                 scq_locationcode,
+                                 scq_stockcode,
+                                 scq_stockidx,
+                                 scq_batchno,
+                                 scq_expirydate,
+                                 scq_unitcost,
+                                 scq_uomcode,
+                                 scq_uomidx,
+                                 scq_qty,
+
+                                 systemname,
+                                 scq_receiveddate,
+                                 scq_xfrdtlidx,
+
+                                 dataexchangestatus,
+                                 dataexchangeqty,
+                                 dataexchangelocked,
+
+                                 createdby,
+                                 createddt,
+                                 recstatus
+                                 )
+
+                                 VALUES
+                                 (
+
+                                 sSCQCompanyCode,
+                                 sSCQLocationCode,
+                                 sSCQStockCode,
+                                 sSCQStockIdx,
+                                 sSCQBatchNo,
+                                 dtExpiry, 
+                                 sSCQUnitCost,
+                                 sSCQUOMCode,
+                                 sSCQUOMIdx,
+                                 sDataExchangeQty, 
+                                 'PORTAL',
+                                 dtReceive, 
+                                 sSCQXfrDtlIdx,
+
+                                 sDataExchangeStatus,
+                                 sDataExchangeQty,
+                                 NULL,
+
+                                 sBy, NOW(), sRecStatus);
+
+
+                                 SELECT '00000' INTO Result;
+                                 SELECT  'Success Inserted' INTO Message;
+
+                                 SELECT LAST_INSERT_ID() INTO retSCQCostQtyIdx;
+                        END IF;
+                END IF;    
+
+     END IF;
+     
+     IF sMethod = 'UPD_DATAEX' THEN
+  UPDATE stkt_costqty SET
+        dataexchangestatus = sDataExchangeStatus, dataexchangelocked = null
+        WHERE scq_costqtyidx = sSCQCostQtyIdx;    
+     END IF;
+     
+     IF sMethod = 'DELETE_COSTQTY' THEN
+  DELETE FROM stkt_costqty
+        WHERE scq_companycode = sSCQCompanyCode AND scq_locationcode = sSCQLocationCode AND scq_stockcode = sSCQStockCode;
+        
+          DELETE FROM stkm_stockbalance
+                  WHERE bal_companycode = sSCQCompanyCode AND bal_location = sSCQLocationCode AND bal_stockcode = sSCQStockCode;
+        
+     END IF;
+
+     IF sMethod = 'DEL_COSTQTY_STKADJ' THEN
+
+   IF (sSCQExpiryDate = '') THEN
+                         DELETE FROM stkt_costqty
+       WHERE scq_companycode = sSCQCompanyCode AND scq_locationcode = sSCQLocationCode AND scq_stockcode = sSCQStockCode
+       AND scq_batchno = sSCQBatchNo AND scq_unitcost = sSCQUnitCost AND scq_expirydate IS NULL AND scq_uomcode = sSCQUOMCode;
+             ELSE
+      DELETE FROM stkt_costqty
+      WHERE scq_companycode = sSCQCompanyCode AND scq_locationcode = sSCQLocationCode AND scq_stockcode = sSCQStockCode
+      AND scq_batchno = sSCQBatchNo AND scq_unitcost = sSCQUnitCost AND scq_expirydate = sSCQExpiryDate AND scq_uomcode = sSCQUOMCode;
+            END IF;
+            
+             DELETE FROM stkm_stockbalance
+                  WHERE bal_companycode = sSCQCompanyCode AND bal_location = sSCQLocationCode AND bal_stockcode = sSCQStockCode;
+
+             SELECT '00000' INTO Result;
+             SELECT  'Success Updated' INTO Message;
+
+     END IF;
+     
+     IF sMethod = 'REINSERT_COSTQTY' THEN
+        INSERT INTO stkt_costqty
+        (scq_companycode, scq_locationcode, scq_stockcode, scq_stockidx, scq_batchno, 
+        scq_expirydate, scq_uomcode, scq_uomidx, scq_qty, createdby, createddt,
+        recstatus, scq_receiveddate, systemname, scq_unitcost, scq_xfrdtlidx, 
+        dataexchangestatus, dataexchangeqty)
+        SELECT sSCQCompanyCode, sSCQLocationCode, sSCQStockCode, stk_stockidx, sSCQBatchNo,
+  dtExpiry, sSCQUOMCode, sSCQUOMIdx, sSCQQty, sBy, NOW(),
+        sRecStatus, dtReceive, 'PORTAL', sSCQUnitCost, sSCQXfrDtlIdx,
+        sDataExchangeStatus, sDataExchangeQty
+        FROM stkm_stockmaster
+        WHERE stk_stockcode = sSCQStockCode;  
+        
+        SET @SUMQTY = '0';
+        SELECT SUM(SCQ_QTY) FROM stkt_costqty
+  WHERE scq_companycode = sSCQCompanyCode AND scq_locationcode = sSCQLocationCode AND scq_stockcode = sSCQStockCode
+  AND scq_uomcode = sSCQUOMCode INTO @SUMQTY;     
+        
+        CALL SP_TRX_STOCK_BALANCE('REINSERT_STOCK_BALANCE', sSCQCompanyCode, sSCQLocationCode, sSCQStockCode, sSCQUOMCode, CAST(@SUMQTY as decimal(15,3)), sBy, sRecStatus, Result, Message);
+     END IF;
+     
+     IF sMethod = 'UPD_COSTQTY_EX' THEN
+  SET sSCQCostQtyIdx = 0;      
+        SET @ConvVal = 0;
+                                
+        SELECT scq_costqtyidx FROM stkt_costqty 
+        WHERE scq_companycode = sSCQCompanyCode AND scq_locationcode = sSCQLocationCode AND scq_stockcode = sSCQStockCode
+        AND scq_batchno = sSCQBatchNo AND CASE WHEN dtExpiry is null THEN scq_expirydate is null ELSE scq_expirydate = dtExpiry END  
+        AND scq_uomcode = sSCQUOMCode
+        AND scq_unitcost = sSCQUnitCost AND dataexchangestatus <> 'I'
+        Limit 1 INTO sSCQCostQtyIdx;        
+
+  select F_CONVERT_UOM(sSCQQty,sSCQUOMCode,scq_uomcode,scq_stockcode)*1
+  from stkt_costqty where scq_costqtyidx=sSCQCostQtyIdx into @ConvVal;
+        
+        IF sSCQCostQtyIdx = 0 THEN
+        
+   INSERT INTO stkt_costqty 
+   (scq_companycode, scq_locationcode, scq_stockcode, scq_stockidx, scq_batchno, scq_expirydate,
+   scq_unitcost, scq_uomcode, scq_uomidx, scq_qty, systemname, scq_receiveddate, scq_xfrdtlidx,
+   dataexchangestatus, dataexchangeqty, dataexchangelocked, createdby, createddt, recstatus)
+   SELECT sSCQCompanyCode, sSCQLocationCode, sSCQStockCode, stk_stockidx, sSCQBatchNo, dtExpiry,
+   sSCQUnitCost, sSCQUOMCode, sSCQUOMIdx, sSCQQty*1, 'PORTAL', dtReceive, sSCQXfrDtlIdx,
+   sDataExchangeStatus, sDataExchangeQty, NULL, sBy, NOW(), sRecStatus
+            FROM stkm_stockmaster
+   WHERE stk_stockcode = sSCQStockCode;           
+            
+            CALL SP_TRX_STOCK_BALANCE('UPDATE_STOCK_BALANCE', sSCQCompanyCode, sSCQLocationCode, sSCQStockCode, sSCQUOMCode, CAST(sSCQQty*1 as decimal(15,3)), sBy, sRecStatus, Result, Message);
+            
+            SELECT '00000' INTO Result;
+   SELECT  'Success Inserted' INTO Message;
+            SET retSCQCostQtyIdx = sSCQCostQtyIdx;
+        ELSE
+   IF @ConvVal <> 0 THEN
+    UPDATE stkt_costqty
+    SET scq_qty = scq_qty + (F_CONVERT_UOM(sSCQQty,scq_uomcode,sSCQUOMCode,scq_stockcode)*1),
+                dataexchangestatus =  sDataExchangeStatus, modifieddt = NOW(), modifiedby = sBy
+                WHERE scq_costqtyidx=sSCQCostQtyIdx;
+                
+                CALL SP_TRX_STOCK_BALANCE('UPDATE_STOCK_BALANCE', sSCQCompanyCode, sSCQLocationCode, sSCQStockCode, sSCQUOMCode, CAST(sSCQQty*1 as decimal(15,3)), sBy, sRecStatus, Result, Message);
+                
+                SELECT '00000' INTO Result;
+    SELECT  'Success Updated' INTO Message;
+                SET retSCQCostQtyIdx = sSCQCostQtyIdx;
+            ELSE
+    INSERT INTO stkt_costqty 
+    (scq_companycode, scq_locationcode, scq_stockcode, scq_stockidx, scq_batchno, scq_expirydate,
+    scq_unitcost, scq_uomcode, scq_uomidx, scq_qty, systemname, scq_receiveddate, scq_xfrdtlidx,
+    dataexchangestatus, dataexchangeqty, dataexchangelocked, createdby, createddt, recstatus)
+    SELECT sSCQCompanyCode, sSCQLocationCode, sSCQStockCode, stk_stockidx, sSCQBatchNo, dtExpiry,
+    sSCQUnitCost, sSCQUOMCode, sSCQUOMIdx, sSCQQty*1, 'PORTAL', dtReceive, sSCQXfrDtlIdx,
+    sDataExchangeStatus, sDataExchangeQty, NULL, sBy, NOW(), sRecStatus
+    FROM stkm_stockmaster
+    WHERE stk_stockcode = sSCQStockCode;
+                
+                CALL SP_TRX_STOCK_BALANCE('UPDATE_STOCK_BALANCE', sSCQCompanyCode, sSCQLocationCode, sSCQStockCode, sSCQUOMCode, CAST(sSCQQty*1 as decimal(15,3)), sBy, sRecStatus, Result, Message);
+   
+    SELECT '00000' INTO Result;
+    SELECT  'Success Inserted' INTO Message;
+                SELECT LAST_INSERT_ID() INTO retSCQCostQtyIdx;
+
+
+            END IF;
+        END IF;
+        
+        
+     END IF;
+
+END

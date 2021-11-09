@@ -1,0 +1,79 @@
+package BusinessLogic;
+
+import java.io.IOException;
+import java.sql.SQLException;
+import net.sf.json.JSONObject;
+import BusinessData.DAL_StockCostQty;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+
+/**
+ *
+ * @author N0535
+ */
+public class BLL_StockCostQty {
+    
+    public JSONObject UPD_StockCostQty(JSONObject sJsonIn, String sDelete, String SiteName) throws IOException, SQLException, ParseException {
+        JSONObject obj_return = new JSONObject();
+        DAL_StockCostQty objSCQ = new DAL_StockCostQty();
+        BLL_Common.Common_Object obj = null;
+        DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+//        DateFormat inputFormat = new SimpleDateFormat ("dd/MM/yyyy HH:mm:ss");
+        DateFormat inputFormat = new SimpleDateFormat ("dd/MM/yyyy hh:mm:ss a");
+        
+        String[] aryEx = {
+            "" /*sMethod VARCHAR(30)*/,                        
+            "0" /* 2 - sSCQCostQtyIdx Integer */,
+            sJsonIn.get("compcode").toString() /* 3 - sSCQCompanyCode varchar(10) */,
+            sJsonIn.get("location").toString() /* 4 - sSCQLocationCode varchar(10) */,
+            sJsonIn.get("stkcode").toString() /* 5 - sSCQStockCode varchar(10) */,
+            "0" /* 6 - sSCQStockIdx Integer */,
+            sJsonIn.get("batchno").toString() /* 7 - sSCQBatchNo varchar(10) */,
+            sJsonIn.get("expirydate").toString() /* 8 - sSCQExpiryDate datetime */,
+            sJsonIn.get("unitcost").toString() /* 9 - sSCQUnitcCost varchar(20) */,
+            sJsonIn.get("uomcode").toString() /* 10 - sSCQUOMCode varchar(6) */,
+            "0" /* 11 - sSCQUOMIdx Integer */,
+            sJsonIn.get("lateststkcostqty").toString() /* 12 - sSCQQty varchar(20) */,
+            sJsonIn.get("updateddate").toString() /* 13 - sSCQReceivedDate datetime */,
+            "0",
+            "SYSTEM" /* 15 - sBy varchar(10) */,
+            "1", /* 16 - srecstatus varchar(4) */    
+            "N",
+            "0"
+        };
+        
+        if(!sJsonIn.get("expirydate").toString().equals("")){
+            aryEx[7] = dateFormat.format(inputFormat.parse(sJsonIn.get("expirydate").toString()));
+        }
+        
+        if(!sJsonIn.get("updateddate").toString().equals("")){
+            aryEx[12] = dateFormat.format(inputFormat.parse(sJsonIn.get("updateddate").toString()));
+        }
+        
+        if(sJsonIn.get("method").toString().equals("STOCKCOSTQTY_DISP")){
+            //just update
+            aryEx[0] = "UPD_COSTQTY_EX";
+            aryEx[11] = sJsonIn.get("qtydeducted").toString();
+        }else{
+            //delete all and reinsert           
+            if(sDelete.equals("Y")){
+                aryEx[0] = "DELETE_COSTQTY";
+                obj = objSCQ.DAL_UPDATE_STOCK_COSTQTY(SiteName, aryEx);
+                try{
+                    obj.commit();
+                }catch (Exception e) {
+                }
+            }
+            aryEx[0] = "REINSERT_COSTQTY";
+        } 
+        
+        obj = objSCQ.DAL_UPDATE_STOCK_COSTQTY(SiteName, aryEx);
+        try{
+            obj.commit();
+        }catch (Exception e) {
+        }
+
+        return obj_return;
+    }    
+}

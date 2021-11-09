@@ -1,0 +1,197 @@
+CREATE DEFINER=`root`@`localhost` PROCEDURE `SP_GET_STOCK_RETURN_RPT`(
+IN sMethod       varchar(50),
+IN sStatusType  varchar(50), /* AF,AP,RA,RF,DF,DP,O */
+IN sCompCode     varchar(200),
+IN sLocCode      varchar(10),
+IN sRecvLocCode      varchar(10),
+IN sDateFrom         varchar(20),
+IN sDateTo         varchar(20),
+IN selReturnStatusDesc      varchar(500)
+
+)
+BEGIN
+
+      DECLARE _statement VARCHAR(8000);
+      DECLARE _statement2 VARCHAR(8000);
+
+         SET _statement = "";      
+
+         IF sMethod = 'TEST' THEN
+   -- set foundpos = 0;
+   select LOCATE('AF',sStatusType) into @foundpos;
+   if (@foundpos > 0) THEN
+    select @foundpos;
+            END IF;
+  end if;
+
+
+         IF sMethod = 'GET_STOCK_RETURN_STATUS_REPORT' THEN
+
+
+            SET _statement = 'SELECT reth_docno AS DocNo, reth_company AS CompCode, reth_issuelocation AS IssLocCode, 
+        reth_recievelocation as RecvLocCode, 
+        DATE(reth_docdate) AS DocDate, reth_personname AS PersonName,
+                              reth_remark AS HdrRemarks, reth_status AS HdrStatus, retd_stockcode AS StkCode, retd_uomcode AS UOMCode, retd_unitcost AS UnitCost,
+                              retd_batchno AS BatchNo, retd_expirydate AS ExpiryDate, retd_qty AS ReturnQty, retd_accepted_qty AS AcceptQty, 
+                              (retd_qty - retd_accepted_qty) as VarianceQty, retd_remarks AS DtlRemarks,
+                              retd_status AS DtlStatus, stk_desc AS StkDesc,
+       
+                              CASE
+                                   WHEN reth_status = "O" THEN "Open"
+                                   WHEN reth_status = "P" THEN "Processed"
+                              END AS HdrStatusDesc,
+                              CASE
+                                   WHEN retd_status = "A" THEN "Accepted"
+                                   WHEN retd_status = "R" THEN "Rejected"
+                                   WHEN retd_status = "O" THEN "Open"
+                                   WHEN retd_status = "W" THEN "Disposed"
+                              END AS DtlStatusDesc,
+                              
+                              case 
+                              WHEN (retd_status = "A" and retd_qty = retd_accepted_qty) THEN "Fully Accepted"
+                              WHEN (retd_status = "A" and retd_qty <> retd_accepted_qty) THEN "Partially Accepted"
+                              
+                              WHEN (retd_status = "R" and retd_qty = retd_accepted_qty) THEN "Filly Rejected"
+                              WHEN (retd_status = "R" and retd_qty <> retd_accepted_qty) THEN "Partially Rejected"
+                              
+       WHEN (retd_status = "W" and retd_qty = retd_accepted_qty) THEN "Fully Disposed"
+                              WHEN (retd_status = "W" and retd_qty <> retd_accepted_qty) THEN "Partially Disposed"
+                              
+                              WHEN (retd_status = "O") THEN "Open"
+                              
+                              END AS DtlStatusDesc2, ';
+                              
+                              SET _statement = CONCAT(_statement,"'",sDateFrom,"'", ' AS selDateFrom, ' );
+
+                               SET _statement = CONCAT(_statement,"'",sDateTo,"'", ' AS selDateTo, ' );
+
+                               SET _statement = CONCAT(_statement,"'",sStatusType,"'", ' AS selReturnStatus, ' );
+
+                               SET _statement = CONCAT(_statement,"'",sLocCode,"'", ' AS selIssLocCode, ' );
+                               SET _statement = CONCAT(_statement,"'",sRecvLocCode,"'", ' AS selRecvLocCode,' );
+                               SET _statement = CONCAT(_statement,"'",selReturnStatusDesc,"'", ' AS selReturnStatusDesc ' );
+                              
+                            
+                              
+                               
+                               
+                              
+                              SET _statement = CONCAT(_statement,'   FROM stkt_stockreturnheader
+                              JOIN stkt_stockreturndetail ON reth_returnhdridx = retd_returnhdridx
+                              JOIN stkm_stockmaster ON retd_stockcode = stk_stockcode
+                              WHERE reth_returnhdridx IS NOT NULL  ' );                              
+                              -- and (retd_status = "A" and retd_qty = retd_accepted_qty)
+                              
+                              
+                              
+
+    if (sDateFrom <> '' and sDateTo <> '') THEN
+     set  _statement = concat(_statement, ' and (reth_docdate between "', sDateFrom, '" and "', sDateTo,' 23:59:59")');
+    END IF;
+                
+                if (sCompCode <> '') THEN
+     set  _statement = concat(_statement, ' and (reth_company ="', sCompCode, '")');
+                END IF;
+                if (sLocCode <> '') THEN
+     set  _statement = concat(_statement, ' and reth_issuelocation in ("', sLocCode, '")');
+    END IF;
+                
+                 if (sRecvLocCode <> '') THEN
+     set  _statement = concat(_statement, ' and reth_recievelocation in ("', sRecvLocCode, '")');
+    END IF;
+                
+   SET _statement2 = "";      
+            
+   select LOCATE('AF',sStatusType) into @foundpos;
+   if (@foundpos > 0) THEN
+    if (_statement2 <> "") then
+     set _statement2 = concat(_statement2, ' OR ');
+                END IF;
+     SET _statement2 = CONCAT(_statement2, ' (retd_status = "A" and retd_qty = retd_accepted_qty)');
+            END IF;
+            
+            select LOCATE('AP',sStatusType) into @foundpos;
+   if (@foundpos > 0) THEN
+    if (_statement2 <> "") then
+     set _statement2 = concat(_statement2, ' OR ');
+                END IF;
+
+     SET _statement2 = CONCAT(_statement2, ' (retd_status = "A" and retd_qty <> retd_accepted_qty)');
+            END IF;
+            
+            select LOCATE('RF',sStatusType) into @foundpos;
+            if (@foundpos > 0) THEN
+    if (_statement2 <> "") then
+     set _statement2 = concat(_statement2, ' OR ');
+                END IF;
+
+     SET _statement2 = CONCAT(_statement2, ' (retd_status = "R" and retd_qty = retd_accepted_qty)');
+            END IF;
+            
+            select LOCATE('RP',sStatusType) into @foundpos;
+   if (@foundpos > 0) THEN
+    if (_statement2 <> "") then
+     set _statement2 = concat(_statement2, ' OR ');
+                END IF;
+            
+     SET _statement2 = CONCAT(_statement2, ' (retd_status = "R" and retd_qty <> retd_accepted_qty)');
+            END IF;
+            
+            select LOCATE('DF',sStatusType) into @foundpos;
+            if (@foundpos > 0) THEN
+    if (_statement2 <> "") then
+     set _statement2 = concat(_statement2, ' OR ');
+                END IF;
+            
+     SET _statement2 = CONCAT(_statement2, ' (retd_status = "W" and retd_qty = retd_accepted_qty)');
+            END IF;
+            
+            select LOCATE('DP',sStatusType) into @foundpos;
+   if (@foundpos > 0) THEN
+    if (_statement2 <> "") then
+     set _statement2 = concat(_statement2, ' OR ');
+                END IF;
+
+     SET _statement2 = CONCAT(_statement2, ' (retd_status = "W" and retd_qty <> retd_accepted_qty)');
+            END IF;
+            
+            select LOCATE('O',sStatusType) into @foundpos;
+   if (@foundpos > 0) THEN
+    if (_statement2 <> "") then
+     set _statement2 = concat(_statement2, ' OR ');
+                END IF;
+            
+     SET _statement2 = CONCAT(_statement2, ' (retd_status = "O" )');
+            END IF;
+            
+            
+   if (_statement2 <> "") then
+     set _statement = concat(_statement, ' AND (', _statement2, ') ');
+   END IF;
+ 
+            
+
+            -- IF (sRetHdrIdx <> '') THEN
+            --        SET _statement = CONCAT(_statement, ' AND reth_returnhdridx = ',"'",sRetHdrIdx,"'" );
+            -- END IF;
+   if (sLocCode <> '') THEN
+    SET _statement = CONCAT(_statement, ' ORDER BY DtlStatusDesc2,reth_company, reth_issuelocation , reth_docno' );
+   else 
+    SET _statement = CONCAT(_statement, ' ORDER BY DtlStatusDesc2,reth_company, reth_issuelocation , reth_docno' );
+             END IF;
+            
+
+   SET @statement = _statement;
+   PREPARE dynquery FROM @statement;
+   EXECUTE dynquery;
+   DEALLOCATE PREPARE dynquery;
+            
+            -- call debug_msg(true, _statement);
+         END IF;
+
+
+
+
+
+
+END

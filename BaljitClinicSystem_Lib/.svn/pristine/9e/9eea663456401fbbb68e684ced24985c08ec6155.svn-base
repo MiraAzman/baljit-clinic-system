@@ -1,0 +1,31 @@
+CREATE DEFINER=`root`@`localhost` PROCEDURE `SP_GET_GST`(
+IN sMethod        varchar(30),
+IN sGSTCode       varchar(8),
+IN sGSTType       varchar(8),
+IN sOrderBy       varchar(30),
+IN sPage          varchar(10),
+IN sPerPage       varchar(10)
+)
+BEGIN
+
+DECLARE _statement VARCHAR(8000);
+
+ IF sMethod = 'GET_GST_DETAIL' THEN
+         SET _statement = 'SELECT * FROM stkm_gstcodemalaysia
+                           WHERE gst_code IS NOT NULL AND GST_ACTIVE = "Y"';
+
+		IF (sGSTCode <> '') THEN
+         SET _statement = CONCAT(_statement, ' AND gst_code =', "'", sGSTCode, "'");
+		END IF;
+
+         IF (sGSTType <> '') THEN
+                 SET _statement = CONCAT(_statement, ' AND gst_type =', "'", sGSTType, "'");
+         END IF;
+ END IF;
+
+
+ SET @statement = _statement;
+ PREPARE dynquery FROM @statement;
+ EXECUTE dynquery;
+ DEALLOCATE PREPARE dynquery;
+END

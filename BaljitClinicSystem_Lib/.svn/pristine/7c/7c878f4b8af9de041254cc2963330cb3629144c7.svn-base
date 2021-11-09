@@ -1,0 +1,128 @@
+CREATE DEFINER=`root`@`localhost` PROCEDURE `SP_GET_LOCATION1`(
+IN sMethod     varchar(20),
+IN sLocCode    varchar(10),
+IN sCompCode   varchar(10),
+IN sName       varchar(100),
+IN sOrderBy    varchar(30),
+IN sPage       varchar(10),
+IN sPerPage    varchar(10)
+)
+BEGIN
+
+
+
+
+
+
+        DECLARE _statement VARCHAR(8000);
+        DECLARE isString VARCHAR(1);
+        
+        SET isString = 'Y';
+
+        IF sMethod = 'GET_LOC_LIST' THEN
+
+                SET _statement = ' SELECT loc_code, loc_name, loc_companycode, recstatus
+                                   FROM stkm_location
+                                   WHERE loc_code IS NOT NULL';
+
+                IF (sLocCode <> '') THEN
+                        SET _statement = CONCAT(_statement, ' AND loc_code LIKE ',"'%",sLocCode ,"%'", ' ');
+                END IF;
+
+
+                IF (sCompCode <> '') THEN
+                        SET _statement = CONCAT(_statement, ' AND loc_companycode LIKE ',"'%",sCompCode ,"%'", ' ');
+                END IF;
+
+
+                IF (sName <> '') THEN
+                        SET _statement = CONCAT(_statement, ' AND loc_name LIKE ',"'%",sLocName ,"%'", ' ');
+                END IF;
+
+
+                IF (sOrderBy <> '')  THEN
+                        SET _statement = CONCAT(_statement, ' ORDER BY ', sOrderBy);
+                ELSE
+                        SET _statement = CONCAT(_statement, ' ORDER BY loc_code');
+                END IF;
+
+
+                SET _statement = CONCAT(_statement, ' LIMIT ',  (sPage - 1) * sPerPage, ",", sPerPage );
+
+        END IF;
+
+        IF sMethod = 'COUNT_LOC_LIST' THEN
+
+                SET _statement = ' SELECT Count(loc_code) as Total
+                                   FROM stkm_location
+                                   WHERE loc_code IS NOT NULL';
+
+
+                IF (sLocCode <> '') THEN
+                        SET _statement = CONCAT(_statement, ' AND loc_code LIKE ',"'%",sLocCode ,"%'", ' ');
+                END IF;
+
+
+                IF (sCompCode <> '') THEN
+                        SET _statement = CONCAT(_statement, ' AND loc_companycode LIKE ',"'%",sCompCode ,"%'", ' ');
+                END IF;
+
+
+                IF (sName <> '') THEN
+                        SET _statement = CONCAT(_statement, ' AND loc_name LIKE ',"'%",sLocName ,"%'", ' ');
+                END IF;
+
+        END IF;
+
+         IF sMethod = 'LOCATION_DETAIL' THEN
+
+                SET _statement = ' SELECT loc_code, loc_companycode, loc_name, loc_add1, loc_add2, loc_add3,
+
+                                          loc_postcode, loc_telephone, loc_fax, loc_countrycode, loc_areacode,
+
+                                          loc_statecode, loc_remarks, loc_contactperson, loc_isactive,
+
+                                          recstatus
+
+                                   FROM stkm_location';
+
+                SET _statement = CONCAT(_statement, ' WHERE loc_code = ', "'",sLocCode, "'");
+
+                SET _statement = CONCAT(_statement, ' AND loc_companycode = ', "'",sCompCode, "'");
+
+        END IF;
+
+
+
+
+
+        IF sMethod = 'GET_LOC_URL' THEN
+
+                SET _statement = ' SELECT
+
+                wsc_url as wsc_url, wsc_userid as wsc_userid, wsc_password as wsc_password, wsc_locationcode as wsc_locationcode
+                                   FROM wsm_config';
+
+                IF (sLocCode <> '') THEN
+                        SET _statement = CONCAT(_statement, ' where wsc_locationcode= ',"'",sLocCode ,"'");
+                END IF;
+
+        END IF;
+
+        IF sMethod = 'GET_LOCATION_URL' THEN
+
+	        SET isString = 'N';
+
+                SELECT IFNULL(wsc_url,'') AS wsc_url FROM wsm_config WHERE wsc_url is not null AND wsc_url <> ''
+
+                AND wsc_companycode = sCompCode AND wsc_locationcode = sLocCode;
+        END IF;
+
+IF isString = 'Y' THEN
+        SET @statement = _statement;
+        PREPARE dynquery FROM @statement;
+        EXECUTE dynquery;
+        DEALLOCATE PREPARE dynquery;
+END IF;
+
+END

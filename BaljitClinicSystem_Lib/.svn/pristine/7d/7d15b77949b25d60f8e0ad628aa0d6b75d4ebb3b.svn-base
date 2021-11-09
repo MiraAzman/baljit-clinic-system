@@ -1,0 +1,265 @@
+CREATE DEFINER=`root`@`localhost` PROCEDURE `SP_GET_STOCK_ADJUSTMENT`(
+IN sMethod       varchar(50),
+IN sAdjHdrIdx    varchar(10),
+IN sCompCode     varchar(20),
+IN sLocCode      varchar(10),
+IN sStkCode      varchar(50),
+IN sStkGrp       varchar(10),
+IN sStkType      varchar(10),
+IN sConsumable   varchar(10),
+IN sDocDate      varchar(20),
+IN sUOMCode      varchar(6),
+IN sBatchNo      varchar(20),
+IN sUnitCost     varchar(20),
+IN sExpiryDate   varchar(20),
+IN sOrderBy      varchar(30),
+IN sPage         varchar(10),
+IN sPerPage      varchar(10)
+)
+BEGIN
+
+      DECLARE _statement VARCHAR(8000);
+
+         SET _statement = "";
+
+         IF sMethod = 'GET_STOCK_ADJUSTMENT' THEN
+
+
+            SET _statement = 'SELECT adjh_headeridx as Idx, adjh_docno as DocNo, adjh_docdate as DocDate,
+                              adjh_remarks as Remarks, adjh_status as Status, CONCAT(adjh_companycode,"'" - "'",comp_name) as Company
+
+                              FROM stkt_stockadjustmentheader
+                              LEFT JOIN stkt_stockadjustmentdetail ON adjh_headeridx = adjd_headeridx
+                              LEFT JOIN stkm_company ON adjh_companycode = comp_code
+                              WHERE adjh_headeridx IS NOT NULL ';
+
+            IF (sCompCode <> '') THEN
+                    SET _statement = CONCAT(_statement, ' and adjh_companycode = ', "'", sCompCode, "'" );
+            END IF;
+
+            IF (sLocCode <> '') THEN
+                    SET _statement = CONCAT(_statement, ' and adjd_locationcode = ', "'", sLocCode, "'" );
+            END IF;
+
+            IF (sStkCode <> '') THEN
+                    SET _statement = CONCAT(_statement, ' and adjd_stockcode = ', "'", sStkCode, "'" );
+            END IF;
+
+            IF (sDocDate <> '') THEN
+                    SET _statement = CONCAT(_statement, ' and adjh_docdate LIKE ', "'", sDocDate, "%'" );
+            END IF;
+
+            SET _statement = CONCAT(_statement, ' GROUP BY DocNo DESC' );
+            SET _statement = CONCAT(_statement, ' LIMIT ',  (sPage - 1) * sPerPage, ",", sPerPage );
+
+
+         END IF;
+
+
+         IF sMethod = 'COUNT_STOCK_ADJUSTMENT' THEN
+
+
+            SET _statement = 'SELECT COUNT(Total2) as Total
+                              FROM (
+                                      SELECT COUNT(adjh_headeridx) as Total2
+                                      FROM stkt_stockadjustmentheader
+                                      LEFT JOIN stkt_stockadjustmentdetail ON adjh_headeridx = adjd_headeridx
+                                      WHERE adjh_headeridx IS NOT NULL';
+
+            IF (sCompCode <> '') THEN
+                    SET _statement = CONCAT(_statement, ' and adjh_companycode = ', "'", sCompCode, "'" );
+            END IF;
+
+            IF (sLocCode <> '') THEN
+                    SET _statement = CONCAT(_statement, ' and adjd_locationcode = ', "'", sLocCode, "'" );
+            END IF;
+
+            IF (sStkCode <> '') THEN
+                    SET _statement = CONCAT(_statement, ' and adjd_stockcode = ', "'", sStkCode, "'" );
+            END IF;
+
+            IF (sDocDate <> '') THEN
+                    SET _statement = CONCAT(_statement, ' and adjh_docdate LIKE ', "'", sDocDate, "%'" );
+            END IF;
+
+            SET _statement = CONCAT(_statement, ' GROUP BY adjh_docno) A' );
+
+         END IF;
+
+
+         IF sMethod = 'GET_PRODUCT_COSTQTY_LIST' THEN
+
+
+            SET _statement = 'SELECT scq_costqtyidx AS Idx, scq_stockcode AS StkCode, stk_desc AS StkDesc, stk_stockidx AS StkIdx,
+
+                              CASE
+                                  WHEN stk_consumable=''0'' THEN ''Drug''
+                                  WHEN stk_consumable=''1'' THEN ''Product''
+                                  WHEN stk_consumable=''2'' THEN ''Consumable''
+                              END AS StkCat,
+                              stk_groupcode AS StkGrp, stk_typecode AS StkType, scq_batchno AS BatchNo,
+                              DATE(scq_expirydate) AS ExpiryDate, scq_unitcost AS UnitCost, scq_uomcode AS UOMCode, TRUNCATE(SUM(scq_qty),2) AS Qty
+                              
+                              FROM stkt_costqty
+                              LEFT JOIN stkm_stockmaster ON scq_stockcode = stk_stockcode
+                              WHERE scq_costqtyidx IS NOT NULL';
+
+            IF (sCompCode <> '') THEN
+                    SET _statement = CONCAT(_statement, ' and scq_companycode = ', "'", sCompCode, "'" );
+            END IF;
+
+            IF (sLocCode <> '') THEN
+                    SET _statement = CONCAT(_statement, ' and scq_locationcode = ', "'", sLocCode, "'" );
+            END IF;
+
+            IF (sStkCode <> '') THEN
+                    SET _statement = CONCAT(_statement, ' and scq_stockcode = ', "'", sStkCode, "'" );
+            END IF;
+
+            IF (sStkGrp <> '') THEN
+                    SET _statement = CONCAT(_statement, ' and stk_groupcode= ', "'", sStkGrp, "'" );
+            END IF;
+
+            IF (sStkType <> '') THEN
+                    SET _statement = CONCAT(_statement, ' and stk_typecode = ', "'", sStkType, "'" );
+            END IF;
+
+            IF (sConsumable <> '') THEN
+                    SET _statement = CONCAT(_statement, ' and stk_consumable = ', "'", sConsumable, "'" );
+            END IF;
+
+            SET _statement = CONCAT(_statement, ' GROUP BY StkCode, BatchNo, ExpiryDate, UnitCost, UOMCode ');
+            
+             SET _statement = CONCAT(_statement, ' LIMIT ',  (sPage - 1) * sPerPage, ",", sPerPage );
+
+         END IF;
+
+         IF sMethod = 'COUNT_PRODUCT_COSTQTY_LIST' THEN
+
+
+            SET _statement = 'SELECT COUNT(scq_costqtyidx) as Total
+                              FROM (SELECT scq_costqtyidx FROM stkt_costqty
+                              LEFT JOIN stkm_stockmaster ON scq_stockcode = stk_stockcode
+                              WHERE scq_costqtyidx IS NOT NULL';
+
+            IF (sCompCode <> '') THEN
+                    SET _statement = CONCAT(_statement, ' and scq_companycode = ', "'", sCompCode, "'" );
+            END IF;
+
+            IF (sLocCode <> '') THEN
+                    SET _statement = CONCAT(_statement, ' and scq_locationcode = ', "'", sLocCode, "'" );
+            END IF;
+
+            IF (sStkCode <> '') THEN
+                    SET _statement = CONCAT(_statement, ' and scq_stockcode = ', "'", sStkCode, "'" );
+            END IF;
+
+            IF (sStkGrp <> '') THEN
+                    SET _statement = CONCAT(_statement, ' and stk_groupcode= ', "'", sStkGrp, "'" );
+            END IF;
+
+            IF (sStkType <> '') THEN
+                    SET _statement = CONCAT(_statement, ' and stk_typecode = ', "'", sStkType, "'" );
+            END IF;
+
+            IF (sConsumable <> '') THEN
+                    SET _statement = CONCAT(_statement, ' and stk_consumable = ', "'", sConsumable, "'" );
+            END IF;
+            
+            SET _statement = CONCAT(_statement, ' GROUP BY scq_stockcode, scq_batchno, scq_expirydate, scq_unitcost, scq_uomcode ) A');
+
+         END IF;
+
+
+         IF sMethod = 'GET_STOCK_ADJ_HEADER' THEN
+
+
+            SET _statement = 'SELECT *, comp_name
+                              FROM stkt_stockadjustmentheader
+                              LEFT JOIN stkm_company ON adjh_companycode = comp_code ';
+
+            SET _statement = CONCAT(_statement, 'WHERE adjh_headeridx = ', "'", sAdjHdrIdx, "'" );
+
+
+         END IF;
+
+
+         IF sMethod = 'GET_STOCK_ADJ_ITEMS' THEN
+
+
+            SET _statement = 'SELECT adjd_detailidx, adjd_stockcode, stk_desc, adjd_uomcode, TRUNCATE(adjd_unitcost,2) AS adjd_unitcost, adjd_locationcode,
+                                     adjd_batchno, adjd_expirydate, TRUNCATE(adjd_onhandqty,2) AS adjd_onhandqty, TRUNCATE(adjd_newqty,2) AS adjd_newqty,
+                                     TRUNCATE(adjd_varianceqty,2) AS adjd_varianceqty, stk_desc, loc_name
+
+                              FROM stkt_stockadjustmentdetail
+                              LEFT JOIN stkm_stockmaster ON stk_stockcode = adjd_stockcode
+                              LEFT JOIN stkm_location ON adjd_locationcode = loc_code ';
+
+            SET _statement = CONCAT(_statement, ' WHERE adjd_headeridx = ', "'", sAdjHdrIdx, "'"  );
+
+
+         END IF;
+
+         IF sMethod = 'GET_SCQ_DETAILS' THEN
+
+            SET _statement = 'SELECT * FROM stkt_costqty WHERE ';
+
+            IF (sCompCode <> '') THEN
+                    SET _statement = CONCAT(_statement, ' scq_companycode = ', "'", sCompCode, "'"  );
+            END IF;
+
+            IF (sLocCode <> '') THEN
+                    SET _statement = CONCAT(_statement, ' AND scq_locationcode = ', "'", sLocCode, "'"  );
+            END IF;
+
+            IF (sStkCode <> '') THEN
+                    SET _statement = CONCAT(_statement, ' AND scq_stockcode = ', "'", sStkCode, "'"  );
+            END IF;
+
+            IF (sUOMCode <> '') THEN
+                    SET _statement = CONCAT(_statement, ' AND scq_uomcode = ', "'", sUOMCode, "'"  );
+            END IF;
+
+            IF (sBatchNo <> '') THEN
+                    SET _statement = CONCAT(_statement, ' AND scq_batchno = ', "'", sBatchNo, "'"  );
+            END IF;
+
+            IF (sUnitCost <> '') THEN
+                    SET _statement = CONCAT(_statement, ' AND scq_unitcost = ', "'", sUnitCost, "'"  );
+            END IF;
+
+            IF (sExpiryDate <> '') THEN
+                    SET _statement = CONCAT(_statement, ' AND scq_expirydate = ', "'", sExpiryDate, "'"  );
+            END IF;
+
+          END IF;
+
+
+         IF sMethod = 'GET_SCQ_QTY' THEN
+
+            SET _statement = 'SELECT IFNULL(SUM(scq_qty),0) AS BalQty FROM stkt_costqty WHERE ';
+
+            IF (sCompCode <> '') THEN
+                    SET _statement = CONCAT(_statement, ' scq_companycode = ', "'", sCompCode, "'"  );
+            END IF;
+
+            IF (sLocCode <> '') THEN
+                    SET _statement = CONCAT(_statement, ' AND scq_locationcode = ', "'", sLocCode, "'"  );
+            END IF;
+
+            IF (sStkCode <> '') THEN
+                    SET _statement = CONCAT(_statement, ' AND scq_stockcode = ', "'", sStkCode, "'"  );
+            END IF;
+
+            IF (sUOMCode <> '') THEN
+                    SET _statement = CONCAT(_statement, ' AND scq_uomcode = ', "'", sUOMCode, "'"  );
+            END IF;
+
+          END IF;
+
+SET @statement = _statement;
+PREPARE dynquery FROM @statement;
+EXECUTE dynquery;
+DEALLOCATE PREPARE dynquery;
+
+END

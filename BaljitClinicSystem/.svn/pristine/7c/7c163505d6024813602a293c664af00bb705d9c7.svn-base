@@ -1,0 +1,489 @@
+package BusinessLogic;
+
+import BusinessData.BaseDAL;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.sql.SQLException;
+import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import BusinessData.DAL_ChargeItem;
+import BusinessData.DAL_PopulateData;
+import javax.servlet.http.HttpSession;
+import net.sf.json.JSONObject;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
+import BusinessData.BaseDAL;
+
+/**
+ *
+ * @author N0528
+ */
+@WebServlet(name = "Servlet_ChargeItem", urlPatterns = {"/Servlet_ChargeItem"})
+public class Servlet_ChargeItem extends HttpServlet {
+
+    /**
+     * Processes requests for both HTTP <code>GET</code> and <code>POST</code> methods.
+     *
+     * @param request servlet request
+     * @param response servlet response
+     * @throws ServletException if a servlet-specific error occurs
+     * @throws IOException if an I/O error occurs
+     */
+//    protected void processRequest(HttpServletRequest request, HttpServletResponse response)
+//            throws ServletException, IOException {
+//        response.setContentType("text/html;charset=UTF-8");
+//        try (PrintWriter out = response.getWriter()) {
+//            /* TODO output your page here. You may use following sample code. */
+//            out.println("<!DOCTYPE html>");
+//            out.println("<html>");
+//            out.println("<head>");
+//            out.println("<title>Servlet Servlet_ChargeItem</title>");            
+//            out.println("</head>");
+//            out.println("<body>");
+//            out.println("<h1>Servlet Servlet_ChargeItem at " + request.getContextPath() + "</h1>");
+//            out.println("</body>");
+//            out.println("</html>");
+//        }
+//    }
+    
+    public void Bind_CHGGroup_HIS_List(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException, SQLException {
+
+        HttpSession session = request.getSession();
+        String SiteName = (String) session.getAttribute("SiteName");
+        
+        response.setContentType("text/html");
+        PrintWriter out = response.getWriter();
+        net.sf.json.JSONObject json = new net.sf.json.JSONObject();
+        
+        int total = 0;
+        double pageval = 0;
+        int page = Integer.parseInt(request.getParameter("page"));
+        int rows = Integer.parseInt(request.getParameter("rows"));
+        String sCHGGrpCode = request.getParameter("CHGGROUPCODE");
+        String sCHGGrpDesc = request.getParameter("CHGGROUPDESC");
+             
+        DAL_ChargeItem DAL_CHGItem = new DAL_ChargeItem();
+        BLL_Common.Common_Object CHGItemList = DAL_CHGItem.DAL_GET_CHARGEITEM(SiteName, new String[]{
+            "GET_CHGGROUP_HIS", "0", "", sCHGGrpCode, sCHGGrpDesc, Integer.toString(page), Integer.toString(rows)});
+
+        BLL_Common.Common_Object CHGItemTotalRow = DAL_CHGItem.DAL_GET_CHARGEITEM(SiteName, new String[]{
+            "COUNT_CHGGROUP_HIS", "0", "", sCHGGrpCode, sCHGGrpDesc, "", ""});
+
+        try {
+            total = CHGItemTotalRow.getJSONArray(0).getJSONObject(0).getInt("Total");
+
+            if (total > 0) {
+                pageval = (double) total / rows;
+            } else {
+                pageval = 0;
+            }        
+            json.put("total", (int) (Math.ceil(pageval)));
+            json.put("page", page);
+            json.put("records", total);
+            json.put("rows", CHGItemList.getJSONArray(0));
+        } catch (NullPointerException e1) {
+            e1.printStackTrace();
+        } 
+        out.print(json);
+        out.flush();
+        out.close();
+    }
+    
+    public void Bind_CHGItem_HIS_List(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException, SQLException {
+       
+        HttpSession session = request.getSession();
+        String SiteName = (String) session.getAttribute("SiteName");
+        
+        response.setContentType("text/html");
+        PrintWriter out = response.getWriter();
+        net.sf.json.JSONObject json = new net.sf.json.JSONObject();
+        
+        int total = 0;
+        double pageval = 0;
+        int page = Integer.parseInt(request.getParameter("page"));
+        int rows = Integer.parseInt(request.getParameter("rows"));
+        String sCHGItemCode = request.getParameter("CHGCODE");
+        String sCHGItemDesc = request.getParameter("CHGDESC");
+             
+        DAL_ChargeItem DAL_CHGItem = new DAL_ChargeItem();
+        BLL_Common.Common_Object CHGItemList = DAL_CHGItem.DAL_GET_CHARGEITEM(SiteName, new String[]{
+            "GET_CHGITEM_HIS", "0", "", sCHGItemCode, sCHGItemDesc, Integer.toString(page), Integer.toString(rows)});
+        
+        BLL_Common.Common_Object CHGItemTotalRow = DAL_CHGItem.DAL_GET_CHARGEITEM(SiteName, new String[]{
+            "COUNT_CHGITEM_HIS", "0", "", sCHGItemCode, sCHGItemDesc, "", ""});
+
+        try {
+            total = CHGItemTotalRow.getJSONArray(0).getJSONObject(0).getInt("Total");
+
+            if (total > 0) {
+                pageval = (double) total / rows;
+            } else {
+                pageval = 0;
+            }        
+            json.put("total", (int) (Math.ceil(pageval)));
+            json.put("page", page);
+            json.put("records", total);
+            json.put("rows", CHGItemList.getJSONArray(0));
+        } catch (NullPointerException e1) {
+            e1.printStackTrace();
+        } 
+        out.print(json);
+        out.flush();
+        out.close();
+    }
+    
+    // by Amira - 21/07/2016
+    public void Bind_ChargeItem_List(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException, SQLException {
+
+        HttpSession session = request.getSession();      
+        String SiteName = (String) session.getAttribute("SiteName");
+        
+        response.setContentType("text/html");
+        PrintWriter out = response.getWriter();
+        net.sf.json.JSONObject json = new net.sf.json.JSONObject();
+
+        int page = Integer.parseInt(request.getParameter("page"));
+        int rows = Integer.parseInt(request.getParameter("rows"));
+
+        String sCategory = request.getParameter("CATEGORY"); 
+        String sCode = request.getParameter("CODE");
+        String sDesc = request.getParameter("DESC");
+
+        //Calculate offset value
+        //int offset = (page - 1) * rows;       
+        int total = 0;
+        double pageval = 0;
+        
+        DAL_ChargeItem DAL_CHGItem = new DAL_ChargeItem();
+        BLL_Common.Common_Object CHGItemList = DAL_CHGItem.DAL_GET_CHARGEITEM(SiteName, new String[]{
+            "GET_CHGITEM_LIST", "0", sCategory, sCode, sDesc, Integer.toString(page), Integer.toString(rows)});
+
+        BLL_Common.Common_Object CHGItemTotalRow = DAL_CHGItem.DAL_GET_CHARGEITEM(SiteName, new String[]{
+            "COUNT_CHGITEM_LIST", "0", sCategory, sCode, sDesc, "", ""});
+
+        try {
+            total = CHGItemTotalRow.getJSONArray(0).getJSONObject(0).getInt("Total");
+
+            if (total > 0) {
+                pageval = (double) total / rows;
+            } else {
+                pageval = 0;
+            }
+
+            //put total no records in json object with total key           
+            json.put("total", (int) (Math.ceil(pageval)));
+            json.put("page", page);
+            json.put("records", total);
+            json.put("rows", CHGItemList.getJSONArray(0));
+        } catch (NullPointerException e1) {
+            e1.printStackTrace();
+        } 
+        out.print(json);
+        out.flush();
+        out.close();
+    }
+    
+    // by Amira - 21/07/2016
+    public void Get_ChargeItem_Detail(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException, SQLException {        
+        
+        HttpSession session = request.getSession();
+        String SiteName = (String) session.getAttribute("SiteName");
+        
+        PrintWriter out = response.getWriter();
+        response.setContentType("text/json");
+        net.sf.json.JSONObject json = new net.sf.json.JSONObject();
+
+        try {            
+            String sIdx = request.getParameter("IDX");
+
+            DAL_ChargeItem CHGItemDetail = new DAL_ChargeItem();
+            BLL_Common.Common_Object rsDetail = CHGItemDetail.DAL_GET_CHARGEITEM(SiteName, new String[]{
+                "GET_CHGITEM_DETAIL", sIdx, "", "", "", "", ""});
+            json.put("row", rsDetail.getJSONArray(0));
+            out.print(rsDetail.getJSONArrayAsJSONObject("object"));                
+        } catch (Exception e) {
+            out.println("Exception Error.");
+            e.printStackTrace();
+        } 
+    }  
+    
+    // by Amira - 21/07/2016
+    public void UPDATE_CHARGE_ITEM(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException, SQLException {
+    
+        HttpSession session = request.getSession();
+        String SiteName = (String) session.getAttribute("SiteName");
+        
+        response.setContentType("text/html");
+        PrintWriter out = response.getWriter();
+        net.sf.json.JSONObject json = new net.sf.json.JSONObject();
+               
+        String sCode = request.getParameter("CODE");
+        String sDesc = request.getParameter("DESC");
+        String sCHGGroup = request.getParameter("CHGGROUP");
+        String sGSTCode = request.getParameter("GSTCODE");
+        String sCost = request.getParameter("COST");
+        String sIsActive = request.getParameter("ISACTIVE");
+        String sPrice1 = request.getParameter("PRICE1");
+        String sPrice2 = request.getParameter("PRICE2");
+        String sPrice3 = request.getParameter("PRICE3");
+        String sPrice4 = request.getParameter("PRICE4");
+        String sACCGroup = request.getParameter("ACCGROUP"); //pengkee 2017May15
+        
+        String sFunc = request.getParameter("FUNCTION");
+               
+        boolean bReturn = false;   
+        String sCategory = "", sMethod = "", sIdx = "0";
+        
+        if ( sFunc.equals("ADD") ){
+            sMethod = "ADD_CHG_ITEM"; 
+            sCategory = request.getParameter("CATEGORY");
+        } else if ( sFunc.equals("EDIT") ) {           
+            sMethod = "EDIT_CHG_ITEM";      
+            sIdx = request.getParameter("IDX");
+        }
+        
+        String[] aryCHGItem = {
+            sMethod,    // sMethod varchar(20)
+            sIdx,       // sci_ciidx integer
+            sCategory,  // sci_cicategory varchar(6)
+            sCode,      // sci_cicode varchar(10)
+            sDesc,      // sci_cidesc varchar(100)
+            sCHGGroup,  // sci_cigroup varchar(6)
+            sCost,      // sci_cicost decimal(15,3)
+            sPrice1,    // sci_ciprice decimal(15,3)
+            sPrice2,    // sci_ciprice2 decimal(15,3)
+            sPrice3,    // sci_ciprice3 decimal(15,3)
+            sPrice4,    // sci_ciprice4 decimal(15,3)
+            sIsActive,  // sci_ciisactive varchar(1)
+            sGSTCode,   // sci_cigstsupptaxcode varchar(8)
+            "",         // sci_ciinvgrp varchar(100)
+            "",         // sci_cidept varchar(3)
+            "N",        // sci_ciisadmin varchar(1)
+            "BOTH",     // sci_cibillmethod varchar(4)
+            "",         // sci_cireportgroup varchar(6)
+            "0",        // sci_omega integer
+            "0",        // sci_cigridtab integer
+            "N",        // sci_ciissystem varchar(1)
+            (String)session.getAttribute("loginid"),  // sBy varchar(10)
+            "1"         // srecstatus varchar(4)
+        };
+        DAL_ChargeItem ItemDetail = new DAL_ChargeItem();       
+        BLL_Common.Common_Object obj = ItemDetail.DAL_UPDATE_CHARGEITEM(SiteName, aryCHGItem);
+        
+        try {              
+            if (obj.getObjectArray(0).toString().equals("00000")) {
+
+                obj.commit();   
+                DataTransfer_ChargeItem(sCode, SiteName); 
+                bReturn = true;                    
+            } else {
+                obj.rollback();
+            }
+        }catch (Exception e) {
+            try {
+                obj.rollback();
+            } catch (SQLException ex) {
+                out.println("Exception Error.");
+                e.printStackTrace();
+                bReturn = false;
+            }
+        }    
+        json.put("bool", bReturn);
+        out.println(json);
+    } 
+    
+    public static String DataTransfer_ChargeItem(String sCode, String SiteName){  
+        return DataTransfer_ChargeItem(sCode, SiteName, "", "");
+    }
+    public static String DataTransfer_ChargeItem(String sCode, String SiteName, String CompanyCode, String LocationCode){        
+//    public static String DataTransfer_ChargeItem(String sCode, String SiteName){      
+        //BLL_ChargeItem sm = new BLL_ChargeItem();
+        int AllowableThreadCount = 50;
+        DAL_ChargeItem objCHGItem = new DAL_ChargeItem();
+        JSONObject obj_add = new JSONObject();
+        JSONObject obj_pass = new JSONObject();
+        String sMessage = "";
+        
+        String[] aryCHGItem = {
+        "GET_DATAEX", //sMethod varchar(20)
+        "0",          //sci_ciidx integer
+        "",           //sci_cicategory varchar(6)
+        sCode,        //sci_cicode varchar(10)
+        "",           //sci_cidesc varchar(100)
+        "",           //sPage varchar(10)
+        ""            //sPerPage varchar(10)
+        };
+        BLL_Common.Common_Object obj = objCHGItem.DAL_GET_CHARGEITEM(SiteName, aryCHGItem);
+        
+        try{
+            if(obj.getJSONArray(0).size() > 0){
+                obj_add.put("CHGITEM", obj.getJSONArray(0));
+                
+                if(obj.getJSONArray(1).size() > 0){
+                    obj_pass.put("DATA", obj_add);
+                    String sURL = "";
+                    String sLoc = "";
+                    String sComp = "";
+
+                    ExecutorService executor = Executors.newFixedThreadPool(AllowableThreadCount); 
+                    
+                    boolean bSingleSite = false;
+                    if (!CompanyCode.equals("") && !LocationCode.equals(""))
+                    {bSingleSite = true;}
+                    
+                    boolean bSiteFound = false;
+                    
+                    
+                    for(Object jsonURL : obj.getJSONArray(1)){
+                        JSONObject jsURL = (JSONObject) jsonURL;
+                        
+                        sLoc = jsURL.get("wsc_locationcode").toString();
+                        sComp = jsURL.get("wsc_companycode").toString();
+                        bSiteFound = false;
+                        
+                        if (bSingleSite)
+                        {
+                            if (sLoc.equals(LocationCode) && sComp.equals(CompanyCode))
+                            {
+                                bSiteFound = true;
+                            }
+                        }
+                        else
+                        {
+                            bSiteFound = true; //TAKE EVERY SITE 
+                        }
+                        
+                        if ( BaseDAL.CMSIntegrationType.equals("HIS") )
+                        {
+                           sURL = jsURL.get("wsc_url").toString() + "HIS_WebServices_Inventory/webresources/HIS_WebServices/UpdateChargeItem";
+                        }
+                        else if ( BaseDAL.CMSIntegrationType.equals("CMS") )
+                        {
+                           sURL = jsURL.get("wsc_url").toString() + "CMS_WebServices_Inventory/webresources/CMS_WebServices/UpdateChargeItem";
+                        }
+                        else
+                        {
+                        sURL = jsURL.get("wsc_url").toString() + "HIS_WebServices_Inventory/webresources/HIS_WebServices/UpdateChargeItem";
+                        }
+//                        sLoc = jsURL.get("wsc_url").toString();
+                        if (bSiteFound)
+                        {
+                            
+                            boolean bStatus = false;
+                            if (jsURL.get("wsc_url").toString().equals(""))
+                            {
+                                bStatus = false;
+                            }
+                            else
+                            {
+                                bStatus = BLL_Common.AA.isReachable2(jsURL.get("wsc_url").toString());
+                            }
+                            if (!bStatus)
+                            {
+
+                                if (!bSingleSite)
+                                {
+                                    String[] aryMasRecSync = new String[]{"ADD","CHARGEITEM", sComp, sLoc, sCode,"","",""};
+                                    String sStatus = Servlet_MasterRecSync.UPDATE_MASTERREC_SYNC(aryMasRecSync, SiteName);
+                                }
+                            }
+                            else
+                            {
+                                if(!sURL.equals("")){
+                            //sURL = "http://localhost:8080/HIS_WebServices_Inventory/webresources/HIS_WebServices/UpdateChargeItem";
+                                Runnable DEThread = new BLL_StockDataExchange(obj_pass.toString(), sURL, sLoc);
+                                executor.execute(DEThread); 
+                                sMessage = "SITE CONTACTED";
+                                }
+                            }
+                        }
+                    }
+                    executor.shutdown();
+                }                
+            }else{
+                sMessage = "No data transfer.";
+            }            
+        }catch (Exception e){
+            sMessage = e.toString();
+        }        
+        return sMessage;
+    }
+    
+    // <editor-fold defaultstate="collapsed" desc="HttpServlet methods. Click on the + sign on the left to edit the code.">
+    /**
+     * Handles the HTTP <code>GET</code> method.
+     *
+     * @param request servlet request
+     * @param response servlet response
+     * @throws ServletException if a servlet-specific error occurs
+     * @throws IOException if an I/O error occurs
+     */
+    @Override
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        //processRequest(request, response);
+    }
+
+    /**
+     * Handles the HTTP <code>POST</code> method.
+     *
+     * @param request servlet request
+     * @param response servlet response
+     * @throws ServletException if a servlet-specific error occurs
+     * @throws IOException if an I/O error occurs
+     */
+    @Override
+    protected void doPost(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        //processRequest(request, response);
+        String p_method = null;
+        p_method = request.getParameter("SFC");
+        
+        if (p_method.equals("GET_CHGITEM_LIST")) {
+            try {
+                Bind_ChargeItem_List(request, response);
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        } else if (p_method.equals("GET_CHGITEM_DETAIL")) {
+            try {
+                Get_ChargeItem_Detail(request, response);
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        } else if (p_method.equals("UPDATE_CHARGE_ITEM")) {
+            try {
+                UPDATE_CHARGE_ITEM(request, response);
+            } catch (SQLException e) { 
+                e.printStackTrace();
+            }
+        } else if (p_method.equals("GET_CHGITEM_HIS")) {
+            try {
+                Bind_CHGItem_HIS_List(request, response);
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        } else if (p_method.equals("GET_CHGGROUP_HIS")) {
+            try {
+                Bind_CHGGroup_HIS_List(request, response);
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    /**
+     * Returns a short description of the servlet.
+     *
+     * @return a String containing servlet description
+     */
+    @Override
+    public String getServletInfo() {
+        return "Short description";
+    }// </editor-fold>
+
+}

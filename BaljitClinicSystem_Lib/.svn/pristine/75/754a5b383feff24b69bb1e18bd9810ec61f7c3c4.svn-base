@@ -1,0 +1,245 @@
+CREATE DEFINER=`root`@`localhost` PROCEDURE `SP_GET_TOPSTOCK`(
+IN sMethod          varchar(30) ,
+IN sDateFrom         varchar(20),
+IN sDateTo         varchar(20),
+IN sStkCodeFrom         varchar(20),
+IN sStkCodeTo         varchar(20),
+IN sCompCodeStr        varchar(20),
+IN sLocCodeStr         varchar(100),
+IN sGroupbyLocation varchar(1),
+IN sSortBy varchar(20), /* DISP, TRANSACTED */
+IN sTopX integer 
+)
+BEGIN  
+
+  DECLARE counter INT;
+  DECLARE x  INT;
+  
+  DECLARE sCompCode varchar(20);
+  DECLARE sLocCode varchar(20);
+  DECLARE _statement         VARCHAR(8000);
+  
+         
+        
+  SET @enabled = TRUE;
+  set sCompCode = '';
+        set sLocCode = '';
+        
+        
+        IF (sMethod = 'GET_TOP_X') THEN
+    DROP TEMPORARY TABLE IF EXISTS RETURN_TBL; 
+                
+    set  _statement = 'CREATE TEMPORARY TABLE RETURN_TBL (
+       SELECT  space(10) AS Company, space(10) AS Location, space(20) AS StockCode, space(10) AS BaseUOM, space(150) AS StockDesc,  0 as XFR_QTY, 0 as GRN_QTY, 0 as DISP_QTY,
+         0 as SALE_QTY, 0 as RETURN_QTY, 0 as ADJ_QTY, 0 as WRITEOFF_QTY,
+         0 as QTY, 
+         0 QTY_TRANSACTED,
+         0 as CLOSING_QTY, 0 as OPENING_QTY,  0 as CLOSING_VALUE, 0 as CLOSING_COST,
+                           space(20) AS SortBy, 0 as TopX, 
+                           space(10) AS DateFrom, space(10) AS DateTo);'; 
+                
+    
+    SET @statement = _statement;
+
+
+    PREPARE dynquery FROM @statement;
+    EXECUTE dynquery;
+    DEALLOCATE PREPARE dynquery;
+                
+                
+                SET @statement = 'delete from RETURN_TBL; ';
+
+
+    PREPARE dynquery FROM @statement;
+    EXECUTE dynquery;
+    DEALLOCATE PREPARE dynquery;
+                 
+                
+                /* ---- */
+
+    set _statement = '';
+
+              set @Date = null;
+              if sDateFrom = '' THEN
+                      set @Date = now();
+              ELSE
+                      set @Date =  sDateFrom;
+              END IF;
+              
+              -- set @TotalLocations = 0;
+    set @TotalLocations = 1; /* to enable loop ONE TIME for all locations */
+    if (sLocCodeStr <> '') THEN                         
+                    SELECT ROUND ((LENGTH(sLocCodeStr) - LENGTH( REPLACE ( sLocCodeStr, ",", "") )) / LENGTH(",")) into @TotalLocations;
+     set @TotalLocations = @TotalLocations + 1;
+                    
+                    -- call debug_msg(@enabled, @TotalLocations);
+    END IF;
+
+              -- set @TotalComps = 0;
+    set @TotalComps = 1; /* to enable loop ONE TIME for all companies*/
+    if (sCompCodeStr <> '') THEN
+      SELECT ROUND ((LENGTH(sCompCodeStr) - LENGTH( REPLACE ( sCompCodeStr, ",", "") )) / LENGTH(",")) into @TotalComps;
+     set @TotalComps = @TotalComps + 1;
+                    -- call debug_msg(@TotalComps, @TotalComps);
+      
+    END IF;
+
+    if (sGroupbyLocation = 'Y') THEN
+     set counter = @TotalLocations;
+    ELSE 
+     set counter = @TotalComps;
+    END IF;
+                
+                SET x = 1;
+    
+   -- call debug_msg(@enabled, counter);
+   WHILE x  <= counter DO
+                          
+                    if (sGroupbyLocation = 'Y') THEN
+      set sLocCode = F_SPLIT_STRING(sLocCodeStr,',',x);
+     ELSE 
+      set sCompCode = F_SPLIT_STRING(sCompCodeStr, ',', x);
+     END IF;
+      
+        
+    -- call debug_msg(@enabled, sLocCode);
+                        
+    /* ---- */
+                
+                 
+              SET @@session.sql_notes = 0;
+              DROP TEMPORARY TABLE IF EXISTS TEMP_MOVEMENT;
+
+              SET @@session.sql_notes = 0;
+              DROP TEMPORARY TABLE IF EXISTS TEMP_MOVEMENT_SUMMARY;
+     
+    set _statement = 'create temporary table TEMP_MOVEMENT ( select  distinct h.sldg_company as Company, ';
+    if (sGroupbyLocation = 'Y') THEN
+     set  _statement = concat(_statement, 'IF(h.sldg_trxtype = "SALE", h.sldg_location, d.sldl_location) as Location,');
+    else
+     set  _statement = concat(_statement, ' "" as Location,');
+                End if;
+                
+                set _statement = CONCAT(_statement,"'",sSortBy,"'", ' AS SortBy, ');
+                set _statement = CONCAT(_statement,"'",sTopX,"'", ' AS TopX, ');
+                
+    SET _statement = CONCAT(_statement,
+     "'",sDateFrom,"'", ' AS DateFrom, ',
+     "'",sDateTo,"'", ' AS DateTo, ');             
+                       
+                set _statement = concat(_statement, 'SUM(IF(h.sldg_trxtype = "XFR" or h.sldg_trxtype = "XFRD", ( F_CONVERT_UOM( IFNULL(d.sldl_qty,0) + IFNULL(d.sldl_bonusqty,0) , s.stk_baseuomcode, d.sldl_uomcode, d.sldl_stockcode) ), 0) ) as XFR_QTY,
+
+                (IF(h.sldg_trxtype = "GRN", SUM( F_CONVERT_UOM( IFNULL(d.sldl_qty,0) + IFNULL(d.sldl_bonusqty,0) , s.stk_baseuomcode, d.sldl_uomcode, d.sldl_stockcode) ) , 0) ) as GRN_QTY,
+                (IF(h.sldg_trxtype = "DISP", ABS(SUM( F_CONVERT_UOM( IFNULL(d.sldl_qty,0) + IFNULL(d.sldl_bonusqty,0) , s.stk_baseuomcode, d.sldl_uomcode, d.sldl_stockcode) )) , 0) ) as DISP_QTY,
+                (IF(h.sldg_trxtype = "SALE", SUM( F_CONVERT_UOM( IFNULL(d.sldl_qty,0) + IFNULL(d.sldl_bonusqty,0) , s.stk_baseuomcode, d.sldl_uomcode, d.sldl_stockcode) ), 0) ) as SALE_QTY,
+                (IF(h.sldg_trxtype = "RETURN", SUM( F_CONVERT_UOM( IFNULL(d.sldl_qty,0) + IFNULL(d.sldl_bonusqty,0) , s.stk_baseuomcode, d.sldl_uomcode, d.sldl_stockcode ) ), 0) ) as RETURN_QTY,
+                (IF(h.sldg_trxtype = "ADJ", SUM( F_CONVERT_UOM( IFNULL(d.sldl_qty,0) + IFNULL(d.sldl_bonusqty,0) , s.stk_baseuomcode, d.sldl_uomcode, d.sldl_stockcode ) ), 0) ) as ADJ_QTY,
+                (IF(h.sldg_trxtype = "WROFF", SUM( F_CONVERT_UOM( IFNULL(d.sldl_qty,0) + IFNULL(d.sldl_bonusqty,0) , s.stk_baseuomcode, d.sldl_uomcode, d.sldl_stockcode) ), 0) ) as WRITEOFF_QTY,
+                SUM( F_CONVERT_UOM( IFNULL(d.sldl_qty,0) + IFNULL(d.sldl_bonusqty,0) , s.stk_baseuomcode, d.sldl_uomcode, d.sldl_stockcode) ) as QTY,
+                0 as CLOSING_QTY,
+                0 as OPENING_QTY,
+               SUM(F_CONVERT_UOM(IF(IFNULL(d.sldl_qty,0) < 0, IFNULL(d.sldl_qty*-1,0) ,IFNULL(d.sldl_qty,0) )
+                + IF(IFNULL(d.sldl_bonusqty,0) < 0, IFNULL(d.sldl_bonusqty*-1,0) ,IFNULL(d.sldl_bonusqty,0) ), s.stk_baseuomcode, d.sldl_uomcode, d.sldl_stockcode
+                )) as QTY_TRANSACTED,
+    d.sldl_stockcode as StockCode, s.stk_baseuomcode as BaseUOM,s.stk_desc as StockDesc
+    from stkt_stockledgerheader h
+                left join view_stockledgerdetail d on d.sldl_stockledgerhdridx = h.sldg_stockledgerhdridx
+                left join stkm_stockmaster s on s.stk_stockcode = d.sldl_stockcode
+                WHERE IFNULL(d.sldl_qty,0) + IFNULL(d.sldl_bonusqty,0) <> 0 ');
+
+                if (sCompCode <> '') THEN
+     set  _statement = concat(_statement, ' and h.sldg_company ="', sCompCode, '"');
+                END IF;
+                if (sLocCode <> '') THEN
+     set  _statement = concat(_statement, ' and IF(h.sldg_trxtype = "SALE", h.sldg_location = ', "'", sLocCode, "', ", ' d.sldl_location = ', "'", sLocCode, "')");
+    END IF;
+
+                if (sStkCodeFrom <> '' and sStkCodeTo <> '') THEN
+     set  _statement = concat(_statement, ' and (d.sldl_stockcode >="', sStkCodeFrom, '" and d.sldl_stockcode <= "', sStkCodeTo, '")');
+                END IF;
+
+    if (sDateFrom <> '' and sDateTo <> '') THEN
+     set  _statement = concat(_statement, ' and h.sldg_docdate between "', sDateFrom, '" and "', sDateTo,' 23:59:59"');
+    END IF;
+
+    if (sGroupbyLocation = 'Y') THEN
+     set  _statement = concat(_statement, ' group by h.sldg_company, Location, d.sldl_stockcode, h.sldg_trxtype, s.stk_baseuomcode, s.stk_desc');
+    ELSE
+     set  _statement = concat(_statement, ' group by h.sldg_company, d.sldl_stockcode, h.sldg_trxtype, s.stk_baseuomcode, s.stk_desc');
+    END IF;                
+
+                set  _statement = concat(_statement, ' order by d.sldl_stockcode,  h.sldg_company, Location ');
+                set  _statement = concat(_statement, ')');
+
+    SET @statement = _statement;
+    PREPARE dynquery FROM @statement;
+    EXECUTE dynquery;
+    DEALLOCATE PREPARE dynquery;
+-- call debug_msg(@enabled, _statement); 
+
+    if (sDateTo <> '') THEN
+      set @DateTo = sDateTo + ' 23:59:59';
+    ELSE
+      set @DateTo = now();
+    END IF;
+
+     
+    set  _statement = 'CREATE TEMPORARY TABLE TEMP_MOVEMENT_SUMMARY (
+      SELECT  Company, Location, StockCode, BaseUOM, StockDesc, SUM(XFR_QTY) as XFR_QTY, SUM(GRN_QTY) as GRN_QTY, ABS(SUM(DISP_QTY)) as DISP_QTY,
+        SUM(SALE_QTY) as SALE_QTY, SUM(RETURN_QTY) as RETURN_QTY, SUM(ADJ_QTY) as ADJ_QTY, SUM(WRITEOFF_QTY) as WRITEOFF_QTY,
+        SUM(QTY) as QTY, 
+        SUM(QTY_TRANSACTED) as QTY_TRANSACTED,
+        SUM(CLOSING_QTY) as CLOSING_QTY, SUM(OPENING_QTY) as OPENING_QTY,  0 as CLOSING_VALUE, 0 as CLOSING_COST, SortBy, TopX,
+        DateFrom, DateTo
+                       
+      FROM TEMP_MOVEMENT';   
+                  
+                 
+                 if (sGroupbyLocation = 'Y') THEN
+     set _statement = concat(_statement, ' GROUP BY  Company, Location, StockCode, BaseUOM, StockDesc ');
+                    
+                    if (sSortBy = 'DISP') THEN
+      set _statement = concat(_statement, ' ORDER BY  Company, Location, DISP_QTY DESC, StockCode');
+                    elseif (sSortBy = 'TRANSACTED') THEN
+      set _statement = concat(_statement, ' ORDER BY  Company, Location, QTY_TRANSACTED DESC, StockCode');
+     else
+      set _statement = concat(_statement, ' ORDER BY  Company, Location, StockCode');
+                    end if;
+               ELSE
+     set _statement = concat(_statement, ' GROUP BY  Company, StockCode, BaseUOM, StockDesc ');
+     if (sSortBy = 'DISP') THEN
+      set _statement = concat(_statement, ' ORDER BY  Company, DISP_QTY DESC, StockCode');
+                    elseif (sSortBy = 'TRANSACTED') THEN
+      set _statement = concat(_statement, ' ORDER BY  Company, QTY_TRANSACTED DESC, StockCode');
+     else
+      set _statement = concat(_statement, ' ORDER BY  Company, StockCode');
+                    end if;
+               END IF;
+        
+        
+    set _statement = concat(_statement, ' LIMIT ');
+    set _statement = concat(_statement, sTopX,');');
+    SET @statement = _statement;
+
+
+    PREPARE dynquery FROM @statement;
+    EXECUTE dynquery;
+    DEALLOCATE PREPARE dynquery;
+
+ 
+    insert into RETURN_TBL select * from TEMP_MOVEMENT_SUMMARY;
+               
+                
+        
+        /* ---- */
+        
+     SET  x = x + 1;      
+    END WHILE;
+         
+    
+   select * from RETURN_TBL;
+             
+        END IF;
+
+
+END

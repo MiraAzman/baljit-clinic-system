@@ -1,0 +1,120 @@
+CREATE DEFINER=`root`@`localhost` PROCEDURE `SP_GET_SUPPLIER`(
+IN sMethod        varchar(30),
+IN sSupCode       varchar(20),
+IN sSupName       varchar(100),
+IN sSupCatFrom    varchar(20),
+IN sSupCatTo      varchar(20),
+IN sSupStatus     varchar(1),
+IN sSupState      varchar(10),
+IN sSupCountry    varchar(10),
+IN sOrderBy       varchar(30),
+IN sPage          varchar(10),
+IN sPerPage       varchar(10)
+)
+BEGIN
+
+DECLARE _statement VARCHAR(8000);
+
+IF sMethod = 'GET_SUPPLIER_LIST' THEN
+   SET _statement = 'SELECT * FROM stkm_suppliermaster
+                     WHERE sup_code IS NOT NULL ';
+
+   IF (sSupCode <> '') THEN
+      SET _statement = CONCAT(_statement, ' AND (sup_code LIKE ',"'%",sSupCode ,"%'", ') ');
+   END IF;
+
+   IF (sSupName <> '') THEN
+      SET _statement = CONCAT(_statement, ' AND (sup_name LIKE ',"'%",sSupName ,"%'", ') ');
+   END IF;
+
+   IF (sSupCatFrom <> '' AND sSupCatTo <> '') THEN
+      SET _statement = CONCAT(_statement, ' AND sup_productgroupcode >= ',"'", sSupCatFrom ,"'", ' AND sup_productgroupcode <= ' ,"'", sSupCatTo ,"'",' ');
+   END IF;
+
+   IF (sSupStatus <> '') THEN
+      SET _statement = CONCAT(_statement, ' AND sup_isactive = ', "'", sSupStatus, "'", ' ');
+   END IF;
+
+   IF (sSupState <> '') THEN
+      SET _statement = CONCAT(_statement, ' AND sup_statecode = ', "'", sSupState, "'", ' ');
+   END IF;
+
+   IF (sSupCountry <> '') THEN
+      SET _statement = CONCAT(_statement, ' AND sup_countrycode = ', "'", sSupCountry, "'", ' ');
+   END IF;
+
+   IF (sOrderBy <> '') THEN
+      SET _statement = CONCAT(_statement, ' ORDER BY ', sOrderBy);
+   ELSE
+      SET _statement = CONCAT(_statement, ' ORDER BY sup_code ');
+   END IF;
+
+   SET _statement = CONCAT(_statement, ' LIMIT ', (sPage-1)*sPerPage, ",", sPerPage);
+
+END IF;
+
+IF sMethod = 'COUNT_SUPPLIER_LIST' THEN
+
+   SET _statement = ' SELECT Count(sup_supplieridx) as Total
+                      FROM stkm_suppliermaster
+                      WHERE sup_code IS NOT NULL ';
+
+   IF (sSupCode <> '') THEN
+      SET _statement = CONCAT(_statement, ' AND sup_code LIKE ',"'%",sSupCode ,"%'", ' ');
+   END IF;
+
+   IF (sSupName <> '') THEN
+      SET _statement = CONCAT(_statement, ' AND sup_name LIKE ',"'%",sSupName ,"%'", ' ');
+   END IF;
+
+   IF (sSupCatFrom <> '' AND sSupCatTo <> '') THEN
+      SET _statement = CONCAT(_statement, ' AND sup_productgroupcode >= ',"'", sSupCatFrom ,"'", ' AND sup_productgroupcode <= ' ,"'", sSupCatTo ,"'",' ');
+   END IF;
+
+   IF (sSupStatus <> '') THEN
+      SET _statement = CONCAT(_statement, ' AND sup_isactive = ', "'", sSupStatus, "'", ' ');
+   END IF;
+
+   IF (sSupState <> '') THEN
+      SET _statement = CONCAT(_statement, ' AND sup_statecode = ', "'", sSupState, "'", ' ');
+   END IF;
+
+   IF (sSupCountry <> '') THEN
+      SET _statement = CONCAT(_statement, ' AND sup_countrycode = ', "'", sSupCountry, "'", ' ');
+   END IF;
+
+END IF;
+
+IF sMethod = 'SUPPLIER_DETAIL' THEN
+   SET _statement = ' SELECT SM.*, CD1.cd_cddesc AS ACCGRPDESC, CD2.cd_cddesc AS AREADESC, CD3.cd_cddesc AS STATEDESC,
+                      CD4.cd_cddesc AS COUNTRYDESC, CD5.cd_cddesc AS CURRENCYDESC, CD6.cd_cddesc AS CATEGORYDESC,
+                      GST.gst_desc AS GSTCODEDESC,
+                      CASE sup_isactive WHEN "Y" THEN "ACTIVE" WHEN "N" THEN "INACTIVE" ELSE "" END AS STATUSDESC,
+                      CASE sup_agingon WHEN "0" THEN "INVOICE DATE" WHEN "1" THEN "DUE DATE" ELSE "" END AS AGINGDESC
+                      FROM stkm_suppliermaster SM
+                      LEFT JOIN stkc_codedesc CD1
+                      ON SM.sup_accountgroup = CD1.cd_cdcode AND CD1.cd_cdtype = "ACCGRP"
+                      LEFT JOIN stkc_codedesc CD2
+                      ON SM.sup_areacode = CD2.cd_cdcode AND CD2.cd_cdtype = "AREA"
+                      LEFT JOIN stkc_codedesc CD3
+                      ON SM.sup_statecode = CD3.cd_cdcode AND CD3.cd_cdtype = "STATE"
+                      LEFT JOIN stkc_codedesc CD4
+                      ON SM.sup_countrycode = CD4.cd_cdcode AND CD4.cd_cdtype = "COU"
+                      LEFT JOIN stkc_codedesc CD5
+                      ON SM.sup_currencycode = CD5.cd_cdcode AND CD5.cd_cdtype = "CUR"
+                      LEFT JOIN stkc_codedesc CD6
+                      ON SM.sup_productgroupcode = CD6.cd_cdcode AND CD6.cd_cdtype = "STKGRP"
+                      LEFT JOIN stkm_gstcodemalaysia GST
+                      ON SM.sup_gstcode = GST.gst_code AND GST.gst_type = "SUPPLY"
+                      WHERE ';
+
+   SET _statement = CONCAT(_statement, 'sup_code = ', "'", sSupcode, "'", ' ');
+END IF;
+
+
+SET @statement = _statement;
+PREPARE dynquery FROM @statement;
+EXECUTE dynquery;
+DEALLOCATE PREPARE dynquery;
+
+END

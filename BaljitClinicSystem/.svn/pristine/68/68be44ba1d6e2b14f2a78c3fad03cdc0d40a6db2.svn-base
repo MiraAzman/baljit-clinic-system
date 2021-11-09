@@ -1,0 +1,405 @@
+<%@taglib prefix="jstl" uri="http://java.sun.com/jsp/jstl/core" %>
+<jsp:useBean id="DDL" scope="page" class="BusinessLogic.Servlet_PopulateData" />
+<style type="text/css">
+    table.multiselect-function tbody tr td { 
+        vertical-align: top;
+    }
+    table.multiselect-function thead th{ 
+        margin: 20px;
+        width: 50%;
+    }
+    table.multiselect-function tbody tr{
+        height: auto;
+        min-height: 300px;
+        max-height: 500px;
+    }
+    table.multiselect-function tbody tr td ul li{
+        vertical-align: central;
+        cursor: pointer;
+        /*white-space: nowrap;*/
+        text-overflow: clip ellipsis;
+    }
+    .litext{
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        display: inline-block;
+    }
+    table.multiselect-function tbody tr td ul li span:not(.litext){
+        width: 16px;
+        padding-top:5px;
+        display: inline-block;
+    }
+    table.multiselect-function tbody tr td ul li a{
+        float: right;
+    }
+    table.multiselect-function tbody tr td ul li a:hover{
+        background-color: #c0c0c0;
+    }
+    table.multiselect-function tbody tr td ul li:hover { 
+        background-color: #f0f0f0;
+    }
+    table.multiselect-function tbody ul{
+        margin: 10px;
+        padding: 0;
+        list-style-type: none;
+    }
+    .noselect {
+        -webkit-touch-callout: none;
+        -webkit-user-select: none;
+        -khtml-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
+    }
+    a.action{
+        /*position: relative;*/
+        display: inline;
+        right: 0px;
+        z-index: 10;
+    }
+    .noselect tr td ul{
+        height: 300px;
+        overflow-y: auto;
+        /*overflow-x: hidden;*/
+    }
+
+</style>
+<link rel="stylesheet" type="text/css" href="css/your_style.css" />
+<link rel="stylesheet" type="text/css" href="js/plugin/jqgrid/ui.multiselect.css" />
+
+<section id="widget-grid" class="">
+    <!--<input type="text" id="lblUserCode" value="<%= session.getAttribute("s_usercode")%>"  class="tboxreadonlyShort"/>-->
+    <div class="col-xs-12 col-sm-7 col-md-7 col-lg-4">
+        <h1 class="page-title txt-color-blueDark">
+            <!-- PAGE HEADER -->
+            <i class="fa-fw fa fa-user-md fa-2x"></i> 
+            Manage Stock Adjustment
+        </h1>
+    </div>
+    <div class="row">
+        <form id='form_StkAdj'>
+            <article class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+                <div class="row" style="padding-left:20px;padding-bottom:20px;">
+                    <input type="hidden" id="lblUsrRole" value="<%= session.getAttribute("UsrRole")%>"  class="tboxreadonlyShort"/>
+                    <input type="button" class="btn btn-default bg-color-blueDark txt-color-white" id="btnAddNew" name="btnAddNew" onclick="location.href = '#/AddNewStockAdjustment'" value="Add New" style="margin-right:20px;"/>
+                </div>
+                <div class="jarviswidget jarviswidget-color-blueDark" id="wid-id-2"  data-widget-editbutton="false" data-widget-colorbutton="false" data-widget-fullscreenbutton="false" data-widget-custombutton="false" data-widget-deletebutton="false">
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-search"></i></span>
+                        <span><h2>&nbsp;Selection Criteria</h2></span>
+                    </header>
+                    <div class="no-padding">
+                        <div class="widget-body">
+                            <div id="selectCriTab" class="tab-content">
+                                <div class="tab-pane fade active in padding-5 no-padding-bottom" id="selectCriTab_s1">
+                                    <table id="tblSearch" class="selection-criteria">
+                                        <tr> 
+                                            <td width="15%">Company & Location:</td>
+                                            <td width="25%">                                            
+                                                <label id="selectComp" class="searchbox">
+                                                <select class="form-control" id="ddlComp" name="ddlComp" rel="popover-hover" data-original-title="Company" data-content="Select Company." style="width:300px;">
+                                                    <option value="">- Select Company -</option>
+                                                    <jstl:forEach var="ddl_Comp" items="${DDL.ddlGet('GET_COMP', '', '', sessionScope.SiteName)}">
+                                                        <option value="${ddl_Comp.VALUE}">${ddl_Comp.VALUE} - ${ddl_Comp.TEXT}</option>
+                                                    </jstl:forEach>                                             
+                                                </select>    
+                                                </label>
+                                            </td>   
+                                            <td width="20%">                                            
+                                                <label id="selectLoc" class="searchbox">
+                                                <select class="form-control" id="ddlLoc" name="ddlLoc" rel="popover-hover" data-original-title="Location" data-content="Select Location." style="width:200px;">
+                                                    <option value="">- Select Location -</option>                                            
+                                                </select>    
+                                                </label>
+                                            </td>     
+                                            <td width="40%"></td>
+                                        </tr>                          
+                                        <tr>
+                                            <td>Product Code:</td>
+                                            <td>                                             
+                                                <div style="float:left">
+                                                    <input type="text" id="txtPrdCode" name="txtPrdCode"  placeholder="--Enter Product Code--" class="searchbox-text" style="width:250px;"/>
+                                                </div>
+                                                <div style="float:left;padding-left:2px">
+                                                    <button class='btn btn-default bg-color-blueDark txt-color-white' type="button" onclick="ProductLookup();" ><i class="fa fa-search fa-lg"></i></button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>Date:</td>
+                                            <td>
+                                                <input id="txtDocDate" name="txtDocDate" placeholder="Document Date" class="searchbox-date" readonly=""/>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td colspan="4">
+                                                <div align="right" >                                                  
+                                                    <input type="submit" Id="btnClear"  class="btn btn-default bg-color-blueDark txt-color-white"  value="Clear" onclick="ResetSearchFields();" />
+                                                </div>
+                                            </td>   
+                                            <td >
+                                                <div align="right" class="padding-5" >
+                                                    <input type="submit" Id="btnSearch"  class="btn btn-default bg-color-blueDark txt-color-white"  value="Search" onclick="GenerateStkAdjList();" />
+                                                </div>
+                                            </td>                                        
+                                        </tr>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="jarviswidget jarviswidget-color-blueDark" id="wid-id-1"  data-widget-editbutton="false" data-widget-custombutton="false" data-widget-deletebutton="false">
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-user-md"></i></span>
+                        <h2>Result</h2>
+                    </header>  
+                    <div>
+                        <!-- widget edit box -->
+                        <div class="jarviswidget-editbox">
+                            <!-- This area used as dropdown edit box -->
+                        </div>
+                        <!-- end widget edit box -->
+
+                        <!-- widget content -->
+                        <div class="widget-body">
+                        <!-- <input type="button" href="#myModal" data-toggle="modal" value="Print Reports" class="btn btn-default bg-color-blueDark txt-color-white" />&nbsp;
+                            <input type="button" id="btnMemExport" name="btnCorpExport" onclick='ExportData()' value="Export"  class="btn btn-default bg-color-blueDark txt-color-white"  style="margin-right:20px;"/>-->
+                            <div class="table-responsive">
+                                <div id="cjqgridStkAdj"></div>
+                                <table id="jqgridStkAdj" class="table table-striped table-bordered"  ></table>
+                                <div id="pjqgridStkAdj"></div>
+                            </div>
+                            <div style=" display: none;">
+                                <table id="ExportMemberjqgrid" class="table table-striped table-bordered"   ></table>
+                            </div>
+                        </div>
+                        <!-- end widget content -->
+                    </div>
+                </div>
+            </article>
+        </form>                             
+    </div>
+</section>
+<jsp:include page="../../../includes/loading-no-status.jsp"/>  
+<jsp:include page="../../../includes/PopUpInitPage.jsp"/>
+<script type="text/javascript">
+
+    function ResetSearchFields() {                  
+        $('#ddlComp').val('');
+        $('#ddlLoc').val('');
+        $('#txtPrdCode').val('');
+        $('#txtDocDate').val('');
+    };
+               
+    function ProductLookup() {       
+        showProduct({width: 800, height: 600}).done(function (rowIn) {
+            //alert(JSON.stringify(rowIn));
+            //$("#txtPrdDesc").val(rowIn.stk_desc);
+            $("#txtPrdCode").val(rowIn.stk_stockcode);
+        });
+    };
+    
+    function GenerateStkAdjList() {
+        $("#jqgridStkAdj").jqGrid('setGridParam', {
+            postData: {
+                SFC: 'GET_STKADJUSTMENT_LIST', 
+                COMPCODE: $('#ddlComp').val(),
+                LOCCODE: $('#ddlLoc').val(),
+                STKCODE: $('#txtPrdCode').val(),
+                DOCDATE: $('#txtDocDate').val()
+            }
+        }).trigger("reloadGrid", [{page: 1}]);                 
+    };  
+    
+    pageSetUp();
+       
+    $().ready(function(){
+        if ($('#lblUsrRole').val() === 'USR') {
+            $("#btnAddNew").hide();           
+        }
+
+        $("#ddlLoc").prop("disabled", true);
+        
+        var tempDate = new Date();
+        $("#txtDocDate").datepicker({
+            numberOfMonths: 2,
+            changeMonth: true,
+            changeYear: true,
+            dateFormat: "yy-mm-dd"
+        });
+        var fromDate = $.datepicker.formatDate('yy-mm-dd', new Date(tempDate.getFullYear(), tempDate.getMonth() - 2, tempDate.getDate()));
+        //$("#txtDocDate").val(fromDate);     
+        $("#txtDocDate").datepicker("option", "maxDate", tempDate); 
+    });
+    
+    var pagefunction = function () {       
+        loadScript("js/plugin/jqgrid/ui.multiselect.js", function () {
+            loadScript("js/plugin/jqgrid/grid.locale-en.min.js", function () {
+                loadScript("js/plugin/jqgrid/jquery.jqGrid.min.js", function () {
+                    loadScript("js/column-chooser.js", function () {
+                       run_jqgrid_function();    
+                    });
+                });
+            });
+        });           
+    };
+    
+    function run_jqgrid_function() {
+            
+        var grid = $("#jqgridStkAdj"),
+            gridPager = "#p" + grid.selector.toString().substring(1),
+            conDiv = $("#c" + grid.selector.toString().substring(1)),
+            defaultColName =  ['Action','Company','Document No','Document Date','Status','Remarks'],
+            defaultColMol = [                   
+                {name: 'details', index: 'details', formatter: viewDetail,  search: false, sortable: false, width: 80, align:'center',must: true, hidedlg: true},
+                {name: 'Company', index: 'Company', sortable: true, must: true, hidedlg: true, width: 120},
+                {name: 'DocNo', index: 'DocNo', sortable: true, must: true, hidedlg: true, width: 120},
+                {name: 'DocDate', index: 'DocDate', sortable: true, width: 120},
+                {name: 'Status', index: 'Status', sortable: true, width: 120},
+                {name: 'Remarks', index: 'Remarks', sortable: true, width: 120}                
+            ],  
+            mainGridName = grid.selector.toString().substring(1),
+            //temp = readSettings({settingArray:${sessionScope.settings}, defaultColName: defaultColName, defaultColMol: defaultColMol, settingName: mainGridName});//,
+            temp = readSettings({settingArray:"admin", defaultColName: defaultColName, defaultColMol: defaultColMol, settingName: mainGridName}),
+            currentColName = temp[0],
+            currentColMol = temp[1];
+    
+        grid.jqGrid({
+            url: '${pageContext.request.contextPath}/Servlet_StockAdjustment',
+                postData: {
+                    SFC: 'GET_STKADJUSTMENT_LIST', 
+                    COMPCODE: $('#ddlComp').val(),
+                    LOCCODE: $('#ddlLoc').val(),
+                    STKCODE: $('#txtPrdCode').val(),
+                    DOCDATE: $('#txtDocDate').val()
+                },
+            datatype: "json",
+            mtype: 'POST',
+            colNames: currentColName,
+            colModel: currentColMol,
+            // rownumbers: true,
+            gridview: true,
+            rownumWidth: 40,
+            rowNum: 20,
+            rowList: [10, 20, 25, 30, 50, 100],
+            pager: gridPager,
+            sortname: ' ',
+            viewrecords: true,
+            sortorder: ' ',
+            toolbarfilter: true,
+            autowidth: true,
+            shrinkToFit: true,
+            loadonce: false,
+            height: 'auto',
+            scrollerbar: false,        
+            sortable: {
+                update: function (relativeColumnOrder) {
+                    //sortColumn({settingArray:${sessionScope.settings}, order: relativeColumnOrder, grid: grid, defaultColMol: defaultColMol, settingName: mainGridName});
+                    sortColumn({settingArray:"admin", order: relativeColumnOrder, grid: grid, defaultColMol: defaultColMol, settingName: mainGridName});
+                }
+            },
+            loadComplete: function () {
+                var iLastPage = parseInt($(this).getGridParam('lastpage'));
+                $(".ui-jqgrid .ui-pg-input").keydown(function (e) {
+                    this.value = this.value.replace(/\D/g, '');
+                    var code = e.keyCode || e.which;
+                    if (code === 13) {
+                        if (this.value > iLastPage) {
+                            this.value = iLastPage;
+                        } else if (this.value <= 0) {
+                            this.value = 1;
+                        }
+                    }
+                });
+            }
+        });
+       
+        function viewDetail(cellvalue, options, rowObject) {     
+            return"<a style='cursor: pointer;' title='View Details' href='#/StockAdjustmentDetail/" + rowObject.Idx + "'><i class='fa fa-fw fa-lg fa-list-alt'/></a>";  
+        };
+               
+        // remove classes
+        $(".ui-jqgrid").removeClass("ui-widget ui-widget-content");
+        $(".ui-jqgrid-view").children().removeClass("ui-widget-header ui-state-default");
+        $(".ui-jqgrid-labels, .ui-search-toolbar").children().removeClass("ui-state-default ui-th-column ui-th-ltr");
+        $(".ui-jqgrid-pager").removeClass("ui-state-default");
+        $(".ui-jqgrid").removeClass("ui-widget-content");
+        // add classes
+        $(".ui-jqgrid-htable").addClass("table table-bordered table-hover");
+        $(".ui-jqgrid-btable").addClass("table table-bordered table-striped");
+        $(".ui-pg-div").removeClass().addClass("btn btn-sm btn-primary");
+        $(".ui-icon.ui-icon-plus").removeClass().addClass("fa fa-plus");
+        $(".ui-icon.ui-icon-pencil").removeClass().addClass("fa fa-pencil");
+        $(".ui-icon.ui-icon-trash").removeClass().addClass("fa fa-trash-o");
+        $(".ui-icon.ui-icon-search").removeClass().addClass("fa fa-search");
+        $(".ui-icon.ui-icon-refresh").removeClass().addClass("fa fa-refresh");
+        $(".ui-icon.ui-icon-disk").removeClass().addClass("fa fa-save").parent(".btn-primary").removeClass("btn-primary").addClass("btn-success");
+        $(".ui-icon.ui-icon-cancel").removeClass().addClass("fa fa-times").parent(".btn-primary").removeClass("btn-primary").addClass("btn-danger");
+        $(".ui-icon.ui-icon-seek-prev").wrap("<div class='btn btn-sm btn-default'></div>");
+        $(".ui-icon.ui-icon-seek-prev").removeClass().addClass("fa fa-backward");
+        $(".ui-icon.ui-icon-seek-first").wrap("<div class='btn btn-sm btn-default'></div>");
+        $(".ui-icon.ui-icon-seek-first").removeClass().addClass("fa fa-fast-backward");
+        $(".ui-icon.ui-icon-seek-next").wrap("<div class='btn btn-sm btn-default'></div>");
+        $(".ui-icon.ui-icon-seek-next").removeClass().addClass("fa fa-forward");
+        $(".ui-icon.ui-icon-seek-end").wrap("<div class='btn btn-sm btn-default'></div>");
+        $(".ui-icon.ui-icon-seek-end").removeClass().addClass("fa fa-fast-forward");
+        $(".ui-pg-input").addClass("pg-input");
+        
+        // resize
+        $(window).on('resize', function () {
+            grid.jqGrid('setGridWidth', conDiv.width());
+        });
+        grid.on('myRefresh', function () {
+            resizeWidth({grid: grid, gridDiv: conDiv});
+        });
+        //quickSetupChooser({grid: grid, defaultColMol: defaultColMol, settingName: mainGridName,
+        //settingArray:${sessionScope.settings},
+        quickSetupChooser({grid: grid, defaultColMol: defaultColMol, settingName: mainGridName,
+            settingArray:"admin",
+            done: function () {
+                resizeWidth({grid: grid, gridDiv: conDiv});
+            }
+        });
+        grid.jqGrid('setGridWidth', conDiv.width());        
+    };
+    
+    $("#ddlComp").change(function(){
+        $('#ddlLoc').empty();       
+        var sCompany = this.value;  
+        if (sCompany !== "") { 
+            $.ajax({
+                type: "POST",
+                url: "${pageContext.request.contextPath}/Servlet_StockAdjustment?SFC=GET_REL_LOCATION_WSM",
+                data: {
+                    COMPANY: sCompany
+                },
+                dataType: 'json',
+                success: function(data) {
+                    $("select#ddlLoc").append( $("<option>").val("").html("- Select Location -"));  
+                    for (var a=0 ; a<data.object1.length ; a++) {                   
+                        var arrData = data.object1[a];                
+                        $("select#ddlLoc").append( $("<option>")
+                            .val(arrData.VALUE)
+                            .html(arrData.VALUE + ' - ' + arrData.TEXT)
+                        ); 
+                    }
+                }
+            });                                                           
+            $("#ddlLoc").prop("disabled", false);
+        } else {
+            $("select#ddlLoc").append( $("<option>").val("").html("- Select Location -"));
+            $("#ddlLoc").prop("disabled", true);
+        }
+    });
+    
+    loadScript("js/plugin/jqgrid/grid.locale-en.min.js", function () {
+        loadScript("js/buttonset.js", function () {
+            loadScript("js/excel-export.js", function () {
+                pagefunction();
+            });
+        });
+    });
+
+</script>

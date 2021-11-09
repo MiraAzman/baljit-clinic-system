@@ -1,0 +1,2238 @@
+<!-- 
+Modification ID     By      Date        Comment
+-------------------------------------------------------------------------------------------
+yesno01             Aaron   05Dec2018   include yes-no.jsp in the code
+void02              Aaron   10Dec2018   add confirmVoid function and voidPO function
+insertnew02         Aaron   10Dec2018   add confirmInsertNew function and insertNewPO function
+aaronDL01           Aaron   01Feb2019   add dropdown list for Product Code and Product Name when user wants to add new item in an open PO
+-->
+<%@taglib prefix="jstl" uri="http://java.sun.com/jsp/jstl/core" %>
+<jsp:useBean id="DDL" scope="page" class="BusinessLogic.Servlet_PopulateData" />
+<style type="text/css">
+    table.multiselect-function tbody tr td { 
+        vertical-align: top;
+    }
+
+    table.multiselect-function thead th{ 
+        margin: 20px;
+        width: 50%;
+    }
+
+    table.multiselect-function tbody tr{
+        height: auto;
+        min-height: 300px;
+        max-height: 500px;
+    }
+
+    table.multiselect-function tbody tr td ul li{
+        vertical-align: central;
+        cursor: pointer;
+        /*white-space: nowrap;*/
+        text-overflow: clip ellipsis;
+    }
+
+    .litext{
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        display: inline-block;
+    }
+
+    table.multiselect-function tbody tr td ul li span:not(.litext){
+        width: 16px;
+        padding-top:5px;
+        display: inline-block;
+    }
+
+    table.multiselect-function tbody tr td ul li a{
+        float: right;
+    }
+
+    table.multiselect-function tbody tr td ul li a:hover{
+        background-color: #c0c0c0;
+    }
+
+    table.multiselect-function tbody tr td ul li:hover { 
+        background-color: #f0f0f0;
+    }
+
+    table.multiselect-function tbody ul{
+        margin: 10px;
+        padding: 0;
+        list-style-type: none;
+    }
+
+    .noselect {
+        -webkit-touch-callout: none;
+        -webkit-user-select: none;
+        -khtml-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
+    }
+
+    a.action{
+        /*position: relative;*/
+        display: inline;
+        right: 0px;
+        z-index: 10;
+    }
+
+    .noselect tr td ul{
+        height: 300px;
+        overflow-y: auto;
+        /*overflow-x: hidden;*/
+    }
+    
+    .ui-jqgrid tr.jqgrow td {
+        word-wrap: break-word; /* IE 5.5+ and CSS3 */
+        white-space: pre-wrap; /* CSS3 */
+        white-space: -moz-pre-wrap; /* Mozilla, since 1999 */
+        white-space: -pre-wrap; /* Opera 4-6 */
+        white-space: -o-pre-wrap; /* Opera 7 */
+        overflow: hidden;
+        height: auto;
+        vertical-align: middle;
+        padding-top: 3px;
+        padding-bottom: 3px
+    }
+    input[type="text"]:read-only {box-shadow: none;}
+    textarea:read-only {box-shadow: none;}
+
+</style>
+<link rel="stylesheet" type="text/css" href="css/your_style.css" />
+<link rel="stylesheet" type="text/css" href="js/plugin/jqgrid/ui.multiselect.css" />
+
+
+<section id="widget-grid" class="">
+    <input type="hidden" id="lblUserCode" value="<%= session.getAttribute("s_usercode")%>"  class="tboxreadonlyShort"/>
+    <div class="col-xs-12 col-sm-7 col-md-7 col-lg-4">
+        <h1 class="page-title txt-color-blueDark">
+            <!-- PAGE HEADER -->
+            <i class="fa-fw fa fa-user-md fa-2x"></i> 
+            Purchase Orders Listing (History)
+        </h1>
+    </div>
+    <div class="row">
+        <form id='form_PoSearch'>
+            <article class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+                <div class="row" style="padding-left:20px;padding-bottom:20px;">
+                    <input type="button" class="btn btn-default bg-color-blueDark txt-color-white" id="btnAddNew" name="btnAddNew" onclick="location.href = '#/CreatePurchaseOrder'" value="Add New" style="margin-right:20px;"/>
+                </div>
+                <div class="jarviswidget jarviswidget-color-blueDark" id="wid-id-2"  data-widget-editbutton="false" data-widget-colorbutton="false" data-widget-fullscreenbutton="false" data-widget-custombutton="false" data-widget-deletebutton="false">
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-search"></i></span>
+                        <span><h2>&nbsp;Selection Criteria</h2></span>
+                    </header>
+                    <div class="no-padding">
+                        <div class="widget-body">
+                            <div id="selectCriTab" class="tab-content">
+                                <div class="tab-pane fade active in padding-5 no-padding-bottom" id="selectCriTab_s1">
+                                    <!--<table id="tblSearch" border="0" cellpadding="0" cellspacing="0" width="80%">-->
+                                    <table id="tblSearch" class="selection-criteria" >
+                                        <tr>
+                                            <td width="15%">                                            
+                                                <input type="text" id="txtGrpNo" name="txtGrpNo"  placeholder="Group Purchase Order No" class="searchbox-text" />
+                                            </td>
+                                            <td width="15%">                                            
+                                                <input type="text" id="txtPoNo" name="txtPoNo"  placeholder="Purchase Order No" class="searchbox-text" />
+                                            </td>
+                                            <td width="15%">
+                                                <input id="txtPoDateFrom" name="txtPoDateFrom" placeholder="Purchase Order Date From" class="searchbox-date" readonly=""/>
+                                            </td>                                      
+                                            <td width="15%">
+                                                <input id="txtPoDateTo" name="txtPoDateTo" placeholder="Purchase Order Date To" class="searchbox-date" readonly=""/>       
+                                            </td>
+                                           
+                                            <td width="25%">
+                                                <div class="input-group" style="width:100%">
+<!--                                                    <input type="hidden" id="hdnSuppCode" name="hdnSuppCode"/>-->
+                                                    <input type="text"  placeholder="Search Supplier" class="searchbox-text" id="txtSupplierName" name="txtSupplierName"/>
+                                                    <span class="input-group-btn" style="width:1px">
+                                                        <button class="btn btn-info bg-color-blueDark" type="button" onclick="SearchSupplier();"><i class="fa fa-search fa-lg"></i></button>
+                                                    </span>
+                                                </div>
+                                            </td>
+                                            <td width="25%">
+                                                <div class="input-group" style="width:100%">
+<!--                                                    <input type="hidden" id="hdnStkCode" name="hdnStkCode"/>-->
+                                                    <input type="text"  placeholder="Search Stock" class="searchbox-text" id="txtStockName" name="txtStockName"/>
+                                                    <span class="input-group-btn" style="width:1px">
+                                                        <button class="btn btn-info bg-color-blueDark" type="button" onclick="SearchStock();"><i class="fa fa-search fa-lg"></i></button>
+                                                    </span>
+                                                </div>
+                                            </td>
+                                             <td width="25%">
+                                                <div class="input-group" style="width:100%; display: none;">
+                                                    
+                                                    <input type="text"  placeholder="Search Company" class="searchbox-text" id="txtCompName" name="txtCompName"  />
+                                                    <span class="input-group-btn" style="width:1px">
+                                                        <button class="btn btn-info bg-color-blueDark" type="button" onclick="SearchCompany();"><i class="fa fa-search fa-lg"></i></button>
+                                                    </span>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td width="15%">
+                                                <input id="txtRefNo" name="txtRefNo" placeholder="PO Reference No" class="searchbox-text" />
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                           <th>
+                                                PO Status
+                                            </th>
+                                            <td colspan="6">
+                                                <div id="chkPoStatus">
+                                                    <input type="checkbox" id="chkPoStatus1" name="chkPoStatus" value="'O'" checked="checked"/><label for="chkPoStatus1" class="label-option btn">Open</label>       
+                                                    <input type="checkbox" id="chkPoStatus2" name="chkPoStatus" value="'P'" checked="checked"/><label for="chkPoStatus2" class="label-option btn">Partial</label>  
+                                                    <input type="checkbox" id="chkPoStatus3" name="chkPoStatus" value="'X'" checked="checked"/><label for="chkPoStatus3" class="label-option btn">Cancel</label>
+                                                    <input type="checkbox" id="chkPoStatus4" name="chkPoStatus" value="'C'" checked="checked"/><label for="chkPoStatus4" class="label-option btn">Close</label>                                                    
+                                                </div>
+                                            </td>                                        
+                                        </tr>
+                                        <tr>
+                                            <td colspan="7">
+                                                <div align="right" class="padding-5" >
+                                                    <input type="button" style="display: none;"  id="btnPPSummary" name="btnPPSummary" onclick='LoadPrintPreview()' value="Print Preview" data-toggle='modal' data-target='#printPreview' class="btn btn-default bg-color-blueDark txt-color-white"  style="margin-right:20px;"/>
+                                                    <input type="submit" Id="btnSearch"  class="btn btn-default bg-color-blueDark txt-color-white"  value="Search" onclick="Search();" />
+                                                    <input type="submit" Id="btnReset"  class="btn btn-default bg-color-blueDark txt-color-white"  value="Reset" onclick="Reset();" />
+                                                    <input type="submit" Id="btnTest" style="display: none;"   class="btn btn-default bg-color-blueDark txt-color-white"  value="Test Call Web Services" onclick="CallServices();" />
+                                                    <input type="submit" Id="btnTest2" style="display: none;"  class="btn btn-default bg-color-blueDark txt-color-white"  value="Test Call Web Services Number" onclick="CallServicesNo();" />
+                                                    <input type="hidden" id="hdnPoStatus">
+                                                </div>
+                                            </td>                                        
+                                        </tr>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="jarviswidget jarviswidget-color-blueDark" id="wid-id-1"  data-widget-editbutton="false" data-widget-custombutton="false" data-widget-deletebutton="false">
+
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-user-md"></i></span>
+                        <h2>Result</h2>
+                    </header>  
+                    <div>
+
+                        <!-- widget edit box -->
+                        <div class="jarviswidget-editbox">
+                            <!-- This area used as dropdown edit box -->
+
+                        </div>
+                        <!-- end widget edit box -->
+
+                        <!-- widget content -->
+                        <div class="widget-body">
+                            <input type="button" id="btnMemExport" name="btnCorpExport" onclick='ExportData()' value="Export"  class="btn btn-default bg-color-blueDark txt-color-white"  style="margin-right:20px;display:none;"/>
+                            <!--                        <input type="button" href="#myModal" data-toggle="modal" value="Print Reports" class="btn btn-default bg-color-blueDark txt-color-white" />&nbsp;
+                                                    <input type="button" id="btnMemExport" name="btnCorpExport" onclick='ExportData()' value="Export"  class="btn btn-default bg-color-blueDark txt-color-white"  style="margin-right:20px;"/>-->
+
+                            <div class="table-responsive">
+                                <div id="cjqgridPo"></div>
+                                <table id="jqgridPo" class="table table-striped table-bordered"  ></table>
+                                <div id="pjqgridPo"></div>
+                            </div>
+                            <div style=" display: none;">
+                                <table id="ExportMemberjqgrid" class="table table-striped table-bordered"   ></table>
+                            </div>
+                        </div>
+                        <!-- end widget content -->
+                    </div>
+                </div>
+            </article>
+        </form>                             
+    </div>
+</section>
+<div class="modal fade" id="PoDetail" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog" style="width: 91%;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">
+                    &times;
+                </button>
+                <h4 class="modal-title" id="PoDetailLabel">Purchase Order Detail</h4>
+            </div>
+            <form id="form_PoDetail" name="form_PoDetail">
+            <div class="modal-body">
+                <div class="widget-body">
+                    <div class="jarviswidget jarviswidget-color-blueDark" id="wid-id-1" data-widget-editbutton="false" data-widget-deletebutton="false" data-widget-colorbutton="false" data-widget-fullscreenbutton="false" data-widget-togglebutton="false">
+                        <header>
+                            <h2>Purchase Order</h2>
+                        </header>
+                        <div class="container">
+                            <!--Purchase Order Header-->
+                            <div class="row">
+                                <div class="widget-body">
+
+                                    <table id="tbPoHeader" class="table table-bordered table-striped" style="clear:both;">
+                                        <tbody>
+                                            <tr>
+                                                <td width="12%">Purchase Order No</td>
+                                                <td width="1%">:</td>
+                                                <td width="25%"> 
+                                                    <input type="text" id="lblPoNo" name="lblPoNo" class="tboxreadonly" readonly/>
+                                                    
+                                                </td>
+                                                <td width="12%">Purchase Order Group No</td>
+                                                <td width="1%">:</td>
+                                                <td width="75%">
+                                                    <input type="text" id="lblPoGrpNo" name="lblPoGrpNo" class="tboxreadonly" readonly/>
+                                                    
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td width="12%">Company</td>
+                                                <td width="1%">:</td>
+                                                <td width="25%"> 
+                                                    <input type="text" id="lblCompCode" name="lblCompCode" class="tboxreadonly" readonly/>
+                                                    <input type="text" id="lblCompName" name="lblCompName" class="tboxreadonly" readonly/>
+                                                    
+                                                </td>
+                                                <td width="12%">Supplier</td>
+                                                <td width="1%">:</td>
+                                                <td width="75%">
+                                                    <input type="text" id="lblSuppName" name="lblSuppName" class="tboxreadonly" readonly/>                                                
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td width="12%">Ref Date</td>
+                                                <td width="1%">:</td>
+                                                <td width="25%"> 
+                                                    <input type="text" id="lblRefDate" name="lblRefDate" class="tboxreadonly" readonly/>                                                  
+                                                </td>
+                                                <td width="12%">Ref No</td>
+                                                <td width="1%">:</td>
+                                                <td width="75%">
+                                                    <input type="text" id="lblRefNo" name="lblRefNo" class="tboxreadonly" readonly/>    
+                                                <!--<input type="text" id="txtRefNo" name="txtRefNo" required   class="form-control numeric" rel="popover-hover" data-original-title="Reference No" data-content="Purchase Order Reference No."   />-->
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td width="12%" rowspan="2">Address</td>
+                                                <td width="1%" rowspan="2">:</td>
+                                                <td width="25%" rowspan="2">  
+                                                    <input type="text" id="lblAddr1" name="lblAddr1" class="tboxreadonly" readonly/><br>    
+                                                    <input type="text" id="lblAddr2" name="lblAddr2" class="tboxreadonly" readonly/><br>
+                                                    <input type="text" id="lblAddr3" name="lblAddr3" class="tboxreadonly" readonly/><br>
+                                                <!--<input type="text" id="txtAddr1" name="txtAddr1" class="form-control" /><br>
+                                                    <input type="text" id="txtAddr2" name="txtAddr2" class="form-control" /><br>
+                                                    <input type="text" id="txtAddr3" name="txtAddr3" class="form-control" />-->
+                                                </td>
+                                                <td width="12%">Purchase Order Date</td>
+                                                <td width="1%">:</td>
+                                                <td width="75%"> 
+                                                    <input type="text" id="lblPoDate" name="lblPoDate" class="tboxreadonly" readonly/><br>
+                                                <!--<input id="txtPoDate" name="txtPoDate" placeholder="Purchase Order Date" class="searchbox-date" readonly=""/>-->
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td width="12%">Fax</td>
+                                                <td width="1%">:</td>
+                                                <td width="25%">
+                                                    <input type="text" id="lblFax" name="lblFax" class="tboxreadonly" readonly/><br>
+                                                    <!--<input type="text" id="txtFax" name="txtFax"  class="form-control" rel="popover-hover" data-original-title="Fax No"  />-->
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td width="12%">Postcode</td>
+                                                <td width="1%">:</td>
+                                                <td width="25%"> 
+                                                    <input type="text" id="lblPostCode" name="lblPostCode" class="tboxreadonly" readonly/><br>
+                                                <!--<input type="text" id="txtPostCode" name="txtPostCode" required  class="form-control" rel="popover-hover" data-original-title="PostCode No" data-content="PostCode" />-->
+                                                </td>
+                                                <td width="12%">Phone</td>
+                                                <td width="1%">:</td>
+                                                <td width="75%">
+                                                    <input type="text" id="lblPhone" name="lblPhone" class="tboxreadonly" readonly/><br>
+                                                    <!--<input type="text" id="txtPhone" name="txtPhone"  class="form-control" rel="popover-hover" data-original-title="Phone No"  />-->
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td width="12%">Po Fulfill</td>
+                                                <td width="1%">:</td>
+                                                <td width="25%">
+                                                    <input type="text" id="lblPoFulfill" name="lblPoFulfill" class="tboxreadonly" readonly/><br>
+                                                </td>
+                                                <td width="12%">Po Status</td>
+                                                <td width="1%">:</td>
+                                                <td width="75%">
+                                                    <input type="text" id="lblPoStatus" name="lblPoStatus" class="tboxreadonly" readonly/><br>
+                                                </td>
+                                            </tr>
+
+                                        </tbody>
+                                    </table>
+
+                                </div>
+                            </div>
+                            <!--End Purchase Order Header-->
+                            
+                            <!--Purchase Order Item-->
+                            <div class="jarviswidget jarviswidget-color-blueDark" id="wid-id-3"  data-widget-editbutton="false" data-widget-custombutton="false"
+                             data-widget-deletebutton="false" data-widget-colorbutton="false" data-widget-fullscreenbutton="false" data-widget-togglebutton="false">
+                            <header>
+                                <span class="widget-icon"> <i class="fa fa-file"></i></span>
+                                <span><h2>&nbsp;Purchase Order Item</h2></span>
+                            </header>
+                        <div>  
+                            
+                            <div class="widget-body">
+                                
+<!--                            <div id="dgPoDetail" class="table-responsive">-->
+                           <div id="dgPoDetail" class="widget-body no-padding">
+                                <div id="cjqgridPoItem" style="width: 100%;"></div>
+                                    <table id="jqgridPoItem" class="table table-striped table-bordered"  ></table>
+                                <div id="pjqgridPoItem"></div>
+                            </div>                           
+                            </div>                               
+                        </div>
+                            <!--End Purchase Order Item-->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+            </form>
+            <div>
+                <div class="row">
+                    <div class="col-sm-12">
+                        <div align="center" class="padding-5" >
+                            <input type="button" Id="btnAddItem" onclick="add_Item();"  class="btn btn-default bg-color-blueDark txt-color-white" value="Add New Item" />
+                            <input type="button" Id="btnVoid"  class="btn btn-default bg-color-blueDark txt-color-white" value="Void PO" style=" width: 100px" onclick ="confirmVoid();" />
+                            <input type="button" Id="btnCloseDetail"  class="btn btn-default bg-color-blueDark txt-color-white" value="Close" style=" width: 80px;" data-dismiss="modal" />
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+    </div>
+    </div>
+</div>
+
+<div class="modal fade" id="EditPoDetail" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog" style="width: 91%;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">
+                    &times;
+                </button>
+                <h4 class="modal-title" id="EditPoDetailLabel">Edit Purchase Order</h4>
+            </div>
+
+            <div class="modal-body">
+                <div class="widget-body">
+                    <div class="jarviswidget jarviswidget-color-blueDark" id="wid-id-1" data-widget-editbutton="false" data-widget-deletebutton="false" data-widget-colorbutton="false" data-widget-fullscreenbutton="false" data-widget-togglebutton="false">
+                        <header>
+                            <h2>Edit Purchase Order Item</h2>
+                        </header>
+                        <div class="container">
+                            <!--Purchase Order Header-->
+                            <div class="row">
+                                <div class="widget-body">
+                                    <form id="form_UpdatePoItem" name="form_UpdatePoItem">
+                                    <table id="tbPoItem" class="table table-bordered table-striped" style="clear:both;">
+                                        <tbody>
+                                            <tr>
+                                                <td width="12%">Purchase Order No</td>
+                                                <td width="1%">:</td>
+                                                <td width="25%"> 
+                                                    <input type="text" id="lblEditIdx" name="lblEditIdx" class="tboxreadonly" readonly style=" display: none;"/>
+                                                    <input type="text" id="lblEditPoNo" name="lblEditPoNo" class="tboxreadonly" readonly/>
+                                                </td>
+                                                <td width="12%">Group Po No</td>
+                                                <td width="1%">:</td>
+                                                <td width="75%">
+                                                    <input type="text" id="lblEditGrpPoNo" name="lblEditGrpPoNo" class="tboxreadonly" readonly/>                                                    
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td width="12%">Product Name</td>
+                                                <td width="1%">:</td>
+                                                <td width="25%"> 
+                                                    <input type="text" id="lblEditPrdName" name="lblEditPrdName" class="tboxreadonly" readonly/>
+                                                    <input type="text" id="lblEditPrdCode" name="lblEditPrdCode" class="tboxreadonly" readonly style=" display: none;"/>
+                                                    
+                                                </td>
+                                                <td width="12%">UOM</td>
+                                                <td width="1%">:</td>
+                                                <td width="75%">
+                                                    <input type="text" id="lblEditUOM" name="lblEditUOM" class="tboxreadonly" />
+                                                    
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td width="12%">Unit Cost</td>
+                                                <td width="1%">:</td>
+                                                <td width="25%"> 
+                                                    <input type="text" id="txtEditUnitCost" name="txtEditUnitCost" class="form-control numeric" onkeyup="this.onchange();" onpaste="this.onchange();" oninput="this.onchange();" onchange="ReCalc(this.id, this.value, 'EditItem');" />
+                                                    
+                                                </td>
+                                                <td width="12%">Qty</td>
+                                                <td width="1%">:</td>
+                                                <td width="75%">
+                                                   <input type="text" id="txtEditQty" name="txtEditQty" class="form-control numeric" onkeyup="this.onchange();" onpaste="this.onchange();" oninput="this.onchange();" onchange="ReCalc(this.id, this.value, 'EditItem');" />
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td width="12%">Bonus</td>
+                                                <td width="1%">:</td>
+                                                <td width="25%"> 
+                                                        <input type="text" id="txtEditBonus" name="txtEditBonus" class="form-control numeric" />                                           
+                                                </td>
+                                                <td width="12%">Disc Option</td>
+                                                <td width="1%">:</td>
+                                                <td width="75%">
+                                                     <select class="form-control" id="ddlEditDisOpt" name="ddlEditDisOpt"  onchange="ReCalc(this.id, this.value, 'EditItem');">
+                                                            <option value="A">Amt</option>
+                                                            <option value="P" selected="">%</option>
+                                                    </select> 
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td width="12%">Disc Amt</td>
+                                                <td width="1%">:</td>
+                                                <td width="25%">
+                                                    <input type="text" id="txtEditDiscVal" name="txtEditDiscVal" class="form-control numeric" onkeyup="this.onchange();" onpaste="this.onchange();" oninput="this.onchange();" onchange="ReCalc(this.id, this.value, 'EditItem');"  />                                                    
+                                                    <input type="text" id="txtEditDiscAmt" name="txtEditDiscAmt" class="form-control numeric" style=" display: none;"/>
+                                                </td>
+                                                <td width="12%">GST</td>
+                                                <td width="1%">:</td>
+                                                <td width="75%"> 
+                                                    <input type="hidden" id="hdnTaxCode" name="hdnTaxCode"/>
+                                                    
+                                                    <label id="selectEditGst" class="searchbox">
+                                                        <select class="form-control" id="ddlEditGst" required name="ddlEditGst" rel="popover-hover" onchange="ReCalc(this.id, this.value, 'EditItem');"   >
+                                                            <option value="">- GST -</option>                                       
+                                                        </select>    
+                                                    </label> 
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td width="12%">GST Inclusive</td>
+                                                <td width="1%">:</td>
+                                                <td width="25%"> 
+                                                    <input type="text" id="lblEditGstInc" name="lblEditGstInc" class="tboxreadonly" readonly/>
+                                                    <input type="text" id="lblEditGstTaxRate" name="lblEditGstTaxRate" class="tboxreadonly" readonly style=" display: none;"/>
+                                                    <input type="hidden" id="hdnTaxRate" name="hdnTaxRate"/>
+                                                </td>
+                                                <td width="12%">Gst Amt</td>
+                                                <td width="1%">:</td>
+                                                <td width="75%">
+                                                    <input type="text" id="lblEditGstAmt" name="lblEditGstAmt" class="tboxreadonly" readonly/>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td width="12%">Gross Total</td>
+                                                <td width="1%">:</td>
+                                                <td width="25%">
+                                                   <input type="text" id="lblEditGrossTotal" name="lblEditGrossTotal" class="tboxreadonly" readonly/>
+                                                </td>
+                                                <td width="12%">Nett Amt</td>
+                                                <td width="1%"></td>
+                                                <td width="75%">
+                                                     <input type="text" id="lblEditNettAmt" name="lblEditNettAmt" class="tboxreadonly" readonly/><br>
+                                                
+                                                </td>
+                                            </tr>
+
+                                        </tbody>
+                                    </table>
+                                    </form>
+                                </div>
+                            </div>
+                            <!--End Purchase Order Header-->
+                            
+                        
+                    
+                </div>
+            </div>
+       
+       
+
+    </div>
+</div>
+            <div>
+                <div class="row">
+                    <div class="col-sm-12">
+                        <div align="center" class="padding-5" >
+                            <input type="button" Id="btnUpdate"  class="btn btn-default bg-color-blueDark txt-color-white" value="Update Item" style=" width: 100px;" />
+                            <input type="button" Id="btnClose"  class="btn btn-default bg-color-blueDark txt-color-white" value="Close" style=" width: 80px;" data-dismiss="modal" />
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+</div>                                                            
+    </div>
+</div>
+
+<div class="modal fade" id="PoAddItemModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog" style="width: 91%;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">
+                    &times;
+                </button>
+                <h4 class="modal-title" id="PoDetailModalLabel">Add New Item</h4>
+            </div>
+
+            <div class="modal-body">
+                <div class="widget-body">
+                    <div class="jarviswidget jarviswidget-color-blueDark" id="wid-id-1" data-widget-editbutton="false" data-widget-deletebutton="false" data-widget-colorbutton="false" data-widget-fullscreenbutton="false" data-widget-togglebutton="false">
+                        <header>
+                            <h2>PO Items</h2>
+                        </header>
+                        <div class="container">
+                            <table id="tblSearch" class="selection-criteria">
+                                <tr>
+                                    <td width="10%">Product Code:</td>
+                                    <td>                                            
+                                        <input type="text" id="txtPrdCode" name="txtPrdCode"  placeholder="--Enter Product Code--" class="searchbox-text" list="PrdCodelist" />
+                                        <datalist id="PrdCodelist"></datalist> <!--aaronDL01-->
+                                        <input type="text" id="txtPrdName" name="txtPrdName"  placeholder="--Enter Product Name--" class="searchbox-text" list="PrdCodeName" />
+                                        <datalist id="PrdCodeName"></datalist> <!--aaronDL01-->
+                                        <input type="text" id="txtPOIDX" name="txtPOIDX" style=" display: none;"  />
+                                        <button class='btn btn-default bg-color-blueDark txt-color-white' type="button" onclick="LookupStock();" ><i class="fa fa-search fa-lg"></i></button>
+                                    </td>
+                                </tr>
+                            </table>
+
+                            <div id="gridAddPoItemSummary" class="">
+                                <!--<div id="bar-chart" class="chart"></div>-->
+
+                                <table  class="table table-striped" id="tbAddPoItem" >
+                                    <thead>
+                                    <th>Action</th>
+                                    <th id="STOCK">Stock</th>
+                                    <th id="UOM">UOM</th>
+                                    <th id="QTY">QTY</th>
+                                    <th id="Bonus">Bonus</th>
+                                    <th id="UCost">U.Cost</th>
+                                    <th id="DiscOption">Disc Option</th>
+                                    <th id="DiscAmt">Disc Amt</th>
+                                    <th id="GrossTotal">Gross Total</th>
+                                    <th id="GST">GST</th>
+                                    <th id="GSTIncl">GST Incl.</th>
+                                    <th id="GSTAmt">GST Amt.</th>
+                                    <th id="NettTotal">Nett Total.</th>
+                                    <th id="Company">Company</th>
+                                    </thead>
+                                    <tbody id="AddPoItemGrid" >
+
+                                    </tbody>
+                                </table>
+
+                            </div>
+
+                        </div>
+                        <input type="button" Id="btnAuto"  class="btn btn-default bg-color-blueDark txt-color-white" value="Auto Allocation Quantity" style=" display: none;"  />
+                    </div>
+                </div>
+            </div>
+            <div>
+                <div class="row">
+                    <div class="col-sm-12">
+                        <div align="Right" class="padding-5" >
+                            <input type="button" Id="btnInsertItem"  class="btn btn-default bg-color-blueDark txt-color-white" value="Insert To Po" style=" width: 120px" onclick ="confirmInsertNew();" />
+                            <input type="button" Id="btnClose"  class="btn btn-default bg-color-blueDark txt-color-white" value="Close" style=" width: 80px;" data-dismiss="modal" />
+                            <input type="hidden" id="hdnTaxRate" name="hdnTaxRate"/>
+                            <input type="hidden" id="hdnTaxCode" name="hdnTaxCode"/>
+                            <input type="hidden" id="hdnRole" name="hdnRole" value='<%= session.getAttribute("UsrRole")%>'/>
+                            <input type="hidden" id="hdnCompCode" name="hdnCompCode" value="<%= session.getAttribute("CompCode")%>"/>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+    </div>
+</div>
+                                                                
+<jsp:include page="../../../includes/loading-no-status.jsp"/> 
+<jsp:include page="../../../includes/PopUpInitPage.jsp"/>
+<!-- include yes-no.jsp --> <!-- Aaron --> <!--yesno01-->
+<jsp:include page="../../../includes/yes-no.jsp"/>
+<script src="js/buttonset.js"></script>
+<script type="text/javascript">
+var mySubgrids = {};
+var myStkUOM = {};
+var arrSubGrid = {};
+var myGST = "";
+
+    getDLL("ddlEditGst", "GET_ACTIVEGSTCODE", "PURCHASE", "");
+    getDLL("ddlCurrency", "GET_CODEDESC", "CUR", "");
+
+    function getDLL (ddl, method, param1, param2) {
+        $.get('${pageContext.request.contextPath}/Servlet_PopulateData', {SFC: 'GET_DLL', METHOD: method, P1: param1, P2: param2}, function (data) {
+            for(var i=0; i < data.length; i++){                                                          
+                $("#"+ddl).append($("<option>").val(data[i].VALUE).html(data[i].TEXT));
+            }     
+        });     
+    }   
+    
+  $('#chkPoStatus').buttonset();
+    //  pageSetUp();
+
+    $(document).ready(function () {
+        defaultDate();
+        
+        //to activate parent modal dialog after child modal box is closed (to fix scroll problem)
+        $('.modal').on("hidden.bs.modal", function (e) { 
+            if ($('.modal:visible').length) { 
+                $('body').addClass('modal-open');
+            }
+        });
+    });
+    
+    function defaultDate(){
+        
+        var tempDate = new Date();
+       // alert(tempDate);
+        $("#txtPoDateFrom").datepicker({
+            numberOfMonths: 2,
+            changeMonth: true,
+            changeYear: true,
+            dateFormat: "yy-mm-dd",
+            onSelect: function (selected) {
+                $("#txtPoDateTo").datepicker("option", "minDate", selected);
+            }
+        });
+        var fromDate = $.datepicker.formatDate('yy-mm-dd', new Date(tempDate.getFullYear(), tempDate.getMonth() - 2, tempDate.getDate()));
+        $("#txtPoDateFrom").val(fromDate);
+        $("#hdnPoFromDate").val($("#txtPoDateFrom").val());
+        $("#txtPoDateTo").datepicker({
+            numberOfMonths: 2,
+            changeMonth: true,
+            changeYear: true,
+            dateFormat: "yy-mm-dd",
+            onSelect: function (selected) {
+                $("#txtPoDateFrom").datepicker("option", "maxDate", selected);
+            }
+        });
+        $("#txtPoDateTo").datepicker("option", "minDate", fromDate);
+        $("#txtPoDateTo").val($.datepicker.formatDate('yy-mm-dd', tempDate));
+        $("#txtPoDateFrom").datepicker("option", "maxDate", tempDate);
+        $("#hdnPoToDate").val($("#txtPoDateTo").val());
+
+        
+    }
+
+
+    var pagefunction = function () {
+        $.get('${pageContext.request.contextPath}/Servlet_Role', {SFC: 'GET_MENU_BY_ROLE', MNUCODE: "MNU000011", ROLECODE:'<%= session.getAttribute("UsrRole")%>' }, function (data) {
+             var arrData = JSON.parse(data);
+            // console.log(JSON.stringify(arrData.rows));
+             
+            if (arrData.rows[0].AllowAdd === '0'){                 
+                  $("#btnAddNew").css("display", "none");
+            }
+            
+            if (arrData.rows[0].AllowEdit === '0'){                 
+                  $("#btnUpdate").css("display", "none");
+            }
+            
+            if (arrData.rows[0].AllowDel === '0'){              
+                  $("#btnVoid").css("display", "none");
+            }
+             
+             //alert(JSON.stringify(arrData.rows));
+        });
+
+        //alert("0000111");
+
+        loadScript("js/plugin/jqgrid/ui.multiselect.js", function () {
+            loadScript("js/plugin/jqgrid/grid.locale-en.min.js", function () {
+                loadScript("js/plugin/jqgrid/jquery.jqGrid.min.js", function () {
+                    loadScript("js/column-chooser.js", function () {
+                        run_jqgrid_function();
+                    });
+                });
+            });
+        });
+
+    function run_jqgrid_function() {
+
+            var grid = $("#jqgridPo"),
+                    gridPager = "#p" + grid.selector.toString().substring(1),
+                    conDiv = $("#c" + grid.selector.toString().substring(1)),
+                    defaultColName = ['View', 'Grp No', 'Po No.', 'Po Date', 'Company', 'Supplier', 'Nett Amt.', 'Status'],
+                    defaultColMol = [
+                        //  {name:'MEM_NRIC',index:'MEM_NRIC', sortable:true, searchoptions: { sopt: ['cn']}, formatter:'showlink',formatoptions:{baseLinkUrl:'../ProviderPortal/Prov_Patient_Detail.jsp',addParam: '',showAction:'',idName:'PMemNRIC'}},                     
+                        {name: 'details', index: 'details', formatter: viewDetail, search: false, sortable: false, width: 80, align: 'center', must: true, hidedlg: true},
+                        {name: 'GrpNo', index: 'GrpNo', sortable: true, must: true, hidedlg: true, width: 100},
+                        {name: 'PoNo', index: 'PoNo', sortable: true, must: true, hidedlg: true, width: 100},
+                        {name: 'PoDate', index: 'PoDate', sortable: true, width: 120},
+                        {name: 'CompName', index: 'CompName', sortable: true, width: 220},
+                        {name: 'SuppName', index: 'SuppName', sortable: true, width: 220},
+                        {name: 'PoNettAmt', index: 'PoNettAmt', sortable: true, width: 100},
+                        {name: 'POStatus', index: 'POStatus', sortable: true, width: 100}
+                    ],
+                    mainGridName = grid.selector.toString().substring(1),
+                    //temp = readSettings({settingArray:${sessionScope.settings}, defaultColName: defaultColName, defaultColMol: defaultColMol, settingName: mainGridName});//,
+                    temp = readSettings({settingArray: "admin", defaultColName: defaultColName, defaultColMol: defaultColMol, settingName: mainGridName}),
+                    currentColName = temp[0],
+                    currentColMol = temp[1];
+            // alert(JSON.stringify(temp));
+            grid.jqGrid({
+                url: '${pageContext.request.contextPath}/Servlet_PurchaseOrder',
+                postData: {
+                    SFC: 'PO_HISTORY',
+                    SUPCODE: $('#txtSupplierName').val(), //$('#hdnSuppCode').val(),
+                    COMPANY: $('#hdnCompCode').val(),
+                    PONO: $('#txtPoNo').val(),
+                    DTFROM: $('#txtPoDateFrom').val(),
+                    DTTO: $('#txtPoDateTo').val(),
+                    GRPNO: $('#txtGrpNo').val(),
+                    STKCODE: $('#txtStockName').val(), //$('#hdnStkCode').val(),
+                    POSTATUS: $('#hdnPoStatus').val(),
+                    REFNO: $('#txtRefNo').val()
+                },
+                datatype: "json",
+                mtype: 'POST',
+                colNames: currentColName,
+                colModel: currentColMol,
+                // rownumbers: true,
+                gridview: true,
+                rownumWidth: 40,
+                rowNum: 20,
+                rowList: [10, 20, 25, 30, 50, 100],
+                pager: gridPager,
+                sortname: 'PoNo',
+                viewrecords: true,
+                sortorder: 'desc',
+                toolbarfilter: true,
+                autowidth: true,
+                shrinkToFit: true,
+                loadonce: false,
+                height: 'auto',
+                scrollerbar: false,
+                sortable: {
+                    update: function (relativeColumnOrder) {
+                        //sortColumn({settingArray:${sessionScope.settings}, order: relativeColumnOrder, grid: grid, defaultColMol: defaultColMol, settingName: mainGridName});
+                        sortColumn({settingArray: "admin", order: relativeColumnOrder, grid: grid, defaultColMol: defaultColMol, settingName: mainGridName});
+                    }
+                },
+                loadComplete: function () {
+                    var iLastPage = parseInt($(this).getGridParam('lastpage'));
+                    $(".ui-jqgrid .ui-pg-input").keydown(function (e) {
+                        this.value = this.value.replace(/\D/g, '');
+                        var code = e.keyCode || e.which;
+                        if (code === 13) {
+                            if (this.value > iLastPage) {
+                                this.value = iLastPage;
+                            } else if (this.value <= 0) {
+                                this.value = 1;
+                            }
+                        }
+                    });
+                }
+            });
+
+            function viewDetail(cellvalue, options, rowObject) {
+                //return "<a  target='_self' class='btn btn-default bg-color-blueDark txt-color-white' title='Member Detail' href='#/MemberDetail/" + rowObject.MEM_ID + "/" + rowObject.MEM_CorpCode + "'>View Details</a>";
+               // return"<a style='cursor: pointer;' title='View Details' href='#/ProductDetail/" + rowObject.stk_stockcode + "'><i class='fa fa-fw fa-lg fa-list-alt' /></a>";
+               //"<a style='cursor: pointer;' title='Print/Export' data-toggle='modal' data-target='#myModal2' onclick='printEmployees(\"" + rowObject.CP_Name + "\" , \"" + rowObject.CP_Code + "\")'><i class='fa fa-fw fa-lg fa-user' /></a>" + 
+                return "<a style='cursor: pointer;' title='Print/Export' onclick='LoadPrintPreview(\"" +  rowObject.PoNo + "\")''><i class='fa fa-fw fa-lg fa-print' /></a>" + 
+                        "&nbsp;<a class='' style='cursor:pointer;' onclick='OpenDetail(\"" +  rowObject.PoNo + "\")''><i class='fa fa-fw fa-lg fa-list-alt' /></a>";
+
+            }
+            
+            var gridPo = $("#jqgridPoItem"),
+            gridPoPager = "#p" + gridPo.selector.toString().substring(1),
+            conPoDiv = $("#c" + gridPo.selector.toString().substring(1)),
+            defaultPoColName = [ 'Action', 'IDX', 'Product Code', 'Product Name', 'Company', 'UOM', 'Qty', 'Unit Cost', 'Bonus', 'Disc Option', 'Disc Amt', 'Disc Val', 'Gross Amt', 'GST', 'Gst Incl.', 'GST Amt', 'GST Rate', 'Nett Amt', 'Fulfill'],
+            defaultPoColMol = [
+                            {name: '', index: '', formatter: EditPoDetail, sortable: true, search: false, width: 80},
+                            {name: 'PODIDX', index: 'PODIDX', sortable: true, search: false, width: 120, hidden: true},
+                            {name: 'StkCode', index: 'StkCode', sortable: true, search: false, width: 120, hidden: true},
+                            {name: 'StkDesc', index: 'StkDesc', sortable: true, search: false, width: 280},
+                            {name: 'CompName', index: 'CompName', sortable: true, search: false, width: 220, hidden: true},
+                            {name: 'UomCode', index: 'UomCode', sortable: true, search: false, width: 100},
+                            {name: 'Qty', index: 'Qty', sortable: true, search: false, width: 100,   formatter: 'number', formatoptions: { decimalPlaces: 2 }},
+                            {name: 'UnitCost', index: 'UnitCost', sortable: true, search: false, width: 100, formatter: 'number', formatoptions: { decimalPlaces: 2 }},
+                            {name: 'QtyBonus', index: 'QtyBonus', sortable: true, search: false, width: 100, formatter: 'number', formatoptions: { decimalPlaces: 2 }},
+                            {name: 'DiscOpt', index: 'DiscOpt', sortable: true, search: false, width: 120},
+                            {name: 'DiscPerc', index: 'DiscPerc', sortable: true, search: false, width: 100, formatter: 'number', formatoptions: { decimalPlaces: 2 }},
+                            {name: 'DiscAmt', index: 'DiscAmt', sortable: true, search: false, width: 100, formatter: 'number', formatoptions: { decimalPlaces: 2 }},
+                            {name: 'GrossTotal', index: 'GrossTotal', sortable: true, search: false, width: 120, formatter: 'number', formatoptions: { decimalPlaces: 2 }},
+                            {name: 'GstPurCode', index: 'GstPurCode', sortable: true, search: false, width: 120},
+                            {name: 'GStInc', index: 'GStInc', sortable: true, search: false, width: 100},
+                            {name: 'GstAmt', index: 'GstAmt', sortable: true, search: false, width: 100, formatter: 'number', formatoptions: { decimalPlaces: 2 }},
+                            {name: 'GstTaxRate', index: 'GstTaxRate', sortable: true, search: false, width: 100, formatter: 'number', formatoptions: { decimalPlaces: 2 }},
+                            {name: 'NettAmt', index: 'NettAmt', sortable: true, search: false, width: 100, formatter: 'number', formatoptions: { decimalPlaces: 2 }},
+                            {name: 'DtlFulfill', index: 'DtlFulfill', sortable: true, search: false, width: 100}
+                            ],
+            mainPoGridName = gridPo.selector.toString().substring(1),
+            // temp = readSettings({settingArray:${sessionScope.settings}, defaultColName: defaultColName, defaultColMol: defaultColMol, settingName: mainGridName}),
+            temp = readSettings({settingArray: "admin", defaultColName: defaultPoColName, defaultColMol: defaultPoColMol, settingName: mainPoGridName}),
+            currentPoColName = temp[0],
+            currentPoColMol = temp[1];
+                 
+                //alert(JSON.stringify(arrPoHeaderData));
+            gridPo.jqGrid({
+            url: '${pageContext.request.contextPath}/Servlet_PurchaseOrder',
+                postData: {
+                        SFC: 'GET_PO_LIST',               
+                        PONO: ''
+                },
+            datatype: "json",
+            // data: arrPoHeaderData,
+            mtype: 'POST',
+            gridview: true,
+            colNames: currentPoColName,
+            colModel: currentPoColMol,
+            rownumWidth: 40,
+            rowNum: 20,
+            rowList: [10, 20, 25, 30, 50, 100],
+            pager: gridPoPager,
+            sortname: 'LineNo',
+            viewrecords: true,
+            sortorder: 'asc',
+            toolbarfilter: true,
+            autowidth: true,
+            shrinkToFit: true,
+            loadonce: false,
+            height: 'auto',
+           scrollerbar: false,  
+             sortable: {
+                update: function (relativeColumnOrder) {
+                    //sortColumn({settingArray:${sessionScope.settings}, order: relativeColumnOrder, grid: grid, defaultColMol: defaultColMol, settingName: mainGridName});
+                    sortColumn({settingArray:"admin", order: relativeColumnOrder, grid: gridPo, defaultColMol: defaultPoColMol, settingName: mainPoGridName});
+                }
+            },
+                loadComplete: function () {
+                var iLastPage = parseInt($(this).getGridParam('lastpage'));
+                $(".ui-jqgrid .ui-pg-input").keydown(function (e) {
+                    this.value = this.value.replace(/\D/g, '');
+                    var code = e.keyCode || e.which;
+                    if (code === 13) {
+                        if (this.value > iLastPage) {
+                            this.value = iLastPage;
+                        } else if (this.value <= 0) {
+                            this.value = 1;
+                        }
+                    }
+                });
+            }   
+ 
+            });
+            
+            function EditPoDetail(cellvalue, options, rowObject) {
+               if ($('#lblPoStatus').val() === "Open"){
+                   document.getElementById("btnVoid").style.visibility='visible'; 
+                    return  "<a class='' style='cursor:pointer;' onclick='EditDetail(\"" +  rowObject.PODIDX + "\")''><i class='fa fa-fw fa-lg fa-pencil' /></a>";
+               }else{
+                   document.getElementById("btnVoid").style.visibility='hidden'; 
+                   return  "";
+                   //document.getElementById("btnVoid").style.display = "none";
+                   
+                 }
+            }
+            
+            // remove classes
+            $(".ui-jqgrid").removeClass("ui-widget ui-widget-content");
+            $(".ui-jqgrid-view").children().removeClass("ui-widget-header ui-state-default");
+            $(".ui-jqgrid-labels, .ui-search-toolbar").children().removeClass("ui-state-default ui-th-column ui-th-ltr");
+            $(".ui-jqgrid-pager").removeClass("ui-state-default");
+            $(".ui-jqgrid").removeClass("ui-widget-content");
+            // add classes
+            $(".ui-jqgrid-htable").addClass("table table-bordered table-hover");
+            $(".ui-jqgrid-btable").addClass("table table-bordered table-striped");
+            $(".ui-pg-div").removeClass().addClass("btn btn-sm btn-primary");
+            $(".ui-icon.ui-icon-plus").removeClass().addClass("fa fa-plus");
+            $(".ui-icon.ui-icon-pencil").removeClass().addClass("fa fa-pencil");
+            $(".ui-icon.ui-icon-trash").removeClass().addClass("fa fa-trash-o");
+            $(".ui-icon.ui-icon-search").removeClass().addClass("fa fa-search");
+            $(".ui-icon.ui-icon-refresh").removeClass().addClass("fa fa-refresh");
+            $(".ui-icon.ui-icon-disk").removeClass().addClass("fa fa-save").parent(".btn-primary").removeClass("btn-primary").addClass("btn-success");
+            $(".ui-icon.ui-icon-cancel").removeClass().addClass("fa fa-times").parent(".btn-primary").removeClass("btn-primary").addClass("btn-danger");
+            $(".ui-icon.ui-icon-seek-prev").wrap("<div class='btn btn-sm btn-default'></div>");
+            $(".ui-icon.ui-icon-seek-prev").removeClass().addClass("fa fa-backward");
+            $(".ui-icon.ui-icon-seek-first").wrap("<div class='btn btn-sm btn-default'></div>");
+            $(".ui-icon.ui-icon-seek-first").removeClass().addClass("fa fa-fast-backward");
+            $(".ui-icon.ui-icon-seek-next").wrap("<div class='btn btn-sm btn-default'></div>");
+            $(".ui-icon.ui-icon-seek-next").removeClass().addClass("fa fa-forward");
+            $(".ui-icon.ui-icon-seek-end").wrap("<div class='btn btn-sm btn-default'></div>");
+            $(".ui-icon.ui-icon-seek-end").removeClass().addClass("fa fa-fast-forward");
+            $(".ui-pg-input").addClass("pg-input");
+            
+
+              $("#jqgridPoItem").bind('resize', function() {
+                $("#jqgridPoItem").jqGrid('setGridWidth', ($("#dgPoDetail").width()));
+              }).trigger('resize');
+              
+              $(window).bind('resize', function() {
+                $("#jqgridPoItem").jqGrid('setGridWidth', ($("#dgPoDetail").width()));
+              }).trigger('resize');
+             
+            
+            
+
+            // resize
+            $(window).on('resize', function () {
+                grid.jqGrid('setGridWidth', conDiv.width());
+            });
+            grid.on('myRefresh', function () {
+                resizeWidth({grid: grid, gridDiv: conDiv});
+            });
+//         quickSetupChooser({grid: grid, defaultColMol: defaultColMol, settingName: mainGridName,
+//            settingArray:${sessionScope.settings},
+            quickSetupChooser({grid: grid, defaultColMol: defaultColMol, settingName: mainGridName,
+                settingArray: "admin",
+                done: function () {
+                    resizeWidth({grid: grid, gridDiv: conDiv});
+                }
+            });
+            grid.jqGrid('setGridWidth', conDiv.width());
+
+        };
+        
+    };
+    
+    function ExportData(){
+
+        var headerLabel = ['Grp No', 'Po No.', 'Po Date', 'Company', 'Supplier', 'Nett Amt.', 'Status'];
+        var grid = $("#jqgridPo");
+     
+        
+        var tot_rows=$("#jqgridPo").jqGrid('getGridParam', 'records'); //get total number records
+        $("#jqgridPo").setGridParam({rowNum:tot_rows,loadonce:true}).trigger("reloadGrid"); //reset grid row number
+        var dataIDs = $("#jqgridPo").getDataIDs(); //get row IDs
+        
+        //var allData = $("#jqgridPo").getGridParam('data');
+   
+        //var page = $('#jqgridPo').getGridParam('lastpage');//this will let you know how many page you have now
+        
+       
+        for(var i = 0; i < dataIDs.length; i++)
+        {
+            var rowData = grid.getRowData(dataIDs[i]);
+            //console.log(rowData);
+        }
+        
+        var labels = grid.jqGrid("getGridParam","colNames"); //get labels
+        console.log(labels); //get labels
+        
+        
+        
+        
+    
+    }
+    function OpenDetail(s_param) {
+        //alert(s_param);
+        $("#PoDetail").modal("show");
+        jQuery("#jqgridPoItem").jqGrid("clearGridData");
+        BindPoDetail(s_param);
+    }
+    
+    function EditDetail(s_IDX) {
+        //alert(s_IDX);
+        $("#EditPoDetail").modal("show");
+        
+        var ItemList = "";
+        $.ajax({
+            type: "get",
+            async: false,
+            url: "${pageContext.request.contextPath}/Servlet_PurchaseOrder?SFC=PO_ITEM",
+            data: {IDX: s_IDX},
+            contentType: "application/json; charset=utf-8",
+            dataType: "json",
+            success: function (msg) {
+                var arrItemData = msg.object1[0];                
+                 
+                $('#lblEditIdx').val(arrItemData.PODIDX);
+                $('#lblEditPoNo').val(arrItemData.PoNo);
+                $('#lblEditGrpPoNo').val(arrItemData.GrpNo);
+                $('#lblEditPrdName').val(arrItemData.StkDesc);
+                $('#lblEditPrdCode').val(arrItemData.StkCode);
+                $('#lblEditUOM').val(arrItemData.UomCode);
+                $('#txtEditUnitCost').val(arrItemData.UnitCost);
+                $('#txtEditQty').val(arrItemData.Qty);
+                $('#txtEditBonus').val(arrItemData.QtyBonus);
+                $('#ddlEditDisOpt').val(arrItemData.DiscOpt);
+                $('#txtEditDiscVal').val(arrItemData.DiscPerc);
+                $('#txtEditDiscAmt').val(arrItemData.DiscAmt);
+
+                $('#hdnTaxCode').val(arrItemData.GstPurCode);
+                $('#ddlEditGst').val(arrItemData.GstPurCode);
+                $('#lblEditGstInc').val(arrItemData.GStInc); 
+                $('#lblEditGstTaxRate').val(arrItemData.GstTaxRate);
+               // $('#hdnTaxRate').val(arrItemData.GstTaxRate);
+                $('#lblEditGstAmt').val(arrItemData.GstAmt);
+                $('#lblEditGrossTotal').val(arrItemData.GrossTotal);
+                $('#lblEditNettAmt').val(arrItemData.NettAmt);    
+            },
+            error: function (jqXHR, textStatus, errorThrown) {
+                alert("error (EditDetail) : " + errorThrown);
+            }
+        });
+        
+        
+        
+        
+       // BindPoDetail(s_param);
+    }
+   //  loadScript("js/plugin/jqgrid/jquery.jqGrid.min.js", BindPoDetail());
+    function BindPoDetail(s_param) {
+         var paramList = "";
+        $.ajax({
+            type: "get",
+            async: false,
+            url: "${pageContext.request.contextPath}/Servlet_PurchaseOrder?SFC=PO_HEADER",
+            data: {PONO: s_param},
+            contentType: "application/json; charset=utf-8",
+            dataType: "json",
+            success: function (msg) {
+                var arrPoHeaderData = msg.object1[0];
+                 
+                $('#lblPoNo').val(arrPoHeaderData.PoNo);
+                $('#lblPoGrpNo').val(arrPoHeaderData.GrpNo);
+                $('#lblCompCode').val(arrPoHeaderData.CompCode);
+                $('#lblCompName').val(arrPoHeaderData.CompName);
+                $('#lblSuppName').val(arrPoHeaderData.SuppName);
+                $('#lblRefDate').val(arrPoHeaderData.RefDate);
+                $('#lblRefNo').val(arrPoHeaderData.RefNo);
+                $('#lblPoDate').val(arrPoHeaderData.PoDate);
+                $('#lblPoStatus').val(arrPoHeaderData.POStatus); 
+                $('#txtPOIDX').val(arrPoHeaderData.POIDX);
+                $('#lblPoFulfill').val(arrPoHeaderData.HdrFulfill);
+                 
+                if (arrPoHeaderData.POStatus === "Cancel") {
+                    $('#btnAddItem').hide();
+                }
+                 // $('#lblAddr1').val(arrPoHeaderData.PoNo);
+                 // $('#lblAddr2').val(arrPoHeaderData.PoNo);
+                 // $('#lblAddr3').val(arrPoHeaderData.PoNo);
+                 // $('#lblPostCode').val(arrPoHeaderData.PoNo);
+                 // $('#lblPhone').val(arrPoHeaderData.PoNo);
+                 // $('#lblFax').val(arrPoHeaderData.PoNo);
+                 
+            $("#jqgridPoItem").jqGrid('setGridParam', {
+            postData: {
+                SFC: 'GET_PO_LIST',               
+                PONO: s_param                
+            }
+            }).trigger("reloadGrid", [{page: 1}]);
+            
+           
+          
+            },
+            error: function (jqXHR, textStatus, errorThrown) {
+                alert("error (BindPoDetail) : " + errorThrown);
+            }
+        });
+       //alert("returnValue"+paramList);
+       // return paramList;
+    };
+    
+    function Reset() {
+//     $('#txtGrpNo').val('');
+//     $('#txtPoNo').val('');
+//     $('#hdnSuppCode').val('');
+//     $('#txtSupplierName').val('');
+//     $('#hdnStkCode').val('');
+//     $('#txtStockName').val('');
+//     defaultDate();
+//     Search();
+location.reload();
+    }
+
+    function Search() {
+         var sPoStatus = "";
+        var cboxes = document.getElementsByName('chkPoStatus');
+        var len = cboxes.length;
+            for (var i = 0; i < len; i++) {
+                if (cboxes[i].checked) {
+                    sPoStatus = sPoStatus + cboxes[i].value + ",";                                            
+                                        }
+                                    }
+        
+         document.getElementById('hdnPoStatus').value = sPoStatus;
+        
+        $("#jqgridPo").jqGrid('setGridParam', {
+            postData: {
+                SFC: 'PO_HISTORY',
+                SUPCODE: $('#txtSupplierName').val(), //$('#hdnSuppCode').val(),
+                COMPANY: $('#hdnCompCode').val(),
+                PONO: $('#txtPoNo').val(),
+                DTFROM: $('#txtPoDateFrom').val(),
+                DTTO: $('#txtPoDateTo').val(),
+                GRPNO: $('#txtGrpNo').val(),
+                STKCODE: $('#txtStockName').val(), //$('#hdnStkCode').val(),
+                POSTATUS: sPoStatus,
+                REFNO: $('#txtRefNo').val()
+            }
+        }).trigger("reloadGrid", [{page: 1}]);
+    }
+
+
+    loadScript("js/plugin/jqgrid/grid.locale-en.min.js", function () {
+        loadScript("js/buttonset.js", function () {
+            loadScript("js/excel-export.js", function () {
+
+                // $('#rdCCStatus').buttonset();
+                //$('#chkpayStatus').buttonset();
+                // $('#rdEmpDep').buttonset();
+                pagefunction();
+            });
+        });
+    });
+    pageSetUp();
+
+
+    function SearchStock() {
+        showProduct({width: 800, height: 600}).done(function (rowIn) {
+            //  alert(JSON.stringify(rowIn));
+            //$("#txtPrdDesc").val(rowIn.stk_desc);
+            //$("#hdnStkCode").val(rowIn.stk_stockcode);
+            $("#txtStockName").val(rowIn.stk_desc);
+        });
+    }
+    
+    function SearchSupplier() {
+        showSupplier({width: 800, height: 600}).done(function (rowIn) {
+            //  alert(JSON.stringify(rowIn));
+            //$("#txtPrdDesc").val(rowIn.stk_desc);
+           // $("#hdnSuppCode").val(rowIn.sup_code);
+            $("#txtSupplierName").val(rowIn.sup_name);
+        });
+    }
+    
+    
+    function ReCalc(key, value, formType) {
+        
+        var qty, unit_cost, disc_opt, disc_amt, disc_val;
+        var gst_amt, gst_rate, gst_code, gst_inclusive;
+        var gross_total, nett_amt;
+        
+        if (formType === "AddNewItem") { 
+            qty = "#txtItemQty" + key.substr(key.length - 1);
+            unit_cost = "#txtUnitCost" + key.substr(key.length - 1);
+            gst_code = "#ddlGst" + key.substr(key.length - 1);
+            gst_inclusive = "#ddlGstIncl" + key.substr(key.length - 1);
+            disc_opt = "#ddlDisOpt" + key.substr(key.length - 1);
+            gst_amt = "#txtGstAmt" + key.substr(key.length - 1);
+            gst_rate = "#txtGstRate" + key.substr(key.length - 1);
+            disc_amt = "#txtDiscAmt" + key.substr(key.length - 1);
+            disc_val = "#txtDiscVal" + key.substr(key.length - 1);
+            gross_total = "#txtGrossTotal" + key.substr(key.length - 1);
+            nett_amt = "#txtNettTotal" + key.substr(key.length - 1);
+        } 
+        else if (formType === "EditItem") {
+            qty = "#txtEditQty";
+            unit_cost = "#txtEditUnitCost";
+            gst_code = "#ddlEditGst";
+            gst_inclusive = "#lblEditGstInc";
+            disc_opt = "#ddlEditDisOpt";
+            gst_amt = "#lblEditGstAmt";
+            gst_rate = "#lblEditGstTaxRate";
+            disc_amt = "#txtEditDiscAmt";
+            disc_val = "#txtEditDiscVal";
+            gross_total = "#lblEditGrossTotal";
+            nett_amt = "#lblEditNettAmt";
+        }
+
+        var itemqty = $(qty).val();
+        var itemUC = $(unit_cost).val();
+        var sGst = $(gst_code).val();
+        var sGstInc = $(gst_inclusive).val();
+        var sGrossTotal = 0;
+        var sGrossTotal_AfterGst = 0;
+        var sDiscOpt = $(disc_opt).val();
+        var sDiscValue = '';
+        var sDicsAmt = '';
+        var sGstAmt = 0;
+        var sNettAmt = 0;
+        var sGstVal = 0;
+        $(gst_amt).val(0);
+        $(gst_rate).val(0);
+       
+        if (sDiscOpt === 'P') {
+            sDiscValue = $(disc_amt).val() / 100;                                                    
+            sDicsAmt = (itemqty * itemUC) * sDiscValue;
+        } else {
+            sDiscValue = $(disc_amt).val();                                                   
+            sDicsAmt = sDiscValue;
+        }
+        $(disc_val).val(sDicsAmt);
+       
+        sGrossTotal = (itemqty * itemUC) - sDicsAmt;     
+        $(gross_total).val(sGrossTotal.toFixed(2));      
+
+        if (sGst !== ""){    
+            sGstVal = GetGstVal(sGst);                
+        }
+        $(gst_rate).val(sGstVal);
+
+        if (sGstInc === 'N') {
+            if (sGstVal > '0'){
+
+                sGstAmt = sGrossTotal * sGstVal;
+                sNettAmt = parseFloat(sGstAmt) + parseFloat(sGrossTotal);
+
+                $(gst_amt).val(parseFloat(sGstAmt).toFixed(2));
+                $(nett_amt).val(parseFloat(sNettAmt).toFixed(2));
+            }else{
+                $(nett_amt).val(parseFloat(sGrossTotal).toFixed(2));
+            }
+        } else {
+            
+            if (sGstVal > '0'){
+                sGrossTotal_AfterGst = sGrossTotal / 106 * 100;
+                sGstAmt = sGrossTotal - sGrossTotal_AfterGst;
+                
+                $(gross_total).val(sGrossTotal_AfterGst.toFixed(2));
+                $(gst_amt).val(sGstAmt.toFixed(2));
+            
+                sNettAmt = sGrossTotal_AfterGst + sGstAmt;
+                $(nett_amt).val(sNettAmt.toFixed(2));
+            } else {
+                $(nett_amt).val(sGrossTotal.toFixed(2));
+            }
+        }
+    }
+            
+    function GetGstVal(sGstCode) {
+        var paramList = "";
+       // alert("sGstCode-->"  +sGstCode);
+        $.ajax({
+            type: "get",
+            async: false,
+            url: "${pageContext.request.contextPath}/Servlet_GST?SFC=GET_GST",
+            data: {GSTCODE: sGstCode, GSTTYPE:'PURCHASE'},
+            contentType: "application/json; charset=utf-8",
+            dataType: "json",
+            success: function (msg) {
+               // alert(JSON.stringify(msg));
+                 var arrGstData = msg.object1[0];             
+                 paramList = parseFloat(arrGstData.gst_taxrate /100); 
+            },
+            error: function (jqXHR, textStatus, errorThrown) {
+                alert("error (GetGstVal) : " + errorThrown);
+            }
+        });
+       //alert("returnValue"+paramList);
+        return paramList;
+    };
+    
+    $("#btnUpdate").click(function () {
+            
+             var request = $.ajax({
+                type: "POST",
+                url: "${pageContext.request.contextPath}/Servlet_PurchaseOrder?SFC=UPDATE_POITEM",
+                data: {
+                     POITEM: JSON.stringify($('#form_UpdatePoItem').serializeArray())
+                     
+                },
+                dataType: 'json',
+                beforeSend: function () {
+                    //alert('send');
+                      $.showLoadingNoStatus();
+                },
+                success: function(data) {
+                   // alert(JSON.stringify(data));
+                    var arrReturn = data;                  
+                   // alert(arrReturn.msg);
+                   $.hideLoadingNoStatus(function () {
+                   
+                    
+                    if (arrReturn.bool === true) {
+                    $.bigBoxSuccess({
+                        title: "PURCAHSE ORDER SUCCESS UPDATED.",
+                        content: "Purchase Order Item SUCCESS Updated.",
+                        timeout: 6000
+                    });
+                    
+                $("#jqgridPo").jqGrid('setGridParam', {
+            postData: {
+                SFC: 'PO_HISTORY',
+                SUPCODE: $('#txtSupplierName').val(), //$('#hdnSuppCode').val(),
+                COMPANY: $('#hdnCompCode').val(),
+                PONO: $('#txtPoNo').val(),
+                DTFROM: $('#txtPoDateFrom').val(),
+                DTTO: $('#txtPoDateTo').val(),
+                GRPNO: $('#txtGrpNo').val(),
+                STKCODE: $('#txtStockName').val(), //$('#hdnStkCode').val(),
+                REFNO: $('#txtRefNo').val()
+            }
+        }).trigger("reloadGrid", [{page: 1}]);
+        
+            $("#jqgridPoItem").jqGrid('setGridParam', {
+            postData: {
+                SFC: 'GET_PO_LIST',               
+                PONO:  $('#lblEditPoNo').val()                
+            }
+            }).trigger("reloadGrid", [{page: 1}]);
+                   
+                   // location.href = "#/PurchaseOrderList";
+                } else {
+                    $.bigBoxFail({
+                        title: "FAILED To Update Purchase Order.",
+                        content: "There is some error during Purchase Order creation.<br> Please try again...",
+                        timeout: 6000
+                    });
+                }
+                
+                 },500);
+                 }
+            });
+            });
+            
+
+    //void02
+    //Aaron
+    function confirmVoid(){
+        document.getElementById("btnVoid").disabled = true;
+        showYesNo({
+                 title: "Confirm Void Order?",
+                 width: 420,
+                 noClose: true,
+                 isModal: true,
+                 body: [
+                     "<br><h4>Are you sure to proceed to void this order?<h4><br>"
+                 ],
+                 show: function(){
+                 },
+                 Yes: {
+                     text: "Yes",
+                     opt: function(){
+                        voidPO();
+                        document.getElementById("btnVoid").disabled = false;
+                        hideYesNo();
+                     }
+                 },
+                 No: {
+                     text: "No",
+                     opt: function(){
+                         document.getElementById("btnVoid").disabled = false;
+                         hideYesNo();
+                     }
+                 }
+             });
+    }
+    //void02
+    function voidPO(){
+        $.ajax({
+                type: "POST",
+                url: "${pageContext.request.contextPath}/Servlet_PurchaseOrder?SFC=VOID_PO",
+                data: {
+                     POITEM: JSON.stringify($('#form_PoDetail').serializeArray())
+                     
+                },
+                dataType: 'json',
+            beforeSend: function (xhr) {
+                      $.showLoadingNoStatus();
+                },
+            success: function(response,status,xhr) {
+                if (response.bool === true) {
+                    $.bigBoxSuccess({
+                        title: "VOID PURCAHSE ORDER .",
+                        content: "Purchase Order has Void.",
+                        timeout: 6000
+                    });
+                    
+                    
+            $("#jqgridPo").jqGrid('setGridParam', {
+            postData: {
+                SFC: 'PO_HISTORY',
+                SUPCODE: $('#txtSupplierName').val(), //$('#hdnSuppCode').val(),
+                COMPANY: $('#hdnCompCode').val(),
+                PONO: $('#txtPoNo').val(),
+                DTFROM: $('#txtPoDateFrom').val(),
+                DTTO: $('#txtPoDateTo').val(),
+                GRPNO: $('#txtGrpNo').val(),
+                STKCODE: $('#txtStockName').val(), //$('#hdnStkCode').val(),
+                REFNO: $('#txtRefNo').val()
+            }
+        }).trigger("reloadGrid", [{page: 1}]);
+        
+            $("#jqgridPoItem").jqGrid('setGridParam', {
+            postData: {
+                SFC: 'GET_PO_LIST',               
+                PONO:  $('#lblPoNo').val()                
+            }
+            }).trigger("reloadGrid", [{page: 1}]);
+            
+            BindPoDetail($('#lblPoNo').val());
+                   
+                } 
+                else {
+                    $.bigBoxFail({
+                        title: "FAILED To Update Purchase Order.",
+                        content: "There is some error during Purchase Order creation.<br> Please try again...",
+                        timeout: 6000
+                    });
+                }
+                
+            },
+            error: function(xhr,status,error){
+                $.bigBoxFail({
+                    title: "Transaction ERROR",
+                    content: "There is some error occur during data transfer. Please try again later",
+                    timeout: 6000 
+                });
+            },
+            complete: function(xhr,status){
+                if (xhr.status === 200){
+                    $.hideLoadingNoStatus(function(){
+                    window.location.href = "#/PurchaseOrderList";
+                 },500);
+                 }
+                else{
+                $.hideLoadingNoStatus(function(){
+                },0);
+                }
+            }
+            });
+    }
+            
+    function CallServices() {
+       
+       $.ajax({
+            type: "GET",
+            async: false,
+            url: "http://localhost:8080/TestWebService/webresources/HelloWorld/GetAllocation",
+            //data: {GSTCODE: sGstCode, GSTTYPE:'PURCHASE'},
+            contentType: "application/json;",
+            dataType: "json",
+            success: function (msg) {
+                 var arrGstData = msg;             
+                 //alert(JSON.stringify(arrGstData));
+                 //paramList = parseFloat(arrGstData.gst_taxrate /100); 
+            },
+            error: function (jqXHR, textStatus, errorThrown) {
+                alert("error (CallServices) : " + errorThrown);
+            }
+        });
+       
+    }
+        
+    function CallServicesNo(){
+           
+           $.ajax({
+            type: "GET",
+            async: false,
+            url: "http://localhost:8080/TestWebService/webresources/HelloWorld/GetNextNumber",
+            //data: {GSTCODE: sGstCode, GSTTYPE:'PURCHASE'},
+            contentType: "text/html;",
+           // dataType: "json",
+            success: function (msg) {
+                 var arrGstData = msg;             
+                // alert(arrGstData);
+                 //paramList = parseFloat(arrGstData.gst_taxrate /100); 
+            },
+            error: function (jqXHR, textStatus, errorThrown) {
+                alert("error (CallServicesNo) : " + errorThrown);
+            }
+        });
+           
+        }
+               
+    function LoadPrintPreview(sPoNo) {
+        loadScript("js/print-preview.js", function () {
+            var jObj = {              
+                1: "GET_PO_REPORT",
+                2: "", 
+                3: "", 
+                4: "",
+                5: "", 
+                6: sPoNo
+            }; 
+
+            var param = {};                       
+            var object = {};
+            object.procParam = jObj;
+            object.jasperName = 'PO_Report';
+            object.procString = 'SP_GET_PO_RPT(?,?,?,?,?,?)';
+            object.fixParam = param;
+            printToPage(object); 
+//                var jObj = {
+//                1: "PO_DETAIL_RPT",
+//                2: "",
+//                3: "",
+//                4: sPoNo,
+//                5: "",
+//                6: "",
+//                7: "",
+//                8: "",
+//                9: "",
+//                10: "",
+//                11: "",
+//                12: "",
+//                13: "",
+//                14: "",
+//                15: "" //Modified by LLT 2016-06-06 - add parameter
+//            };
+
+//            var param = {
+//                 PO_NO:sPoNo
+//                
+//            };          
+//                var object = {};
+//                object.procParam = jObj;
+//                object.jasperName = 'IVC_PO';
+//                object.procString = 'SP_GET_PO(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)'; //Modified by LLT 2016-06-06 - add parameter
+//                object.fixParam = param;
+//                printToPage(object);                                            
+        });
+      
+        };
+        
+      
+    function add_Item() {    
+        $("#PoAddItemModal").modal("show");
+        $('#tbAddPoItem tbody > tr').remove();
+        $("#txtPrdCode").val("");
+        $("#txtPrdName").val("");
+        $("#hdnTaxRate").val("");
+        $("#hdnTaxCode").val("");
+        //aaronDL01
+        $("#PrdCodelist").empty(); 
+        $("#PrdCodeName").empty();
+        
+        $.ajax({
+                type: "GET",
+                async: false,
+                url: "${pageContext.request.contextPath}/Servlet_Stock?SFC=SEARCH_PRODUCT_LIST",
+                data: {PRDCODE:'', PRDNAME:''},
+                contentType: "application/json; charset=utf-8",
+                dataType: "json",
+                success: function (data) {
+                        //alert(JSON.stringify(data));
+                        for (var i = 0; i < data.rows.length; i++) {
+                               //$("#PrdCodelist").append('<option value=' + (data.rows[i].StkCode).replace(" ", "_") + '>' + data.rows[i].StkDesc + '</option>');
+                               //$("#PrdCodeName").append('<option value=' + (data.rows[i].StkDesc).replace(" ", "_") + '>' + data.rows[i].StkCode + '</option>');
+                               
+                               $("#PrdCodelist").append('<option value="' + (data.rows[i].StkCode) + '">' + data.rows[i].StkDesc + '</option>');
+                               $("#PrdCodeName").append('<option value="' + (data.rows[i].StkDesc) + '">' + data.rows[i].StkCode + '</option>');                               
+                        }
+
+
+                },
+                error: function (jqXHR, textStatus, errorThrown) {
+                    alert("error in function add_Item " + errorThrown);
+                }
+            }); 
+    } 
+            
+       function BindStockUOM(stkCode) {
+      // alert(stkCode);
+            $.get('${pageContext.request.contextPath}/Servlet_Stock', {SFC: 'GET_REL_STKUOM', STKCODE: stkCode}, function (data) {
+                myStkUOM = JSON.parse(data);
+              //  alert("myStkUOM-->" + JSON.stringify(data));
+               //var arrData = JSON.parse(data.object1[0]);
+             //alert(JSON.stringify(myStkUOM));
+            });
+            
+//            $.ajax({
+//                                type: "GET",
+//                                url: "${pageContext.request.contextPath}/Servlet_Stock?SFC=GET_REL_STKUOM",
+//                                data: {
+//                                    STKCODE: stkCode                 
+//                                },
+//                                dataType: 'json',
+//                              //  async:false,
+//                                beforeSend: function () {
+//                                //alert('send');
+//                                 // $.showLoadingNoStatus();
+//                                },
+//                                success: function(data) {
+//                                      myStkUOM = data;
+//                                alert("myStkUOM-->" + JSON.stringify(data));
+//                                 }
+//                            });
+            
+            
+
+    }   
+    
+    
+    function LookupStock() {
+        var isSet = true;
+        $(".numeric").numeric();
+      //  $('#tbPoItem tbody > tr').remove();
+                        
+        showProduct({width: 1000, height: 600}).done(function (rowIn) {
+         //alert(JSON.stringify(rowIn.gst_taxrate));
+        $("#txtPrdCode").val(rowIn.stk_stockcode);
+        $("#txtPrdName").val(rowIn.stk_desc);
+        $("#hdnTaxRate").val(rowIn.gst_taxrate);
+        $("#hdnTaxCode").val(rowIn.stk_gstpurcode);
+        
+        var row = "";
+        var rows = jQuery("#jqgridPoItem").getDataIDs();
+         for(a=0;a<rows.length;a++)
+         {
+            row=jQuery("#jqgridPoItem").getRowData(rows[a]);
+            //alert(row["StkCode"]);
+
+            if (row["StkCode"] === rowIn.stk_stockcode)
+            {
+              isSet = false;  
+            }
+
+            //row.colname1; row.colname2; 
+
+         }
+
+
+        if (isSet === true){       
+            $('#tbAddPoItem tr').each(function (row, th) {
+            
+                if ($("#txtStkCode" + row).val() === rowIn.stk_stockcode){
+                    isSet = false;
+                   // break;
+                }
+                else {
+                    isSet = true;
+
+                }
+            });
+       // alert(isSet);
+            if (isSet === true){
+                     
+                var rowCount = $('#tbAddPoItem tr').length;
+               // alert(rowCount);
+                var x = rowCount;
+                            
+                $("#tbAddPoItem tbody").append("<tr>" +
+                "<td><a class='' style='cursor:pointer;' onclick='ItemDelete(this)''><i class='fa fa-fw fa-lg fa-trash-o' /></a></td>" +
+                "<td><input type='hidden' class='form-control' ID='txtStkCode" + x + "' name='txtStkCode" + x + "' /><textarea rows='1' cols='20'  ID='txtStkName" + x + "' name='txtStkName" + x + "' readonly  class='tboxreadonly'/></td>" +
+                "<td><label id='selectPrdUom' class='searchbox' style='width:100px' ><select class='form-control' id='ddlPrdUOM" + x + "' name='ddlPrdUOM" + x + "' ></select></label>" +
+                "</td>" +
+                "<td><input type='text' required   class='form-control numeric'  ID='txtItemQty" + x + "'  name='txtItemQty" + x + "' style='width:50px' value='0'  onkeyup='this.onchange();' onpaste='this.onchange();' oninput='this.onchange();' onchange='ReCalc(this.id, this.value, \"AddNewItem\");'    /></td>" +
+                "<td><input type='text' class='form-control numeric' ID='txtItemBonus" + x + "' name='txtItemBonus" + x + "' style='width:50px' value='0'    /></td>" +
+                "<td><input type='text' class='form-control numeric' ID='txtUnitCost" + x + "' name='txtUnitCost" + x + "' style='width:60px' value='0' onkeyup='this.onchange();' onpaste='this.onchange();' oninput='this.onchange();' onchange='ReCalc(this.id, this.value, \"AddNewItem\");'   /></td>" +
+                "<td><select class='form-control' style='width:55px' id='ddlDisOpt" + x + "' name='ddlDisOpt" + x + "' onchange='ReCalc(this.id, this.value, \"AddNewItem\");'><option value='A'>Amt</option><option value='P' selected=''>%</option></select></td>" +
+                "<td><input type='text' class='form-control numeric' ID='txtDiscAmt" + x + "' name='txtDiscAmt" + x + "' style='width:50px' value='0' onkeyup='this.onchange();' onpaste='this.onchange();' oninput='this.onchange();' onchange='ReCalc(this.id, this.value, \"AddNewItem\");'  />\n\
+                     <input type='text' class='form-control numeric' ID='txtDiscVal" + x + "' name='txtDiscVal" + x + "' style='width:50px; display:none;' value='0'   />\n\
+                </td>" +
+                "<td><input type='text' class='form-control numeric' ID='txtGrossTotal" + x + "' name='txtGrossTotal" + x + "' style='width:60px' value='0' disabled /></td>" +
+                "<td><select class='form-control' ID='ddlGst" + x + "'  name='ddlGst" + x + "' style='width:80px;' onchange='ReCalc(this.id, this.value, \"AddNewItem\");' ><option value=''>- GST -</option></select></td>" +
+                "<td><select disabled class='form-control' style='width:58px' id='ddlGstIncl" + x + "' name='ddlGstIncl" + x + "'><option value='N' selected=''>No</option><option value='Y'>Yes</option></select></td>" +
+                "<td><input type='text' class='form-control numeric' ID='txtGstAmt" + x + "' name='txtGstAmt" + x + "' style='width:50px' value='0'  />\n\
+                     <input type='text' class='form-control numeric' ID='txtGstRate" + x + "' name='txtGstRate" + x + "' style='width:50px;display:none;' value='0'   />\n\
+                </td>" +
+                "<td><input type='text' class='form-control numeric' ID='txtNettTotal" + x + "' name='txtNettTotal" + x + "' style='width:60px' value='0' disabled/></td>" +
+                "<td><input type='text' class='form-control' ID='txtCompCode" + x + "' name='txtCompCode" + x + "' style='Display:none;' /><input type='text' class='form-control' ID='txtCompName" + x + "' name='txtCompName" + x + "'  /></td>"+                            
+                "</tr>"
+            );
+
+            getDLL("ddlGst"+x, "GET_ACTIVEGSTCODE", "PURCHASE", "");
+
+            $("#txtCompCode" + x).val($('#lblCompCode').val());
+            $("#txtCompName" + x).val($('#lblCompName').val());
+            $("#txtStkCode" + x).val(rowIn.stk_stockcode);
+            $("#txtStkName" + x).val(rowIn.stk_desc);
+            
+            $("#ddlGst" + x ).val(rowIn.stk_gstpurcode);
+
+//            if ($('#chkGstInc').is(':checked')) {
+//                $("#ddlGstIncl" + (x + 1)).val('Y');
+//            } else {
+//                $("#ddlGstIncl" + (x + 1)).val('N');
+//            }
+            
+           $.get('${pageContext.request.contextPath}/Servlet_Company', {SFC: 'GET_COMP_SUPP_STK', STKCODE: $("#txtPrdCode").val(), COMPCODE: $('#lblCompCode').val()}, function (Compdata) {
+                                                           
+            var compStkjsonData = JSON.parse(Compdata);   
+             //alert("compStkjsonData-->" + JSON.stringify(compStkjsonData));
+            $('#tbPoItem tr').each(function (row, th) {
+                    // BindStockUOM($("#txtPrdCode").val());                                          
+   
+            $.ajax({
+                    type: "GET",
+                    url: "${pageContext.request.contextPath}/Servlet_Stock?SFC=GET_REL_STKUOM",
+                    data: {
+                        STKCODE: $("#txtPrdCode").val()                 
+                    },
+                    dataType: 'json',
+                  //  async:false,
+                    beforeSend: function () {
+                       // BindStockUOM($("#txtPrdCode").val());
+                    //alert('send');
+                     // $.showLoadingNoStatus();
+                    },
+                    success: function(data) {
+
+                        if (compStkjsonData.rows.length > 0) {
+
+                       //if ($("#txtPrdCode").val() === compStkjsonData.rows[0].stkCode){
+                       if ($("#txtStkCode" + row).val() === $("#txtPrdCode").val()){
+                            //alert($("#txtPrdCode").val() === compStkjsonData.rows[0].stkCode);
+                           // alert("row-->" + row);
+                            for (var i = 0; i < data.rows.length; i++) {
+                                //alert(row);
+                                //  if ($("#txtStkCode" + row).val() === $("#txtPrdCode").val()){
+                                    $("#ddlPrdUOM" + row).append('<option value=' + data.rows[i].VALUE + '>' + data.rows[i].TEXT + '</option>');
+                                    $("#ddlPrdUOM" + row).val(compStkjsonData.rows[0].UomCode);
+                                    $('#txtUnitCost' + row).val(parseFloat(compStkjsonData.rows[0].UnitCost).toFixed(2));
+
+                                // }
+                            }
+
+                        }
+
+                        }
+
+                 }
+            });
+            });
+            });  
+        }  
+            } else {
+                $("#txtPrdCode").val("");
+                $("#txtPrdName").val("");
+                $("#hdnTaxRate").val("");
+                $("#hdnTaxCode").val("");
+                  $.bigBoxFail({
+                            title: "Item Exists.",
+                            content: "Item already exists in Purchase Order.",
+                            timeout: 6000
+                        });
+            }
+        });
+    }
+   
+
+    
+    function ItemDelete(e) {
+        $(e).closest('tr').remove();
+    }
+   
+  /*  function AddReCalc(key, value) {
+          // alert(value);
+            var itemqty = $("#txtItemQty" + key.substr(key.length - 1)).val();
+            var itemUC = $("#txtUnitCost" + key.substr(key.length - 1)).val();
+            var sGst = $("#ddlGst" + key.substr(key.length - 1)).val();
+            var sGstInc = $("#ddlGstIncl" + key.substr(key.length - 1)).val();
+            var sGrossTotal = 0;//$("#txtGrossTotal" + key.substr(key.length - 1)).val();
+            var sDiscOpt = $("#ddlDisOpt" + key.substr(key.length - 1)).val();
+            var sDiscValue = '';
+            var sDicsAmt = '';
+            var sGstAmt = 0;
+            var sNettAmt = 0;
+            var sGstVal = 0;
+             $("#txtGstAmt" + key.substr(key.length - 1)).val(0);
+             $("#txtGstRate" + key.substr(key.length - 1)).val(0);
+            //alert('5');
+            
+             $('#txtGrossTotal' + key.substr(key.length - 1)).val(parseFloat(itemqty * itemUC).toFixed(2));
+             sGrossTotal = $("#txtGrossTotal" + key.substr(key.length - 1)).val();
+            
+            if (sDiscOpt === 'P') {
+                sDiscValue = $("#txtDiscAmt" + key.substr(key.length - 1)).val() / 100;                                                    
+                sDicsAmt = sGrossTotal * sDiscValue;
+                    $("#txtDiscVal" + key.substr(key.length - 1)).val(sDicsAmt);
+            } else {
+                sDiscValue = $("#txtDiscAmt" + key.substr(key.length - 1)).val();                                                   
+                sDicsAmt = sDiscValue;
+                $("#txtDiscVal" + key.substr(key.length - 1)).val(sDicsAmt);
+            }
+          
+            if (sGst !== $("#hdnTaxCode").val()){                  
+                   sGstVal = GetGstVal(sGst);                 
+                   // alert('if (sGst !== $("#hdnTaxCode").val())-->' + sGstVal);
+            }else{
+               sGstVal = parseFloat($("#hdnTaxRate").val() /100); 
+            } 
+            
+            $("#txtGstRate" + key.substr(key.length - 1)).val(sGstVal);
+            
+            //alert('1-->' + sGstVal);
+            
+            if (sGstInc === 'N') {
+                //alert('sGstInc-->' + sGstInc);
+                // alert('sGstVal-->' + sGstVal);
+               // if ($("#hdnTaxRate").val() > '0.000'){
+                if (sGstVal > '0'){
+                   
+                    sGstAmt = (sGrossTotal - sDicsAmt) * (sGstVal);
+                    sNettAmt = (parseFloat(sGstAmt) + parseFloat(sGrossTotal)) - parseFloat(sDicsAmt);
+                    //alert('sGstAmt-->' + sGstAmt);
+                    $("#txtGstAmt" + key.substr(key.length - 1)).val(parseFloat(sGstAmt).toFixed(2));
+                    $("#txtNettTotal" + key.substr(key.length - 1)).val(parseFloat(sNettAmt).toFixed(2));
+                }else{
+                    $("#txtNettTotal" + key.substr(key.length - 1)).val(parseFloat(sGrossTotal - sDicsAmt).toFixed(2));
+                }
+                } else {
+                    sGstAmt = (sGrossTotal - sDicsAmt) * (sGstVal);
+                    $("#txtGstAmt" + key.substr(key.length - 1)).val(sGstAmt);
+                    sNettAmt = parseFloat(sGrossTotal) - parseFloat(sDicsAmt);
+                        $("#txtNettTotal" + key.substr(key.length - 1)).val(parseFloat(sNettAmt).toFixed(2));
+                }
+                
+                
+            }*/
+            
+    //insertnew02
+    //Aaron
+    function confirmInsertNew(){
+        var $this = $(this);
+          var arrPOItemDetail = new Array();
+          //Aaron
+          //change checkstatus initialisation to false
+        var checkstatus = false;
+          $('#tbAddPoItem tr').each(function (row, th) {
+             // alert(row);
+               if (row > 0) { 
+                   if ($('#txtItemQty' + row).val() > 0 ){
+                         arrPOItemDetail[row] = {
+                            "PRDCODE": $('#txtStkCode' + row).val()
+                          , "PRDNAME": $('#txtStkName' + row).val()
+                          , "QTY": parseFloat($('#txtItemQty' + row).val())
+                          , "BONUS": parseFloat($('#txtItemBonus' + row).val())
+                          , "UOM": $('#ddlPrdUOM' + row + ' option:selected').val()
+                          , "UCOST": parseFloat($('#txtUnitCost' + row).val())
+                          , "DISC": $('#ddlDisOpt' + row + ' option:selected').val()                                                            
+                          , "DISCAMT": parseFloat($('#txtDiscAmt' + row).val())
+                          , "DISCVal": parseFloat($('#txtDiscVal' + row).val())
+                          , "GST": $('#ddlGst' + row + ' option:selected').val()
+                          , "GSTINC": $('#ddlGstIncl' + row + ' option:selected').val()
+                          , "GROSSTOTAL": parseFloat($('#txtGrossTotal' + row).val())
+                          , "NETTTOTAL": parseFloat($('#txtNettTotal' + row).val())
+                          , "GSTAMT": parseFloat($('#txtGstAmt' + row).val())
+                          , "GSTRATE": parseFloat($('#txtGstRate' + row).val())
+                          , "COMPANY": $('#ddlCompany' + row + ' option:selected').val() //$(th).find('td:eq(11)').val()
+                        };
+                    //set boolean to true if condition met
+                    checkstatus = true;
+                        }else{
+                    //Aaron
+                    //move the prompt error box to down
+                    checkstatus = false;
+                    }
+                }
+            });
+        arrPOItemDetail.splice(0, 1);
+        document.getElementById("btnInsertItem").disabled = true;
+        if  (checkstatus === true){
+            showYesNo({
+                title: "Confirm Add Item to Purchase Order?",
+                width: 420,
+                noClose: true,
+                isModal: true,
+                body: [
+                    "<br><h4>Are you sure to proceed this action?<h4><br>"
+                ],
+                show: function(){
+                },
+                Yes: {
+                    text: "Yes",
+                    opt: function(){
+                        insertNewPO(arrPOItemDetail);
+                        document.getElementById("btnInsertItem").disabled = false;
+                        hideYesNo();
+                    }
+                },
+                No:{
+                    text: "No",
+                    opt: function(){
+                        document.getElementById("btnInsertItem").disabled = false;
+                        hideYesNo();
+                    }
+                }
+            });
+        }
+        else{
+        //Aaron
+        //if checkstatus condition not met, prompt a fail box
+        //error box moved to here
+                            $.bigBoxFail({
+                            title: "Qty Needed.",
+                            content: "Quantity for Purchase order quantity need greater then 0.",
+                            timeout: 6000
+                        });
+            document.getElementById("btnInsertItem").disabled = false;
+                       }
+                    }
+    //insertnew02
+    //Aaron
+    function insertNewPO(arr){
+        var $this = $(this);
+        $this.off('click');
+        $.ajax({
+                type: "POST",
+                url: "${pageContext.request.contextPath}/Servlet_PurchaseOrder?SFC=ADD_POITEM",
+                data: {
+                 PODETAIL: JSON.stringify(arr),
+                     POIDX :  $('#txtPOIDX').val()
+                     ////$('#hdnArrItem').val()
+                },
+                dataType: 'json',
+            beforeSend: function(xhr) {
+                      $.showLoadingNoStatus();
+                },
+            success: function(response,status,xhr) {
+                if (response.bool === true) {
+                    $.bigBoxSuccess({
+                        title: "PURCAHSE ORDER SUCCESS CREATED.",
+                        content: "Purchase Order Group No " + response.msg +  " SUCCESS Created.",
+                        timeout: 6000
+                    });
+                $("#PoAddItemModal").modal("hide");    
+                $('#tbAddPoItem tbody > tr').remove();
+                $("#txtPrdCode").val("");
+                $("#txtPrdName").val("");
+                $("#hdnTaxRate").val("");
+                $("#hdnTaxCode").val("");
+                        $("#jqgridPo").jqGrid('setGridParam', {
+                        postData: {
+                            SFC: 'PO_HISTORY',
+                            SUPCODE: $('#txtSupplierName').val(), //$('#hdnSuppCode').val(),
+                            COMPANY: $('#hdnCompCode').val(),
+                            PONO: $('#txtPoNo').val(),
+                            DTFROM: $('#txtPoDateFrom').val(),
+                            DTTO: $('#txtPoDateTo').val(),
+                            GRPNO: $('#txtGrpNo').val(),
+                            STKCODE: $('#txtStockName').val(), //$('#hdnStkCode').val(),
+                            REFNO: $('#txtRefNo').val()
+                        }
+                        }).trigger("reloadGrid", [{page: 1}]);
+                        //alert($('#lblPoNo').val() );
+                        $("#jqgridPoItem").jqGrid('setGridParam', {
+                        postData: {
+                            SFC: 'GET_PO_LIST',               
+                            PONO:  $('#lblPoNo').val()                
+                        }
+                        }).trigger("reloadGrid", [{page: 1}]);
+                } 
+                else {
+                    $.bigBoxFail({
+                        title: "FAILED To Create Purchase Order.",
+                        content: "There is some error during Purchase Order creation.<br> Please try again...",
+                        timeout: 6000
+                    });
+                }
+            },
+            error: function(xhr,status,error){
+                $.bigBoxFail({
+                title: "Transaction ERROR",
+                content: "There is some error occur during data transfer. Please try again later",
+                timeout: 6000 
+                });
+            },
+            complete: function(xhr,status){
+            if (xhr.status === 200){
+               $.hideLoadingNoStatus(function(){
+                   window.location.href = "#/PurchaseOrderList";
+                 },500);
+                 }
+            else{
+                $.hideLoadingNoStatus(function(){
+                },0);
+            }
+        }
+
+    });
+    }
+    //insertnew02
+
+
+
+    //aaronDL01
+    function BuildGrid(rowIn){
+        var isSet = true;
+        var row = "";
+        var rows = jQuery("#jqgridPoItem").getDataIDs();
+        
+        for(a=0;a<rows.length;a++)
+        {
+            row=jQuery("#jqgridPoItem").getRowData(rows[a]);
+            //alert(row["StkCode"]);
+            if (row["StkCode"] === rowIn.StkCode)
+            {
+              isSet = false;  
+            }
+        }
+        
+         if (isSet === true){       
+            $('#tbAddPoItem tr').each(function (row, th) {
+            
+                if ($("#txtStkCode" + row).val() === rowIn.StkCode){
+                    isSet = false;
+                   // break;
+                }
+                else {
+                    isSet = true;
+
+                }
+            });
+       // alert(isSet);
+            if (isSet === true){
+                     
+                var rowCount = $('#tbAddPoItem tr').length;
+               // alert(rowCount);
+                var x = rowCount;
+                            
+                $("#tbAddPoItem tbody").append("<tr>" +
+                "<td><a class='' style='cursor:pointer;' onclick='ItemDelete(this)''><i class='fa fa-fw fa-lg fa-trash-o' /></a></td>" +
+                "<td><input type='hidden' class='form-control' ID='txtStkCode" + x + "' name='txtStkCode" + x + "' /><textarea rows='1' cols='20'  ID='txtStkName" + x + "' name='txtStkName" + x + "' readonly  class='tboxreadonly'/></td>" +
+                "<td><label id='selectPrdUom' class='searchbox' style='width:100px' ><select class='form-control' id='ddlPrdUOM" + x + "' name='ddlPrdUOM" + x + "' ></select></label>" +
+                "</td>" +
+                "<td><input type='text' required   class='form-control numeric'  ID='txtItemQty" + x + "'  name='txtItemQty" + x + "' style='width:50px' value='0'  onkeyup='this.onchange();' onpaste='this.onchange();' oninput='this.onchange();' onchange='ReCalc(this.id, this.value, \"AddNewItem\");'    /></td>" +
+                "<td><input type='text' class='form-control numeric' ID='txtItemBonus" + x + "' name='txtItemBonus" + x + "' style='width:50px' value='0'    /></td>" +
+                "<td><input type='text' class='form-control numeric' ID='txtUnitCost" + x + "' name='txtUnitCost" + x + "' style='width:60px' value='0' onkeyup='this.onchange();' onpaste='this.onchange();' oninput='this.onchange();' onchange='ReCalc(this.id, this.value, \"AddNewItem\");'   /></td>" +
+                "<td><select class='form-control' style='width:55px' id='ddlDisOpt" + x + "' name='ddlDisOpt" + x + "' onchange='ReCalc(this.id, this.value, \"AddNewItem\");'><option value='A'>Amt</option><option value='P' selected=''>%</option></select></td>" +
+                "<td><input type='text' class='form-control numeric' ID='txtDiscAmt" + x + "' name='txtDiscAmt" + x + "' style='width:50px' value='0' onkeyup='this.onchange();' onpaste='this.onchange();' oninput='this.onchange();' onchange='ReCalc(this.id, this.value, \"AddNewItem\");'  />\n\
+                     <input type='text' class='form-control numeric' ID='txtDiscVal" + x + "' name='txtDiscVal" + x + "' style='width:50px; display:none;' value='0'   />\n\
+                </td>" +
+                "<td><input type='text' class='form-control numeric' ID='txtGrossTotal" + x + "' name='txtGrossTotal" + x + "' style='width:60px' value='0' disabled /></td>" +
+                "<td><select class='form-control' ID='ddlGst" + x + "'  name='ddlGst" + x + "' style='width:80px;' onchange='ReCalc(this.id, this.value, \"AddNewItem\");' ><option value=''>- GST -</option></select></td>" +
+                "<td><select disabled class='form-control' style='width:58px' id='ddlGstIncl" + x + "' name='ddlGstIncl" + x + "'><option value='N' selected=''>No</option><option value='Y'>Yes</option></select></td>" +
+                "<td><input type='text' class='form-control numeric' ID='txtGstAmt" + x + "' name='txtGstAmt" + x + "' style='width:50px' value='0'  />\n\
+                     <input type='text' class='form-control numeric' ID='txtGstRate" + x + "' name='txtGstRate" + x + "' style='width:50px;display:none;' value='0'   />\n\
+                </td>" +
+                "<td><input type='text' class='form-control numeric' ID='txtNettTotal" + x + "' name='txtNettTotal" + x + "' style='width:60px' value='0' disabled/></td>" +
+                "<td><input type='text' class='form-control' ID='txtCompCode" + x + "' name='txtCompCode" + x + "' style='Display:none;' /><input type='text' class='form-control' ID='txtCompName" + x + "' name='txtCompName" + x + "'  /></td>"+                            
+                "</tr>"
+            );
+
+            getDLL("ddlGst"+x, "GET_ACTIVEGSTCODE", "PURCHASE", "");
+
+            $("#txtCompCode" + x).val($('#lblCompCode').val());
+            $("#txtCompName" + x).val($('#lblCompName').val());
+            $("#txtStkCode" + x).val(rowIn.StkCode);
+            $("#txtStkName" + x).val(rowIn.StkDesc);
+            
+            $("#ddlGst" + x ).val(rowIn.stk_gstpurcode);
+
+//            if ($('#chkGstInc').is(':checked')) {
+//                $("#ddlGstIncl" + (x + 1)).val('Y');
+//            } else {
+//                $("#ddlGstIncl" + (x + 1)).val('N');
+//            }
+            
+           $.get('${pageContext.request.contextPath}/Servlet_Company', {SFC: 'GET_COMP_SUPP_STK', STKCODE: $("#txtPrdCode").val(), COMPCODE: $('#lblCompCode').val()}, function (Compdata) {
+                                                           
+            var compStkjsonData = JSON.parse(Compdata);   
+             //alert("compStkjsonData-->" + JSON.stringify(compStkjsonData));
+            $('#tbPoItem tr').each(function (row, th) {
+                    // BindStockUOM($("#txtPrdCode").val());                                          
+   
+            $.ajax({
+                    type: "GET",
+                    url: "${pageContext.request.contextPath}/Servlet_Stock?SFC=GET_REL_STKUOM",
+                    data: {
+                        STKCODE: $("#txtPrdCode").val()                 
+                    },
+                    dataType: 'json',
+                  //  async:false,
+                    beforeSend: function () {
+                       // BindStockUOM($("#txtPrdCode").val());
+                    //alert('send');
+                     // $.showLoadingNoStatus();
+                    },
+                    success: function(data) {
+
+                        if (compStkjsonData.rows.length > 0) {
+
+                       //if ($("#txtPrdCode").val() === compStkjsonData.rows[0].stkCode){
+                       if ($("#txtStkCode" + row).val() === $("#txtPrdCode").val()){
+                            //alert($("#txtPrdCode").val() === compStkjsonData.rows[0].stkCode);
+                           // alert("row-->" + row);
+                            for (var i = 0; i < data.rows.length; i++) {
+                                //alert(row);
+                                //  if ($("#txtStkCode" + row).val() === $("#txtPrdCode").val()){
+                                    $("#ddlPrdUOM" + row).append('<option value=' + data.rows[i].VALUE + '>' + data.rows[i].TEXT + '</option>');
+                                    $("#ddlPrdUOM" + row).val(compStkjsonData.rows[0].UomCode);
+                                    $('#txtUnitCost' + row).val(parseFloat(compStkjsonData.rows[0].UnitCost).toFixed(2));
+
+                                // }
+                            }
+
+                        }
+
+                        }
+
+                 }
+            });
+            });
+            });  
+        }  
+            } else {
+                $("#txtPrdCode").val("");
+                $("#txtPrdName").val("");
+                $("#hdnTaxRate").val("");
+                $("#hdnTaxCode").val("");
+                  $.bigBoxFail({
+                            title: "Item Exists.",
+                            content: "Item already exists in Purchase Order.",
+                            timeout: 6000
+                        });
+            }
+         
+    }
+//aaronDL01
+$("#txtPrdCode").on('input', function () {
+    var val = this.value;
+    
+    if($('#PrdCodelist option').filter(function(){
+
+        return this.value === val;     
+                
+    }).length) {
+      
+       $.ajax({
+            type: "GET",
+            async: false,
+            url: "${pageContext.request.contextPath}/Servlet_Stock?SFC=SEARCH_PRODUCT_LIST",
+            data: {
+                //PRDCODE:val.replace("_", " "), 
+                PRDCODE:val,
+                PRDNAME:''
+            },
+            contentType: "application/json; charset=utf-8",
+            dataType: "json",
+            success: function (data) {
+                                       
+                $("#txtPrdCode").val(data.rows[0].StkCode);
+                $("#txtPrdName").val(data.rows[0].StkDesc);
+                $("#hdnTaxRate").val(data.rows[0].gst_taxrate);       
+                $("#hdnTaxCode").val(data.rows[0].stk_gstpurcode);
+
+                BuildGrid(data.rows[0]);
+            },
+            error: function (jqXHR, textStatus, errorThrown) {
+                alert("error : " + errorThrown);
+            }
+        });
+    }
+});
+//aaronDL01
+$("#txtPrdName").on('input', function () {
+    var val = this.value;
+   // alert(val);
+   // var name = this.text;
+    if($('#PrdCodeName option').filter(function(){
+        return this.value === val;        
+    }).length) {
+        
+        $.ajax({
+            type: "GET",
+            async: false,
+            url: "${pageContext.request.contextPath}/Servlet_Stock?SFC=SEARCH_PRODUCT_LIST",
+            data: {PRDCODE:'', PRDNAME:val.replace("_", " ")},
+            contentType: "application/json; charset=utf-8",
+            dataType: "json",
+            success: function (data) {
+                   
+                    $("#txtPrdCode").val(data.rows[0].StkCode);
+                    $("#txtPrdName").val(data.rows[0].StkDesc);
+                    $("#hdnTaxRate").val(data.rows[0].gst_taxrate);       
+                    $("#hdnTaxCode").val(data.rows[0].stk_gstpurcode);
+
+                    BuildGrid(data.rows[0]);
+            },
+            error: function (jqXHR, textStatus, errorThrown) {
+                alert("error (txtPrdName on input) " + errorThrown);
+            }
+        });
+    }
+});
+</script>

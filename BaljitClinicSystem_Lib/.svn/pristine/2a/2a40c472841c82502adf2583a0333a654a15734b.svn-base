@@ -1,0 +1,385 @@
+CREATE DEFINER=`root`@`localhost` PROCEDURE `SP_GET_STOCKREQ`(
+
+IN sMethod        varchar(30),
+IN sCompCode      varchar(20),
+IN sLocCode       varchar(20),
+IN sReqNo         varchar(20),
+IN sReqDTFrom     varchar(20),
+IN sReqDTto       varchar(20),
+IN sStkCode       varchar(20),
+IN sReqStatus     varchar(20),
+IN sReqType       varchar(20),
+IN sIdx           varchar(20),
+IN sOrderBy       varchar(30),
+IN sPage          varchar(10),
+IN sPerPage       varchar(10)
+
+)
+BEGIN
+
+
+
+
+
+
+
+
+
+
+
+
+DECLARE _statement VARCHAR(8000);
+
+
+IF sMethod = 'GET_REQ_LIST' THEN
+         SET _statement = ' SELECT ReqH.rqhdr_requestidx as IDX, ReqH.rqhdr_requestnumber as ReqNo, date(ReqH.rqhdr_requestdate) as ReqDate,
+                            ReqH.rqhdr_companycode as CompCode, Comp.comp_name as CompName,
+                            ReqH.rqhdr_locationcode as LocCode, Loc.loc_name as LocName,
+                            ReqH.rqhdr_manualrequest as ReqTypeCode,
+                            CASE
+                        	 WHEN ReqH.rqhdr_manualrequest = ''M'' THEN ''Manual''
+                        	 WHEN ReqH.rqhdr_manualrequest = ''A'' Then ''Auto''
+                            END as ReqType,
+                            ReqH.rqhdr_statuscode as StatusCode,
+                            CASE
+                        	WHEN ReqH.rqhdr_statuscode = ''O'' THEN ''Open''
+                        	WHEN ReqH.rqhdr_statuscode = ''A'' THEN ''Approved''
+                                WHEN ReqH.rqhdr_statuscode = ''R'' THEN ''Rejected''
+                        	WHEN ReqH.rqhdr_statuscode = ''P'' THEN ''Partial Approved''
+                        	WHEN ReqH.rqhdr_statuscode = ''C'' THEN ''Closed''
+                                WHEN ReqH.rqhdr_statuscode = ''V'' THEN ''Verified''
+                            END as StatusDesc
+                            FROM stkt_stockrequestheader ReqH
+                            Left outer join stkm_company Comp on Comp.comp_code = ReqH.rqhdr_companycode
+                            Left outer join stkm_location Loc on Loc.loc_code = ReqH.rqhdr_locationcode
+                            Left outer join stkt_stockrequestdetail ReqD on ReqH.rqhdr_requestidx = ReqD.rqdtl_requestidx
+                            WHERE ReqH.rqhdr_requestnumber IS NOT NULL
+                          ';
+
+         IF (sCompCode <> '') THEN
+              SET _statement = CONCAT(_statement, ' AND ReqH.rqhdr_companycode = ', "'", sCompCode, "'", ' ');
+         END IF;
+
+         IF (sLocCode <> '') THEN
+              SET _statement = CONCAT(_statement, ' AND ReqH.rqhdr_locationcode = ', "'", sLocCode, "'", ' ');
+         END IF;
+
+         IF (sReqNo <> '') THEN
+              SET _statement = CONCAT(_statement, ' AND ReqH.rqhdr_requestnumber LIKE ',"'%",sReqNo ,"%'", ' ');
+         END IF;
+
+         IF  (sReqDTFrom <> '' and sReqDTto <> '') THEN
+             SET _statement = CONCAT(_statement, ' AND date(ReqH.rqhdr_requestdate) between',"'", sReqDTFrom ,"'", ' AND ' ,"'", sReqDTto ,"'",' ');
+         END IF;
+
+         IF (sReqStatus <> '') THEN
+              SET _statement = CONCAT(_statement, ' AND ReqH.rqhdr_statuscode IN (',  sReqStatus, ') ');
+         END IF;
+
+         IF (sReqType <> '') THEN
+              SET _statement = CONCAT(_statement, ' AND ReqH.rqhdr_manualrequest IN (',  sReqType, ') ');
+         END IF;
+
+         IF (sStkCode <> '') THEN
+              SET _statement = CONCAT(_statement, ' AND ReqD.rqdtl_stockcode = ', "'", sStkCode, "'", ' ');
+         END IF;
+
+               SET _statement = CONCAT(_statement, ' Group by ReqH.rqhdr_requestnumber , ReqH.rqhdr_requestdate,
+                            ReqH.rqhdr_companycode , Comp.comp_name ,
+                            ReqH.rqhdr_locationcode , Loc.loc_name,
+                            ReqH.rqhdr_manualrequest , ReqH.rqhdr_manualrequest, ReqH.rqhdr_statuscode ');
+
+         IF (sOrderBy <> '') THEN
+              SET _statement = CONCAT(_statement, ' ORDER BY ', sOrderBy);
+         ELSE
+              SET _statement = CONCAT(_statement, ' ORDER BY ReqH.rqhdr_requestnumber ');
+         END IF;
+
+         SET _statement = CONCAT(_statement, ' LIMIT ', (sPage-1)*sPerPage, ",", sPerPage);
+
+
+END IF;
+
+IF sMethod = 'COUNT_REQ_LIST' THEN
+         SET _statement = ' SELECT COUNT(*) as Total FROM ( SELECT ReqH.rqhdr_requestnumber as ReqNo
+                            FROM stkt_stockrequestheader ReqH
+                            Left outer join stkm_company Comp on Comp.comp_code = ReqH.rqhdr_companycode
+                            Left outer join stkm_location Loc on Loc.loc_code = ReqH.rqhdr_locationcode
+                            Left outer join stkt_stockrequestdetail ReqD on ReqH.rqhdr_requestidx = ReqD.rqdtl_requestidx
+                            WHERE ReqH.rqhdr_requestnumber IS NOT NULL
+                          ';
+
+         IF (sCompCode <> '') THEN
+              SET _statement = CONCAT(_statement, ' AND ReqH.rqhdr_companycode = ', "'", sCompCode, "'", ' ');
+         END IF;
+
+         IF (sLocCode <> '') THEN
+              SET _statement = CONCAT(_statement, ' AND ReqH.rqhdr_locationcode = ', "'", sLocCode, "'", ' ');
+         END IF;
+
+         IF (sReqNo <> '') THEN
+              SET _statement = CONCAT(_statement, ' AND ReqH.rqhdr_requestnumber LIKE ',"'%",sReqNo ,"%'", ' ');
+         END IF;
+
+         IF  (sReqDTFrom <> '' and sReqDTto <> '') THEN
+             SET _statement = CONCAT(_statement, ' AND date(ReqH.rqhdr_requestdate) between',"'", sReqDTFrom ,"'", ' AND ' ,"'", sReqDTto ,"'",' ');
+         END IF;
+
+         IF (sReqStatus <> '') THEN
+              SET _statement = CONCAT(_statement, ' AND ReqH.rqhdr_statuscode IN (',  sReqStatus, ') ');
+         END IF;
+
+         IF (sReqType <> '') THEN
+              SET _statement = CONCAT(_statement, ' AND ReqH.rqhdr_manualrequest IN (',  sReqType, ') ');
+         END IF;
+
+           IF (sStkCode <> '') THEN
+              SET _statement = CONCAT(_statement, ' AND ReqD.rqdtl_stockcode = ', "'", sStkCode, "'", ' ');
+         END IF;
+
+           SET _statement = CONCAT(_statement, ' Group by ReqH.rqhdr_requestnumber) as Total');
+
+END IF;
+
+IF sMethod = 'GET_REQ_DETAIL' THEN
+               SET _statement = ' SELECT ReqH.rqhdr_requestnumber as ReqNo, date(ReqH.rqhdr_requestdate) as ReqDate,
+                                  ReqH.rqhdr_companycode as CompCode, Comp.comp_name as CompName,
+                                  ReqH.rqhdr_locationcode as LocCode, Loc.loc_name as LocName,
+                                  ReqD.rqdtl_requestdetailidx as DetailIDX, ReqD.rqdtl_requestidx as HIDX, ReqD.rqdtl_stockcode as StkCode,
+                                  StkM.Stk_Desc as StkName, StkM.stk_consumable,
+				  CASE
+                                        WHEN StkM.stk_consumable=''0'' THEN ''Drug''
+                                        WHEN StkM.stk_consumable=''1'' THEN ''product''
+                                        WHEN StkM.stk_consumable=''2'' THEN ''consumable''
+                                        END AS Consumable,
+                                  ReqH.rqhdr_statuscode as StatusCode,
+                                  CASE
+                        	        WHEN ReqD.rqdtl_requeststatuscode = ''O'' THEN ''Open''
+                                	WHEN ReqD.rqdtl_requeststatuscode = ''A'' THEN ''Approved''
+                                        WHEN ReqD.rqdtl_requeststatuscode = ''R'' THEN ''Rejected''
+                                	WHEN ReqD.rqdtl_requeststatuscode = ''P'' THEN ''Partial Approved''
+                                	WHEN ReqD.rqdtl_requeststatuscode = ''C'' THEN ''Closed''
+                                        WHEN ReqD.rqdtl_requeststatuscode = ''V'' THEN ''Verified''
+                                  END as StatusCodedesc,
+                                  ReqD.rqdtl_uomcode as UOMCODE, TRUNCATE(ReqD.rqdtl_requestqty,2) as ReqQty,
+                                  TRUNCATE(ReqD.rqdtl_verifiedqty,2) as VerifiedQty, TRUNCATE(ReqD.rqdtl_approvedqty,2) as ApprovedQty, ReqD.rqdtl_verifiedby as VerifiedBy,
+                                  ReqD.rqdtl_fulfilledqty as FullFillQty, ReqD.rqdtl_currentbalance as CurrBal,
+                                  ReqD.rqdtl_reasoncode as ReasonCode, cd.CD_CDDESC as ReasonDesc, ReqD.rqdtl_reasonremarks as ReasonRemarks, ReqD.rqdtl_requeststatuscode as ReqStatus,
+                                   TRUNCATE(coalesce(SUM(stkB.bal_balanceqty), null,0),2) as BalQty,
+                                   date((
+                                    SELECT pReqD.createddt
+                                    FROM stkt_stockrequestdetail pReqD
+                                    Left outer join stkt_stockrequestheader pReqH on pReqH.rqhdr_requestidx = pReqD.rqdtl_requestidx
+                                    WHERE pReqD.rqdtl_stockcode = ReqD.rqdtl_stockcode
+                                    and  pReqH.rqhdr_companycode = ReqH.rqhdr_companycode
+                           	 and  pReqH.rqhdr_locationcode = ReqH.rqhdr_locationcode
+                                    AND pReqD.createddt < ReqD.createddt
+                                    ORDER BY pReqD.createddt DESC
+                                    LIMIT 1
+                                  )) AS previous_Date
+                                  FROM stkt_stockrequestdetail ReqD
+                                  Left outer join stkt_stockrequestheader ReqH on ReqH.rqhdr_requestidx = ReqD.rqdtl_requestidx
+                                  Left outer join stkm_stockmaster StkM on StkM.stk_stockcode = ReqD.rqdtl_stockcode
+                                  Left outer join stkm_stockbalance stkB on stkB.bal_stockcode = ReqD.rqdtl_stockcode
+                                  and stkB.bal_companycode = ReqH.rqhdr_companycode and stkB.bal_location = ReqH.rqhdr_locationcode
+                                  Left outer join stkm_company Comp on Comp.comp_code = ReqH.rqhdr_companycode
+                                  Left outer join stkm_location Loc on Loc.loc_code = ReqH.rqhdr_locationcode
+                                  Left outer join stkc_codedesc cd on cd.cd_cdcode = ReqD.rqdtl_reasoncode and cd_cdtype = ''REJREQ''
+                                  WHERE ReqD.rqdtl_requestdetailidx IS NOT NULL
+                          ';
+                IF (sIdx <> '') THEN
+                      SET _statement = CONCAT(_statement, ' AND ReqD.rqdtl_requestidx = ', "'", sIdx, "'", ' ');
+                 END IF;
+
+
+
+                 SET _statement = CONCAT(_statement, ' Group by ReqH.rqhdr_requestnumber , ReqH.rqhdr_companycode, ReqH.rqhdr_locationcode, Loc.loc_name, ReqD.rqdtl_stockcode, StkM.Stk_Desc, StkM.stk_consumable,
+                                                          ReqD.rqdtl_uomcode');
+
+                   IF (sOrderBy <> '') THEN
+              SET _statement = CONCAT(_statement, ' ORDER BY ', sOrderBy);
+         ELSE
+              SET _statement = CONCAT(_statement, ' ORDER BY ReqQty desc ');
+         END IF;
+
+         SET _statement = CONCAT(_statement, ' LIMIT ', (sPage-1)*sPerPage, ",", sPerPage);
+
+END IF;
+
+IF sMethod = 'COUNT_REQ_DETAIL' THEN
+               SET _statement = ' SELECT COUNT(*) as Total FROM (SELECT ReqD.rqdtl_requestdetailidx
+                                  FROM stkt_stockrequestdetail ReqD
+                                  Left outer join stkt_stockrequestheader ReqH on ReqH.rqhdr_requestidx = ReqD.rqdtl_requestidx
+                                  Left outer join stkm_stockmaster StkM on StkM.stk_stockcode = ReqD.rqdtl_stockcode
+                                  Left outer join stkm_stockbalance stkB on stkB.bal_stockcode = ReqD.rqdtl_stockcode
+                                  and stkB.bal_companycode = ReqH.rqhdr_companycode and stkB.bal_location = ReqH.rqhdr_locationcode
+                                  Left outer join stkm_company Comp on Comp.comp_code = ReqH.rqhdr_companycode
+                                  Left outer join stkm_location Loc on Loc.loc_code = ReqH.rqhdr_locationcode
+                                  Left outer join stkc_codedesc cd on cd.cd_cdcode = ReqD.rqdtl_reasoncode and cd_cdtype = ''REJREQ''
+                                  WHERE ReqD.rqdtl_requestdetailidx IS NOT NULL
+                          ';
+                IF (sIdx <> '') THEN
+                      SET _statement = CONCAT(_statement, ' AND ReqD.rqdtl_requestidx = ', "'", sIdx, "'", ' ');
+                 END IF;
+
+
+
+                 SET _statement = CONCAT(_statement, ' Group by ReqH.rqhdr_requestnumber , ReqH.rqhdr_companycode, ReqH.rqhdr_locationcode, Loc.loc_name, ReqD.rqdtl_stockcode, StkM.Stk_Desc, StkM.stk_consumable,
+                                                          ReqD.rqdtl_uomcode) as TOTAL');
+
+END IF;
+
+
+IF sMethod = 'GET_REQ_GRP' THEN
+               SET _statement = ' SELECT ReqH.rqhdr_requestnumber as ReqNo, date(ReqH.rqhdr_requestdate) as ReqDate,
+                                  ReqH.rqhdr_companycode as CompCode, Comp.comp_name as CompName,
+                                  ReqH.rqhdr_locationcode as LocCode, Loc.loc_name as LocName,
+                                  ReqD.rqdtl_requestdetailidx as DetailIDX, ReqD.rqdtl_requestidx as HIDX, ReqD.rqdtl_stockcode as StkCode,
+                                  StkM.Stk_Desc as StkName, StkM.stk_consumable,
+				  CASE
+                                        WHEN StkM.stk_consumable=''0'' THEN ''Drug''
+                                        WHEN StkM.stk_consumable=''1'' THEN ''product''
+                                        WHEN StkM.stk_consumable=''2'' THEN ''consumable''
+                                        END AS Consumable,
+                                  ReqD.rqdtl_requeststatuscode as StatusCode,
+                                  CASE
+                        	        WHEN ReqD.rqdtl_requeststatuscode = ''O'' THEN ''Open''
+                                	WHEN ReqD.rqdtl_requeststatuscode = ''A'' THEN ''Approved''
+                                        WHEN ReqD.rqdtl_requeststatuscode = ''R'' THEN ''Rejected''
+                                	WHEN ReqD.rqdtl_requeststatuscode = ''P'' THEN ''Partial Approved''
+                                	WHEN ReqD.rqdtl_requeststatuscode = ''C'' THEN ''Closed''
+                                        WHEN ReqD.rqdtl_requeststatuscode = ''V'' THEN ''Verified''
+                                  END as StatusDesc,
+                                  ReqD.rqdtl_uomcode as UOMCODE, TRUNCATE(ReqD.rqdtl_requestqty,2) as ReqQty,
+                                  TRUNCATE(ReqD.rqdtl_verifiedqty,2) as VerifiedQty, TRUNCATE(ReqD.rqdtl_approvedqty,2) as ApprovedQty, ReqD.rqdtl_verifiedby as VerifiedBy,
+                                  ReqD.rqdtl_fulfilledqty as FullFillQty, ReqD.rqdtl_currentbalance as CurrBal,
+                                  ReqD.rqdtl_reasoncode as ReasonCode, ReqD.rqdtl_reasonremarks as ReasonRemarks, ReqD.rqdtl_requeststatuscode as ReqStatus,
+                                  TRUNCATE(coalesce(SUM(stkB.bal_balanceqty), null,0),2) as BalQty,
+                                  date((
+                                    SELECT pReqD.createddt
+                                    FROM stkt_stockrequestdetail pReqD
+                                    Left outer join stkt_stockrequestheader pReqH on pReqH.rqhdr_requestidx = pReqD.rqdtl_requestidx
+                                    WHERE pReqD.rqdtl_stockcode = ReqD.rqdtl_stockcode
+                                    and  pReqH.rqhdr_companycode = ReqH.rqhdr_companycode
+                           	 and  pReqH.rqhdr_locationcode = ReqH.rqhdr_locationcode
+                                    AND pReqD.createddt < ReqD.createddt
+                                    ORDER BY pReqD.createddt DESC
+                                    LIMIT 1
+                                  )) AS previous_Date
+                                  FROM stkt_stockrequestdetail ReqD
+                                  Left outer join stkt_stockrequestheader ReqH on ReqH.rqhdr_requestidx = ReqD.rqdtl_requestidx
+                                  Left outer join stkm_stockmaster StkM on StkM.stk_stockcode = ReqD.rqdtl_stockcode
+                                  Left outer join stkm_stockbalance stkB on stkB.bal_stockcode = ReqD.rqdtl_stockcode
+                                  and stkB.bal_companycode = ReqH.rqhdr_companycode and stkB.bal_location = ReqH.rqhdr_locationcode
+                                  Left outer join stkm_company Comp on Comp.comp_code = ReqH.rqhdr_companycode
+                                  Left outer join stkm_location Loc on Loc.loc_code = ReqH.rqhdr_locationcode
+                                  WHERE ReqH.rqhdr_requestnumber IS NOT NULL and ReqD.rqdtl_requeststatuscode in(''O'',''V'')
+                          ';
+                IF (sIdx <> '') THEN
+                      SET _statement = CONCAT(_statement, ' AND ReqD.rqdtl_requestidx = ', "'", sIdx, "'", ' ');
+                 END IF;
+
+                  IF (sCompCode <> '') THEN
+                      SET _statement = CONCAT(_statement, ' AND ReqH.rqhdr_companycode = ', "'", sCompCode, "'", ' ');
+                END IF;
+
+                IF (sLocCode <> '') THEN
+                      SET _statement = CONCAT(_statement, ' AND ReqH.rqhdr_locationcode = ', "'", sLocCode, "'", ' ');
+                END IF;
+
+                     SET _statement = CONCAT(_statement, ' Group by ReqH.rqhdr_requestnumber , ReqH.rqhdr_companycode, ReqH.rqhdr_locationcode, Loc.loc_name, ReqD.rqdtl_stockcode, StkM.Stk_Desc, StkM.stk_consumable,
+                                                          ReqD.rqdtl_uomcode');
+
+                   IF (sOrderBy <> '') THEN
+                      SET _statement = CONCAT(_statement, ' ORDER BY ', sOrderBy , ' ,DetailIDX desc');
+                   ELSE
+                 SET _statement = CONCAT(_statement, ' ORDER BY ReqQty desc ');
+                 END IF;
+
+         SET _statement = CONCAT(_statement, ' LIMIT ', (sPage-1)*sPerPage, ",", sPerPage);
+
+END IF;
+
+IF sMethod = 'COUNT_REQ_GRP' THEN
+               SET _statement = ' SELECT COUNT(*) as Total FROM (SELECT ReqD.rqdtl_requestdetailidx
+                                  FROM stkt_stockrequestdetail ReqD
+                                  Left outer join stkt_stockrequestheader ReqH on ReqH.rqhdr_requestidx = ReqD.rqdtl_requestidx
+                                  Left outer join stkm_stockmaster StkM on StkM.stk_stockcode = ReqD.rqdtl_stockcode
+                                  Left outer join stkm_stockbalance stkB on stkB.bal_stockcode = ReqD.rqdtl_stockcode
+                                  and stkB.bal_companycode = ReqH.rqhdr_companycode and stkB.bal_location = ReqH.rqhdr_locationcode
+                                  Left outer join stkm_company Comp on Comp.comp_code = ReqH.rqhdr_companycode
+                                  Left outer join stkm_location Loc on Loc.loc_code = ReqH.rqhdr_locationcode
+                                  WHERE ReqH.rqhdr_requestnumber IS NOT NULL and ReqD.rqdtl_requeststatuscode in(''O'',''V'')
+                                 ';
+                IF (sIdx <> '') THEN
+                      SET _statement = CONCAT(_statement, ' AND ReqD.rqdtl_requestidx = ', "'", sIdx, "'", ' ');
+                END IF;
+
+                 IF (sCompCode <> '') THEN
+                      SET _statement = CONCAT(_statement, ' AND ReqH.rqhdr_companycode = ', "'", sCompCode, "'", ' ');
+                END IF;
+
+                IF (sLocCode <> '') THEN
+                      SET _statement = CONCAT(_statement, ' AND ReqH.rqhdr_locationcode = ', "'", sLocCode, "'", ' ');
+                END IF;
+
+                 SET _statement = CONCAT(_statement, ' Group by ReqH.rqhdr_requestnumber , ReqH.rqhdr_companycode, ReqH.rqhdr_locationcode, Loc.loc_name, ReqD.rqdtl_stockcode, StkM.Stk_Desc, StkM.stk_consumable,
+                                                       ReqD.rqdtl_uomcode) as Total ');
+
+
+
+END IF;
+
+   IF sMethod = 'GET_STKBALANCE_STKREQ' THEN
+
+            SET _statement = 'SELECT bal_companycode, bal_location, bal_stockcode, TRUNCATE(SUM(bal_balanceqty),2) AS SumBalance
+                              FROM stkm_stockbalance
+                              WHERE bal_companycode IS NOT NULL ';
+
+            IF (sStkCode <> '') THEN
+                    SET _statement = CONCAT(_statement, ' AND bal_stockcode = ',"'",sStkCode,"'" );
+            END IF;
+
+            IF (sCompCode <> '') THEN
+                    SET _statement = CONCAT(_statement, ' AND bal_companycode = ',"'",sCompCode,"'" );
+            END IF;
+
+            SET _statement = CONCAT(_statement, ' GROUP BY bal_companycode ');
+
+            IF (sCompCode <> '') THEN
+                    SET _statement = CONCAT(_statement, ' , bal_location ' );
+            END IF;
+
+   END IF;
+
+
+   IF sMethod = 'COUNT_STKBALANCE_STKREQ' THEN
+
+            SET _statement = 'SELECT COUNT(bal_balanceqty) AS Total
+                              FROM stkm_stockbalance
+                              WHERE bal_companycode IS NOT NULL ';
+
+            IF (sStkCode <> '') THEN
+                    SET _statement = CONCAT(_statement, ' AND bal_stockcode = ',"'",sStkCode,"'" );
+            END IF;
+
+            IF (sCompCode <> '') THEN
+                    SET _statement = CONCAT(_statement, ' AND bal_companycode = ',"'",sCompCode,"'" );
+            END IF;
+
+            SET _statement = CONCAT(_statement, ' GROUP BY bal_companycode ');
+
+            IF (sCompCode <> '') THEN
+                    SET _statement = CONCAT(_statement, ' , bal_location ' );
+            END IF;
+
+   END IF;
+
+
+
+SET @statement = _statement;
+PREPARE dynquery FROM @statement;
+EXECUTE dynquery;
+DEALLOCATE PREPARE dynquery;
+
+END

@@ -1,0 +1,88 @@
+CREATE DEFINER=`root`@`localhost` PROCEDURE `SP_GET_PERFORMANCE_PRD_RPT`(
+IN sMethod varchar(30),
+IN sDateFrom varchar(20),
+IN sDateTo varchar(20),
+IN sLimit varchar(10),
+IN sStkCodeFrom varchar(20),
+IN sStkCodeTo varchar(20),
+IN sStkGrpFrom varchar(20),
+IN sStkGrpTo varchar(20),
+IN sStkTypeFrom varchar(20),
+IN sStkTypeTo varchar(20),
+IN sStkCat varchar(40)
+)
+BEGIN
+ DECLARE _statement VARCHAR(8000);
+ 
+	IF (sMethod = 'GET_PRD_PERFORMANCE_LIST') THEN
+
+		SET _statement = ' SELECT stk_stockcode, ABS(SUM(sldl_qty)) AS Qty,  ';
+
+		SET _statement = CONCAT(_statement,"'",sDateFrom,"'", ' AS selDateFrom, ' );
+
+		SET _statement = CONCAT(_statement,"'",sDateTo,"'", ' AS selDateTo, ' );
+                              
+		IF (sLimit <> '') THEN
+			SET _statement = CONCAT(_statement,"'",sLimit,"'", ' AS DisplayBy ');
+		ELSE
+			SET _statement = CONCAT(_statement,' 10 AS DisplayBy ');
+		END IF;
+
+		SET _statement = CONCAT(_statement,'
+			FROM stkt_stockledgerheader HDR
+			JOIN stkt_stockledgerdetail DTL ON HDR.sldg_stockledgerhdridx = DTL.sldl_stockledgerhdridx
+			JOIN stkm_stockmaster STK ON DTL.sldl_stockcode = STK.stk_stockcode
+
+			WHERE HDR.sldg_trxtype = ''DISP'' ' );
+
+		IF (sDateFrom <> '') THEN
+			SET _statement = CONCAT(_statement, ' AND HDR.sldg_docdate >= ',"'",sDateFrom,"'" );
+		END IF;
+
+		IF (sDateTo <> '') THEN
+			SET _statement = CONCAT(_statement, ' AND HDR.sldg_docdate <= ',"'",sDateTo,"'" );
+		END IF;
+
+		IF (sStkCodeFrom <> '') THEN
+			SET _statement = CONCAT(_statement, ' AND DTL.sldl_stockcode >= ',"'",sStkCodeFrom,"'" );
+		END IF;
+
+		IF (sStkCodeTo <> '') THEN
+			SET _statement = CONCAT(_statement, ' AND DTL.sldl_stockcode <= ',"'",sStkCodeTo,"'" );
+		END IF;
+
+		IF  (sStkTypeFrom <> '') THEN
+			SET _statement = CONCAT(_statement, ' AND STK.stk_typecode >= ',"'", sStkTypeFrom,"'");
+		END IF;
+
+		IF  (sStkTypeTo <> '') THEN
+			SET _statement = CONCAT(_statement, ' AND STK.stk_typecode <= ',"'", sStkTypeTo,"'");
+		END IF;
+
+		IF  (sStkGrpFrom <> '') THEN
+			SET _statement = CONCAT(_statement, ' AND STK.stk_groupcode >= ',"'", sStkGrpFrom,"'");
+		END IF;
+
+		IF  (sStkGrpTo <> '') THEN
+			SET _statement = CONCAT(_statement, ' AND STK.stk_groupcode <= ',"'", sStkGrpTo,"'");
+		END IF;
+
+		IF (sStkCat <> '') THEN
+			SET _statement = CONCAT(_statement, ' AND STK.stk_consumable = ',"'",sStkCat,"'" );
+		END IF;
+
+		SET _statement = CONCAT(_statement, ' GROUP BY sldl_stockcode ORDER BY Qty DESC ' );
+        
+        IF (sLimit <> '') THEN
+			SET _statement = CONCAT(_statement, ' LIMIT ', sLimit);
+		ELSE
+			SET _statement = CONCAT(_statement, ' LIMIT 10 ');
+		END IF;
+
+		SET @statement = _statement;
+		PREPARE dynquery FROM @statement;
+		EXECUTE dynquery;
+		DEALLOCATE PREPARE dynquery;
+
+	END IF;
+END

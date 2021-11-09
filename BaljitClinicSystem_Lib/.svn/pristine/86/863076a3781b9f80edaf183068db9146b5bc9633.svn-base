@@ -1,0 +1,35 @@
+package BusinessData;
+
+import java.sql.ResultSet;
+//import BusinessLogic.BLL_CorpProvider;
+import BusinessData.BaseDAL;
+import BusinessLogic.BLL_Common;
+import java.sql.CallableStatement;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.sql.Types;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Iterator;
+
+
+/**
+ *
+ * @author N3355
+ */
+public class DAL_StockDespatch {
+    BaseDAL DAL = new BaseDAL();
+    
+    public BLL_Common.Common_Object DAL_ADDEDIT_STOCKT_DESPATCH(String SiteName, String[] sStringIn) {
+        return BaseDAL.Get_Multiple_QueryReturn_No_Commit("SP_TRX_STOCK_DESPATCH(?,?,?,?,?,?,?,?,?,?,"
+                + "?,?,?,?,?,?,?,?,?,?,"              
+                + "?,?,?,?,?,?,?,?,?,?"
+                
+                + ")", sStringIn, new int[]{java.sql.Types.VARCHAR, java.sql.Types.VARCHAR, java.sql.Types.VARCHAR, java.sql.Types.VARCHAR}, SiteName);
+    }
+    public BLL_Common.Common_Object DAL_GET_STOCK_DESPATCH(String SiteName, String[] sIn) { 
+         
+        return BaseDAL.Get_Multiple_QueryReturn("SP_GET_STOCK_DESPATCH(?,?,?,?,?,?,?,?,?,?,?)", sIn, new int[]{}, SiteName);
+    }
+    
+}

@@ -1,0 +1,287 @@
+<!--
+Modification ID     By      Date        Comment
+--------------------------------------------------------------------------------
+export01            Aaron   18Jan2019   add exportXLS function to button export
+-->
+<%@taglib prefix="jstl" uri="http://java.sun.com/jsp/jstl/core" %>
+<jsp:useBean id="DDL" scope="page" class="BusinessLogic.Servlet_PopulateData" />
+<style type="text/css">
+    .ui-jqgrid tr.jqgrow td {
+        word-wrap: break-word; /* IE 5.5+ CSS3 see http://www.w3.org/TR/css3-text/#text-wrap */
+        white-space: pre-wrap; /* CSS3 */
+        white-space: -moz-pre-wrap; /* Mozilla, since 1999 */
+        white-space: -pre-wrap; /* Opera 4-6 */
+        white-space: -o-pre-wrap; /* Opera 7 */
+        overflow: hidden;
+        height: auto;
+        vertical-align: middle;
+        padding-top: 3px;
+        padding-bottom: 3px
+    }    
+</style>
+<link rel="stylesheet" type="text/css" href="css/your_style.css" />
+<link rel="stylesheet" type="text/css" href="js/plugin/jqgrid/ui.multiselect.css" />
+<section id="widget-grid" class="">
+    <!--<input type="text" id="lblUserCode" value="<%= session.getAttribute("s_usercode")%>"  class="tboxreadonlyShort"/>-->
+    <div class="col-xs-12 col-sm-7 col-md-7 col-lg-4">
+        <h1 class="page-title txt-color-blueDark">
+            <!-- PAGE HEADER -->
+            <i class="fa-fw fa fa-file fa-2x"></i> 
+            Stock Transfer Report                                   
+        </h1>
+    </div>
+    <div class="row">
+        <form id='form_StkXfer_Report'>
+        <article class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+            <div class="jarviswidget jarviswidget-color-blueDark" id="wid-id-2"  data-widget-editbutton="false" data-widget-colorbutton="false" data-widget-fullscreenbutton="false" data-widget-custombutton="false" data-widget-deletebutton="false">
+                <header>
+                    <span class="widget-icon"> <i class="fa fa-search"></i></span>
+                    <span><h2>&nbsp;Generate Stock Transfer Report</h2></span>
+                </header>
+                <div class="no-padding">
+                    <div class="widget-body">
+                        <div id="selectCriTab" class="tab-content">
+                            <div class="tab-pane fade active in padding-5 no-padding-bottom" id="selectCriTab_s1">
+                                <table id="tblSearch" class="selection-criteria">
+                                    <tr>
+                                        <td width="15%">Document Date:</td>
+                                        <td width="20%"><input id="txtDocDateFrom" name="txtDocDateFrom" placeholder="Document Date From" class="searchbox-date" style="width:300px"/></td>
+                                        <td width="5%" align="center">To</td>
+                                        <td width="60%"><input id="txtDocDateTo" name="txtDocDateTo" placeholder="Document Date To" class="searchbox-date" style="width:300px"/></td>                                           
+                                    </tr>
+                                    <tr>
+                                        <td>Stock/Product:</td>
+                                        <td>                                             
+                                            <div style="float:left">
+                                                <input type="text" id="txtStkFrom" name="txtStkFrom" placeholder="--Enter Product Code--" class="searchbox-text" style="width:255px;"/>
+                                            </div>
+                                            <div style="float:left;padding-left:2px">
+                                                <button class='btn btn-default bg-color-blueDark txt-color-white' type="button" onclick="StkLookup('Stock','From');" ><i class="fa fa-search fa-lg"></i></button>
+                                            </div>
+                                        </td>
+                                        <td align="center">To</td>
+                                        <td>                                             
+                                            <div style="float:left">
+                                                <input type="text" id="txtStkTo" name="txtStkTo" placeholder="--Enter Product Code--" class="searchbox-text" style="width:255px;"/>
+                                            </div>
+                                            <div style="float:left;padding-left:2px">
+                                                <button class='btn btn-default bg-color-blueDark txt-color-white' type="button" onclick="StkLookup('Stock','To');" ><i class="fa fa-search fa-lg"></i></button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>Company:</td>
+                                        <td>                                            
+                                            <label id="selectCompany" class="searchbox">
+                                            <select class="form-control" id="ddlComp" name="ddlComp" rel="popover-hover" data-original-title="Company" data-content="Select Company." style="width:300px;">
+                                                <option value="">- Select Company -</option>
+                                                <jstl:forEach var="ddl_Comp" items="${DDL.ddlGet('GET_COMP', '', '', sessionScope.SiteName)}">
+                                                    <option value="${ddl_Comp.VALUE}">${ddl_Comp.VALUE}</option>
+                                                </jstl:forEach>     
+                                            </select>    
+                                            </label>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>Location:</td>
+                                        <td>                                            
+                                            <label id="selectLocation" class="searchbox">
+                                            <select class="form-control" id="ddlIssueLoc" name="ddlIssueLoc" rel="popover-hover" data-original-title="Issue Location" data-content="Select Issue Location." style="width:300px;cursor:default;">
+                                                <option value="">- Select Issue Location -</option>
+                                            </select>    
+                                            </label>
+                                        </td>   
+                                        <td colspan="3">                                         
+                                            <label id="selectLocation" class="searchbox">
+                                            <select class="form-control" id="ddlReceiveLoc" name="ddlReceiveLoc" rel="popover-hover" data-original-title="Receive Location" data-content="Select Receive Location." style="width:300px;cursor:default;">
+                                                <option value="">- Select Receive Location -</option>
+                                            </select>    
+                                            </label>
+                                        </td>
+                                    </tr> 
+                                    <tr>    
+                                        <th>Product Category</th>
+                                        <td colspan="4">
+                                            <div id="rdPrdCat">       
+                                                <input type="radio" id="rdPrdCat1" name="rdPrdCat"  value="" checked="checked" /><label for="rdPrdCat1" class="label-option btn">All</label>
+                                                <input type="radio" id="rdPrdCat2" name="rdPrdCat" value="0"/><label for="rdPrdCat2" class="label-option btn">Drug</label>
+                                                <input type="radio" id="rdPrdCat3" name="rdPrdCat" value="1"/><label for="rdPrdCat3" class="label-option btn">Product</label>
+                                                <input type="radio" id="rdPrdCat4" name="rdPrdCat" value="2"/><label for="rdPrdCat4" class="label-option btn">Consumable</label>
+                                            </div>
+                                        </td>
+                                    </tr>                                                                
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>                            
+        </article>
+        </form>                             
+    </div>
+    <div class="row" style="padding-left:20px;padding-bottom:20px;">
+        <div align="center" class="padding-5" >
+            <input type="button" class="btn btn-default bg-color-blueDark txt-color-white" id="btnPrintPrev" name="btnPrintPrev" onclick="LoadPrintPreview();" data-toggle='modal' data-target='#printPreview' value="Print Preview" style="margin-right:20px;"/>
+            <input type="button" class="btn btn-default bg-color-blueDark txt-color-white" id="btnExport" name="btnExport" onclick="exportXLS()" value="Export" style="margin-right:20px;"/> <!--export01-->
+            <input type="button" class="btn btn-default bg-color-blueDark txt-color-white" id="btnCancel" name="btnCancel" onclick="location.href = '#/dashboard'" value="Cancel" style="margin-right:20px"/>
+        </div>
+    </div>
+</section>
+<jsp:include page="../../../includes/loading-no-status.jsp"/>  
+<jsp:include page="../../../includes/PopUpInitPage.jsp"/>
+<script src="js/buttonset.js"></script>
+<script type="text/javascript">
+   
+    pageSetUp();
+    $('#rdPrdCat').buttonset();
+    
+    function StkLookup(lookupType, ToFrom) {
+        if (lookupType === 'Stock') {
+            showProduct({width: 800, height: 600}).done(function (rowIn) {
+                //alert(JSON.stringify(rowIn));
+                $("#txtStk"+ToFrom).val(rowIn.stk_stockcode);
+            });
+        } 
+    }
+    
+    $().ready(function(){
+        
+        loadScript("js/buttonset.js", function () {
+            loadScript("js/excel-export.js", function () {
+            });
+        });
+    
+        var tempDate = new Date();
+        $("#txtDocDateFrom").datepicker({
+            numberOfMonths: 2,
+            changeMonth: true,
+            changeYear: true,
+            dateFormat: "yy-mm-dd",
+            onSelect: function (selected) {
+                $("#txtDocDateTo").datepicker("option", "minDate", selected);
+            }
+        });       
+        var fromDate = $.datepicker.formatDate('yy-mm-dd', new Date(tempDate.getFullYear(), tempDate.getMonth() - 2, tempDate.getDate()));
+        $("#txtDocDateFrom").val(fromDate);
+        $("#txtDocDateTo").datepicker({
+            numberOfMonths: 2,
+            changeMonth: true,
+            changeYear: true,
+            dateFormat: "yy-mm-dd",
+            onSelect: function (selected) {
+                $("#txtDocDateFrom").datepicker("option", "maxDate", selected);
+            }
+        });
+        $("#txtDocDateTo").datepicker("option", "minDate", fromDate);
+        $("#txtDocDateTo").val($.datepicker.formatDate('yy-mm-dd', tempDate));
+        $("#txtDocDateFrom").datepicker("option", "maxDate", tempDate);
+                
+        $("#ddlIssueLoc,#ddlReceiveLoc").prop("disabled", true);    
+        $("#ddlComp").change(function(){             
+            $('#ddlIssueLoc,#ddlReceiveLoc').empty();   
+            var sCompany = this.value;
+            if (sCompany !== "") {                
+                $.ajax({
+                    type: "GET",
+                    url: "${pageContext.request.contextPath}/Servlet_Stock?SFC=GET_REL_XFER_LOCATION",
+                    data: {
+                        COMPANY: sCompany,
+                        LOCATION: 'GET_ISSUE_LOC'
+                    },
+                    dataType: 'json',
+                    success: function(data) { 
+                        $("select#ddlIssueLoc").append( $("<option>").val("").html("- Select Issue Location -")); 
+                        for (var a=0 ; a<data.object1.length ; a++) {                   
+                            var arrData = data.object1[a];                
+                            $("select#ddlIssueLoc").append( $("<option>")
+                                .val(arrData.ISSUE_LOC)
+                                .html(arrData.ISSUE_LOC)
+                            ); 
+                        }
+                    }
+                });           
+                $.ajax({
+                    type: "GET",
+                    url: "${pageContext.request.contextPath}/Servlet_Stock?SFC=GET_REL_XFER_LOCATION",
+                    data: {
+                        COMPANY: sCompany,
+                        LOCATION: 'GET_RECEIVE_LOC'
+                    },
+                    dataType: 'json',
+                    success: function(data) { 
+                        $("select#ddlReceiveLoc").append( $("<option>").val("").html("- Select Receive Location -")); 
+                        for (var a=0 ; a<data.object1.length ; a++) {                   
+                            var arrData = data.object1[a];                
+                            $("select#ddlReceiveLoc").append( $("<option>")
+                                .val(arrData.REC_LOC)
+                                .html(arrData.REC_LOC)
+                            ); 
+                        }
+                    }
+                });
+                $("#ddlIssueLoc,#ddlReceiveLoc").prop("disabled", false); 
+            } else { 
+                $("select#ddlIssueLoc").append( $("<option>").val("").html("- Select Issue Location -")); 
+                $("select#ddlReceiveLoc").append( $("<option>").val("").html("- Select Receive Location -"));
+            }
+        });
+    });
+
+    function LoadPrintPreview() {
+        loadScript("js/print-preview.js", function () {
+            var jObj = {              
+                1: "GET_STKXFER_LIST_REPORT",
+                2: $('#txtDocDateFrom').val(), 
+                3: $('#txtDocDateTo').val(), 
+                4: $('#txtStkFrom').val(), 
+                5: $('#txtStkTo').val(), 
+                6: $('#ddlComp').val(), 
+                7: $('#ddlIssueLoc').val(), 
+                8: $('#ddlReceiveLoc').val(), 
+                9: $('input[name=rdPrdCat]:checked').val()
+            }; 
+ 
+            //for fix parameter
+            var param = {     
+                // PO_NO: sPoNo               
+            };           
+            //alert(JSON.stringify(jObj));               
+            var object = {};
+            object.procParam = jObj;
+            object.jasperName = 'Stk_Transfer_Report';
+            object.procString = 'SP_GET_STOCK_TRANSFER_RPT(?,?,?,?,?,?,?,?,?)';
+            object.fixParam = param;
+            object.format = 'pdf'; //indicate which format is being used
+            //alert(JSON.stringify(funcIn));
+            printToPage(object);                                           
+        });      
+    };
+    //export01
+    //Aaron
+    function exportXLS()
+    {   
+        loadScript("js/print-preview.js", function () {
+            var jObj = {              
+                1: "GET_STKXFER_LIST_REPORT",
+                2: $('#txtDocDateFrom').val(), 
+                3: $('#txtDocDateTo').val(), 
+                4: $('#txtStkFrom').val(), 
+                5: $('#txtStkTo').val(), 
+                6: $('#ddlComp').val(), 
+                7: $('#ddlIssueLoc').val(), 
+                8: $('#ddlReceiveLoc').val(), 
+                9: $('input[name=rdPrdCat]:checked').val()
+            };
+ 
+            var param = {};           
+            var object = {};
+            object.procParam = jObj;
+            object.jasperName = 'Stk_Transfer_Report';
+            object.procString = 'SP_GET_STOCK_TRANSFER_RPT(?,?,?,?,?,?,?,?,?)';
+            object.fixParam = param;
+            object.format = 'xlsx'; //indicate which format is using
+            printToPage(object);     
+        }); 
+    };
+        
+</script>

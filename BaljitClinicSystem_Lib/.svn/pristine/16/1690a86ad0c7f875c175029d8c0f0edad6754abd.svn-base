@@ -1,0 +1,246 @@
+CREATE DEFINER=`root`@`localhost` PROCEDURE `SP_GET_GRN_RPT`(
+IN sMethod         varchar(30),
+IN sGRNDateFrom    varchar(20),
+IN sGRNDateTo      varchar(20),
+IN sCompCode       varchar(10),
+IN sSupCode        varchar(10),
+IN sInterSup       varchar(10),
+IN sStkCodeFrom    varchar(16),
+IN sStkCodeTo      varchar(16),
+IN sStkTypeFrom    varchar(16),
+IN sStkTypeTo      varchar(16),
+IN sStkGrpFrom     varchar(16),
+IN sStkGrpTo       varchar(16),
+IN sStkCat         varchar(6),
+IN sGRNNo 		   varchar(10)
+)
+BEGIN
+
+DECLARE _statement VARCHAR(8000);
+
+		IF (sMethod = 'GET_GRN_REPORT') THEN
+
+            SET _statement = 'SELECT DATE(hdr.sgrh_grndate) AS GRNDate, hdr.sgrh_grnno AS GRNNo, hdr.sgrh_company AS CompCode, hdr.sgrh_suppliercode AS SupCode, stk.stk_stockcode AS StkCode,
+                              dtl.sgrd_uomcode AS UOM, TRUNCATE(dtl.sgrd_qty,2) AS Qty, TRUNCATE(dtl.sgrd_unitcost,2) AS UnitCost, TRUNCATE(dtl.sgrd_gstamt,2) AS GSTAmt, TRUNCATE(dtl.sgrd_subtotalamt,2) AS NettAmt,
+                              dtl.sgrd_batchno AS BatchNo, DATE(dtl.sgrd_expirydate) AS ExpDate, hdr.sgrh_intersupplier AS InterSup, hdr.sgrh_status AS GRNStatus, stk.stk_desc AS StkDesc, ';
+
+            SET _statement = CONCAT(_statement,"'",sGRNDateFrom,"'", ' AS selGRNDateFrom, ');
+            SET _statement = CONCAT(_statement,"'",sGRNDateTo,"'", ' AS selGRNDateTo, ');
+            SET _statement = CONCAT(_statement,"'",sCompCode,"'", ' AS selCompCode, ' );
+            SET _statement = CONCAT(_statement,"'",sSupCode,"'", ' AS selSupCode, ' );
+            SET _statement = CONCAT(_statement,"'",sStkCodeFrom,"'", ' AS selStkCodeFrom, ' );
+            SET _statement = CONCAT(_statement,"'",sStkCodeTo,"'", ' AS selStkCodeTo, ' );
+            SET _statement = CONCAT(_statement,"'",sStkTypeFrom,"'", ' AS selStkTypeFrom, ' );
+            SET _statement = CONCAT(_statement,"'",sStkTypeTo,"'", ' AS selStkTypeTo, ' );
+            SET _statement = CONCAT(_statement,"'",sStkGrpFrom,"'", ' AS selStkGrpFrom, ' );
+            SET _statement = CONCAT(_statement,"'",sStkGrpTo,"'", ' AS selStkGrpTo, ' );
+            SET _statement = CONCAT(_statement, '
+                             CASE
+                                   WHEN ',"'",sInterSup,"'",' =''Y'' THEN ''Yes''
+                                   WHEN ',"'",sInterSup,"'",' =''N'' THEN ''No''
+                                   WHEN ',"'",sInterSup,"'",' ='''' THEN ''Yes / No''
+                             END AS selInterSup,
+                             CASE
+                                   WHEN ',"'",sStkCat,"'",' =''0'' THEN ''Drug''
+                                   WHEN ',"'",sStkCat,"'",' =''1'' THEN ''Product''
+                                   WHEN ',"'",sStkCat,"'",' =''2'' THEN ''Consumable''
+                                   WHEN ',"'",sStkCat,"'",' ='''' THEN ''Drug / Product / Consumable''
+                             END AS selStkCat ' );
+
+            SET _statement = CONCAT(_statement,'FROM stkt_grnheader hdr
+                                                LEFT JOIN stkt_grndetail dtl ON hdr.sgrh_grnhdridx = dtl.sgrd_grnhdrdtlidx
+                                                LEFT JOIN stkm_stockmaster stk ON dtl.sgrd_stockidx = stk.stk_stockidx
+                                                WHERE hdr.sgrh_grnhdridx IS NOT NULL AND dtl.sgrd_grddtlidx IS NOT NULL' );
+
+            IF (sGRNDateFrom <> '') THEN
+                    SET _statement = CONCAT(_statement, ' AND DATE(hdr.sgrh_grndate) >= ',"'",sGRNDateFrom,"'" );
+            END IF;
+
+            IF (sGRNDateTo <> '') THEN
+                    SET _statement = CONCAT(_statement, ' AND DATE(hdr.sgrh_grndate) <= ',"'",sGRNDateTo,"'" );
+            END IF;
+
+            IF (sCompCode <> '') THEN
+                    SET _statement = CONCAT(_statement, ' AND hdr.sgrh_company = ',"'",sCompCode,"'" );
+            END IF;
+
+            IF (sSupCode <> '') THEN
+                    SET _statement = CONCAT(_statement, ' AND hdr.sgrh_suppliercode = ',"'",sSupCode,"'" );
+            END IF;
+
+            IF (sInterSup <> '') THEN
+                    SET _statement = CONCAT(_statement, ' AND hdr.sgrh_intersupplier = ',"'",sInterSup,"'" );
+            END IF;
+
+            IF (sStkCodeFrom <> '') THEN
+                    SET _statement = CONCAT(_statement, ' AND stk.stk_desc >= (SELECT stk_desc FROM stkm_stockmaster WHERE stk_stockcode = ',"'",sStkCodeFrom,"')" );
+            END IF;
+
+            IF (sStkCodeTo <> '') THEN
+                    SET _statement = CONCAT(_statement, ' AND stk.stk_desc <= (SELECT stk_desc FROM stkm_stockmaster WHERE stk_stockcode = ',"'",sStkCodeTo,"')" );
+            END IF;
+
+            IF  (sStkTypeFrom <> '') THEN
+                    SET _statement = CONCAT(_statement, ' AND stk.stk_typecode >= ',"'", sStkTypeFrom,"'");
+            END IF;
+
+            IF  (sStkTypeTo <> '') THEN
+                    SET _statement = CONCAT(_statement, ' AND stk.stk_typecode <= ',"'", sStkTypeTo,"'");
+            END IF;
+
+            IF  (sStkGrpFrom <> '') THEN
+                    SET _statement = CONCAT(_statement, ' AND stk.stk_groupcode >= ',"'", sStkGrpFrom,"'");
+            END IF;
+
+            IF  (sStkGrpTo <> '') THEN
+                    SET _statement = CONCAT(_statement, ' AND stk.stk_groupcode <= ',"'", sStkGrpTo,"'");
+            END IF;
+
+            IF  (sStkCat <> '') THEN
+                    SET _statement = CONCAT(_statement, ' AND stk.stk_consumable = ',"'", sStkCat,"'");
+            END IF;
+
+            SET _statement = CONCAT(_statement, ' ORDER BY StkCode, GRNDate ' );
+
+	END IF;
+
+	IF (sMethod = 'GET_GRN_REPORT_2') THEN
+      
+		SET _statement = 'SELECT *, DATE(sgrd_expirydate) AS grd_expirydate, DATE(sgrh_grndate) AS grh_grndate,
+							DATE_FORMAT(sgrh_grndate,''%H:%i'') AS grh_grntime
+							FROM stkt_grnheader 
+                            LEFT JOIN stkt_grndetail ON sgrh_grnhdridx = sgrd_grnhdrdtlidx 
+                            LEFT JOIN stkm_stockmaster ON sgrd_stockidx = stk_stockidx 
+                            LEFT JOIN stkm_location ON sgrd_location = loc_code
+                            LEFT JOIN stkm_suppliermaster ON sgrh_suppliercode = sup_code
+                            WHERE sgrh_grnhdridx IS NOT NULL ';
+                            
+		IF (sGRNDateFrom <> '') THEN
+			SET _statement = CONCAT(_statement, ' AND DATE(sgrh_grndate) >= ',"'",sGRNDateFrom,"'");
+		END IF;
+
+		IF (sGRNDateTo <> '') THEN
+			SET _statement = CONCAT(_statement, ' AND DATE(sgrh_grndate) <= ',"'",sGRNDateTo,"'");
+		END IF;
+        
+		IF (sSupCode <> '') THEN
+			SET _statement = CONCAT(_statement, ' AND sgrh_suppliercode = ',"'",sSupCode,"'");
+		END IF;        
+        
+		IF (sCompCode <> '') THEN
+			SET _statement = CONCAT(_statement, ' AND sgrh_company = ',"'",sCompCode,"'");
+		END IF;       
+        
+		IF (sGRNNo <> '') THEN
+			SET _statement = CONCAT(_statement, ' AND sgrh_grnno = ',"'",sGRNNo,"'");
+		END IF;          
+      
+	END IF;     
+
+	IF (sMethod = 'GET_GSTINPUT_REPORT') THEN
+
+            SET _statement = 'SELECT DATE(hdr.sgrh_grndate) AS GRNDate, hdr.sgrh_grnno AS GRNNo, hdr.sgrh_company AS CompCode, hdr.sgrh_suppliercode AS SupCode, stk.stk_stockcode AS StkCode,
+                              dtl.sgrd_uomcode AS UOM, TRUNCATE(dtl.sgrd_qty,2) AS Qty, TRUNCATE(dtl.sgrd_unitcost,2) AS UnitCost, TRUNCATE(dtl.sgrd_gstamt,2) AS GSTAmt, TRUNCATE(dtl.sgrd_subtotalamt,2) AS NettAmt,
+                              dtl.sgrd_batchno AS BatchNo, DATE(dtl.sgrd_expirydate) AS ExpDate, hdr.sgrh_intersupplier AS InterSup, hdr.sgrh_status AS GRNStatus, stk.stk_desc AS StkDesc, ';
+
+
+
+            SET _statement = CONCAT(_statement,"'",sGRNDateFrom,"'", ' AS selGRNDateFrom, ');
+            SET _statement = CONCAT(_statement,"'",sGRNDateTo,"'", ' AS selGRNDateTo, ');
+            SET _statement = CONCAT(_statement,"'",sCompCode,"'", ' AS selCompCode, ' );
+            SET _statement = CONCAT(_statement,"'",sSupCode,"'", ' AS selSupCode, ' );
+            SET _statement = CONCAT(_statement,"'",sStkCodeFrom,"'", ' AS selStkCodeFrom, ' );
+            SET _statement = CONCAT(_statement,"'",sStkCodeTo,"'", ' AS selStkCodeTo, ' );
+            SET _statement = CONCAT(_statement,"'",sStkTypeFrom,"'", ' AS selStkTypeFrom, ' );
+            SET _statement = CONCAT(_statement,"'",sStkTypeTo,"'", ' AS selStkTypeTo, ' );
+            SET _statement = CONCAT(_statement,"'",sStkGrpFrom,"'", ' AS selStkGrpFrom, ' );
+            SET _statement = CONCAT(_statement,"'",sStkGrpTo,"'", ' AS selStkGrpTo, ' );
+            SET _statement = CONCAT(_statement, '
+                             CASE
+                                   WHEN ',"'",sInterSup,"'",' =''Y'' THEN ''Yes''
+                                   WHEN ',"'",sInterSup,"'",' =''N'' THEN ''No''
+                                   WHEN ',"'",sInterSup,"'",' ='''' THEN ''Yes / No''
+                             END AS selInterSup,
+                             CASE
+                                   WHEN ',"'",sStkCat,"'",' =''0'' THEN ''Drug''
+                                   WHEN ',"'",sStkCat,"'",' =''1'' THEN ''Product''
+                                   WHEN ',"'",sStkCat,"'",' =''2'' THEN ''Consumable''
+                                   WHEN ',"'",sStkCat,"'",' ='''' THEN ''Drug / Product / Consumable''
+                             END AS selStkCat ' );
+SET _statement = CONCAT(_statement,',sup.sup_name AS SupName,
+case
+when sup.sup_gstregno is null then ''''
+when sup.sup_gstregno is not null then sup.sup_gstregno
+END AS SupGstRegNo,
+
+dtl.sgrd_gstpurcode AS GstPurCode,
+        hdr.sgrh_invno as InvNo, hdr.sgrh_invdate as InvDate, dtl.sgrd_pono AS PONo ');
+            SET _statement = CONCAT(_statement,'FROM stkt_grnheader hdr
+                                                LEFT JOIN stkt_grndetail dtl ON hdr.sgrh_grnhdridx = dtl.sgrd_grnhdrdtlidx
+                                                LEFT JOIN stkm_suppliermaster sup on sup.sup_code = hdr.sgrh_suppliercode
+                                                LEFT JOIN stkm_stockmaster stk ON dtl.sgrd_stockidx = stk.stk_stockidx
+
+                                                WHERE hdr.sgrh_grnhdridx IS NOT NULL AND dtl.sgrd_grddtlidx IS NOT NULL
+                                                and hdr.sgrh_status = ''CONFIRMED'' AND sgrd_gstpurcode <> '''' '
+                                                );
+
+            IF (sGRNDateFrom <> '') THEN
+                    SET _statement = CONCAT(_statement, ' AND DATE(hdr.sgrh_grndate) >= ',"'",sGRNDateFrom,"'" );
+            END IF;
+
+            IF (sGRNDateTo <> '') THEN
+                    SET _statement = CONCAT(_statement, ' AND DATE(hdr.sgrh_grndate) <= ',"'",sGRNDateTo,"'" );
+            END IF;
+
+            IF (sCompCode <> '') THEN
+                    SET _statement = CONCAT(_statement, ' AND hdr.sgrh_company = ',"'",sCompCode,"'" );
+            END IF;
+
+            IF (sSupCode <> '') THEN
+                    SET _statement = CONCAT(_statement, ' AND hdr.sgrh_suppliercode = ',"'",sSupCode,"'" );
+            END IF;
+
+            IF (sInterSup <> '') THEN
+                    SET _statement = CONCAT(_statement, ' AND hdr.sgrh_intersupplier = ',"'",sInterSup,"'" );
+            END IF;
+
+            IF (sStkCodeFrom <> '') THEN
+                    SET _statement = CONCAT(_statement, ' AND stk.stk_desc >= (SELECT stk_desc FROM stkm_stockmaster WHERE stk_stockcode = ',"'",sStkCodeFrom,"')" );
+            END IF;
+
+            IF (sStkCodeTo <> '') THEN
+                    SET _statement = CONCAT(_statement, ' AND stk.stk_desc <= (SELECT stk_desc FROM stkm_stockmaster WHERE stk_stockcode = ',"'",sStkCodeTo,"')" );
+            END IF;
+
+            IF  (sStkTypeFrom <> '') THEN
+                    SET _statement = CONCAT(_statement, ' AND stk.stk_typecode >= ',"'", sStkTypeFrom,"'");
+            END IF;
+
+            IF  (sStkTypeTo <> '') THEN
+                    SET _statement = CONCAT(_statement, ' AND stk.stk_typecode <= ',"'", sStkTypeTo,"'");
+            END IF;
+
+            IF  (sStkGrpFrom <> '') THEN
+                    SET _statement = CONCAT(_statement, ' AND stk.stk_groupcode >= ',"'", sStkGrpFrom,"'");
+            END IF;
+
+            IF  (sStkGrpTo <> '') THEN
+                    SET _statement = CONCAT(_statement, ' AND stk.stk_groupcode <= ',"'", sStkGrpTo,"'");
+            END IF;
+
+            IF  (sStkCat <> '') THEN
+                    SET _statement = CONCAT(_statement, ' AND stk.stk_consumable = ',"'", sStkCat,"'");
+            END IF;
+
+            SET _statement = CONCAT(_statement, ' ORDER BY StkCode, GRNDate ' );
+
+      END IF;
+
+SET @statement = _statement;
+PREPARE dynquery FROM @statement;
+EXECUTE dynquery;
+DEALLOCATE PREPARE dynquery;
+
+
+
+END

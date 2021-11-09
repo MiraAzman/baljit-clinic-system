@@ -1,0 +1,391 @@
+<!--
+Modification ID     By      Date        Comment
+------------------------------------------------------------------------
+yesno01             Aaron   17Dec2018   include yes-no.jsp in the code
+c01                 Aaron   17Dec2018   add confirm function 
+font01              Aaron   27Dec2018   change font style and color 
+len01               Aaron   27Dec2018   set maxlength for textbox
+validate01          Aaron   02Jan2019   add validator for mandatory fields
+-->
+<%@taglib prefix="jstl" uri="http://java.sun.com/jsp/jstl/core" %>
+<jsp:useBean id="DDL" scope="page" class="BusinessLogic.Servlet_PopulateData" />
+<style type="text/css">
+    .ui-jqgrid tr.jqgrow td {
+        word-wrap: break-word; /* IE 5.5+ CSS3 see http://www.w3.org/TR/css3-text/#text-wrap */
+        white-space: pre-wrap; /* CSS3 */
+        white-space: -moz-pre-wrap; /* Mozilla, since 1999 */
+        white-space: -pre-wrap; /* Opera 4-6 */
+        white-space: -o-pre-wrap; /* Opera 7 */
+        overflow: hidden;
+        height: auto;
+        vertical-align: middle;
+        padding-top: 3px;
+        padding-bottom: 3px 
+    }
+    .centered {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        margin-top: -50px;
+        margin-left: -100px;
+    }
+    div.errorContainer, div.errorContainer2{
+        display:none;
+        width:100%;
+    }
+    div.errorContainer, div.errorContainer2 ol li{
+        list-style-type:disc;
+        margin-left: 20px;
+    }
+    select:disabled{
+        background: #dddddd;
+    }
+    li{
+        list-style:none;
+    }
+    .disabledTab{
+        pointer-events: none;
+    }
+    input[type="text"].error { border: 1px solid #A94444; background-color:#FFF0F0; }
+    select.error { border: 1px solid #A94444; background-color:#FFF0F0; }
+    textarea.error { border: 1px solid #A94444; background-color:#FFF0F0; }
+</style>
+<link rel="stylesheet" type="text/css" href="css/your_style.css" />
+<link rel="stylesheet" type="text/css" href="js/plugin/jqgrid/ui.multiselect.css" />
+<section id="widget-grid" class="">
+    <!--<span>{{params}}</span>-->
+    <input type="hidden" value={{params}} id="hidHospCode">
+
+    <div class="col-xs-12 col-sm-7 col-md-7 col-lg-12">
+        <h1 class="page-title txt-color-blueDark">
+            <!-- PAGE HEADER -->
+            <i class="fa-fw fa fa-file fa-2x"></i> 
+            System Environment Settings                                         
+        </h1>
+    </div>
+    <div class="widget-body row">
+        <article class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+            <div class="row" style="padding-bottom:10px;padding-left:10px;padding-right:10px;">
+                <div class="errorContainer alert alert-danger alert-block">
+                    <h4 class="alert-heading">There were some field left out or invalid inputs. Please brief through the form and reenter necessarily.</h4>
+                    <ol>
+                    </ol>
+                </div>
+            </div>
+            <div class="row">
+                <form id="form_EditComp" name="form_EditComp">
+                    <article class="col-sm-12 col-md-12 col-lg-12">
+                        <div class="jarviswidget jarviswidget-color-blueDark" id="wid-id-1"  data-widget-editbutton="false" data-widget-custombutton="false"
+                             data-widget-deletebutton="false" data-widget-colorbutton="false" data-widget-fullscreenbutton="false" data-widget-togglebutton="false">
+                            <header>
+                                <span class="widget-icon"> <i class="fa fa-file"></i></span>
+                                <span><h2>&nbsp;System Environment Settings</h2></span>
+                            </header>
+                            <div class="row">
+                                <div class="widget-body">
+
+                                    <table id="tbEnv" class="table table-bordered table-striped" style="clear:both;">
+                                        <tbody>
+                                            
+                                            <tr>
+                                                <td><font color="red">*</font> <b>Name</b></td> <!--font01-->
+                                                <td>:</td>
+                                                <td> 
+                                                    <input type="text" id="txtName" name="txtName" class="form-control" maxlength="100"/>    <!--len01-->
+                                                </td>
+                                                 <td width="12%">Contact Person</td>
+                                                <td width="1%">:</td>
+                                                <td width="67%">       
+                                                    <input type="text" id="txtContactPerson" name="txtContactPerson"  class="form-control" maxlength="100"/> <!--len01-->    
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>Address 1</td>
+                                                <td>:</td>
+                                                <td> 
+                                                    <input type="text" id="txtAdd1" name="txtAdd1"  class="form-control" maxlength="50"/> <!--len01-->    
+                                                </td>
+                                                <td>Business Registration No.</td>
+                                                <td>:</td>
+                                                <td>       
+                                                    <input type="text" id="txtBusRegNo" name="txtBusRegNo"  class="form-control" maxlength="20"/> <!--len01-->    
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>Address 2</td>
+                                                <td>:</td>
+                                                <td> 
+                                                    <input type="text" id="txtAdd2" name="txtAdd2"  class="form-control" maxlength="50"/> <!--len01-->    
+                                                </td>
+                                                <td>GST Registration No.</td>
+                                                <td>:</td>
+                                                <td>       
+                                                    <input type="text" id="txtGSTRegNo" name="txtGSTRegNo"  class="form-control" maxlength="20"/> <!--len01-->    
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>Address 3</td>
+                                                <td>:</td>
+                                                <td> 
+                                                    <input type="text" id="txtAdd3" name="txtAdd3"  class="form-control" maxlength="50"/> <!--len01-->    
+                                                </td>
+                                                <td colspan="3">
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>Postcode</td>
+                                                <td>:</td>
+                                                <td> 
+                                                    <input type="text" id="txtPostcode" name="txtPostcode"  class="form-control" maxlength="10"/> <!--len01-->    
+                                                </td>
+                                                <td colspan="3">
+                                                </td>
+                                            </tr>
+                                             
+                                            <tr>
+                                                <td>State</td>
+                                                <td>:</td>
+                                                <td> 
+                                                    <!--<input type="text" id="txtState" name="txtState" class="form-control"/>-->    
+                                                    <label id="selectState" class="searchbox">
+                                                        <select class="form-control" id="ddlState" name="ddlState" rel="popover-hover" data-original-title="State" data-content="Select State." style="width:350px;">
+                                                            <option value="">- Select State -</option>                                          
+                                                        </select>    
+                                                    </label>   
+                                                </td>
+                                                <td colspan="3">
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>Country</td>
+                                                <td>:</td>
+                                                <td> 
+                                                    <label id="selectCountry" class="searchbox">
+                                                        <select class="form-control" id="ddlCountry" name="ddlCountry" rel="popover-hover" style="width:390px;">
+                                                            <option value="">- Select Country -</option>                                         
+                                                        </select>    
+                                                    </label>      
+                                                </td>
+                                                <td colspan="3">
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>Telephone No.</td>
+                                                <td>:</td>
+                                                <td> 
+                                                    <input type="text" id="txtPhoneNo" name="txtPhoneNo"  class="form-control" maxlength="20"/> <!--len01-->    
+                                                </td>
+                                                <td colspan="3">
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>Fax No.</td>
+                                                <td>:</td>
+                                                <td> 
+                                                    <input type="text" id="txtFaxNo" name="txtFaxNo"  class="form-control" maxlength="20"/> <!--len01-->    
+                                                </td>
+                                                <td colspan="3">
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>Remarks</td>
+                                                <td>:</td>
+                                                <td> 
+                                                    <textarea id="txtRemarks" name="txtRemarks"  class="form-control" rows="3" cols="50" maxlength="200"></textarea>  <!--len01-->  
+                                                </td>
+                                                <td colspan="3">
+                                                </td>
+                                            </tr>
+                                        </tbody>                                         
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </article>
+                    
+                    
+                    
+                </form>
+            </div>
+        </article>
+        <div>
+            <div class="row">
+                <div class="col-sm-12">
+                    <div align="center" class="padding-5" >
+                        <input type="button" Id="btnSave"  class="btn btn-default bg-color-blueDark txt-color-white" value="Save" onclick="confirm();"/>
+                        <input type="button" Id="btnCancel"  class="btn btn-default bg-color-blueDark txt-color-white"  value="Cancel" onclick="location.href = '#/dashboard'" />
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<jsp:include page="../../includes/loading-no-status.jsp"/>
+<!--yesno01-->
+<jsp:include page="../../../includes/yes-no.jsp"/>
+<!--<script src="js/buttonset.js"></script>-->
+<script type="text/javascript">
+    pageSetUp();
+
+    getDLL("ddlState", "GET_CODEDESC", "STATE", "");
+    getDLL("ddlCountry", "GET_CODEDESC", "COU", "");
+
+    function getDLL (ddl, method, param1, param2) {
+        $.get('${pageContext.request.contextPath}/Servlet_PopulateData', {SFC: 'GET_DLL', METHOD: method, P1: param1, P2: param2}, function (data) {
+            for(var i=0; i < data.length; i++){                                                          
+                $("#"+ddl).append($("<option>").val(data[i].VALUE).html(data[i].TEXT));
+            }     
+        });     
+    }   
+    //validate01
+    var pagefunction = function(){
+        var container = $('div.errorContainer');
+        var validator = $("#form_EditComp").validate({
+                    rules: { txtName: "required"
+                        },
+                    messages: { txtName: "Name cannot be blank."
+                        },
+                    errorContainer: container,
+                    errorLabelContainer: $("ol", container),
+                    wrapper: 'li'
+                });
+    };
+    pagefunction();
+//    function bindData() {
+        $(document).ready(function() {
+
+            $.ajax({
+                
+                
+                type:'POST',
+                url:"${pageContext.request.contextPath}/Servlet_SystemEnvironmentSettings",
+                data:  {
+                    SFC: 'GET_ENVSETTINGS' 
+                     
+                },
+                dataType: 'json',
+                success: function(data) {               
+                            var arrData = data.object1[0];
+
+                            
+                            $('#txtName').val(arrData.sys_orgname); 
+                            $('#txtAdd1').val(arrData.sys_orgadd1);
+                            $('#txtAdd2').val(arrData.sys_orgadd2);
+                            $('#txtAdd3').val(arrData.sys_orgadd3);
+                            $('#txtPostcode').val(arrData.sys_orgpostcode);
+                            //$('#txtState').val(arrData.comp_statecode);
+                            $('#ddlState').val(arrData.sys_orgstate);
+                            $('#txtPhoneNo').val(arrData.sys_orgtelephone);
+                            $('#txtFaxNo').val(arrData.sys_orgfax);
+                            $('#txtRemarks').val(arrData.sys_orgremarks);
+                            $('#txtContactPerson').val(arrData.sys_orgcontactperson);
+                            $('#txtBusRegNo').val(arrData.sys_orgbusinessregno);
+                            $('#txtGSTRegNo').val(arrData.sys_orgbusinessgstno);
+                            $('#ddlCountry').val(arrData.sys_orgcountry);
+                        }        
+                //error:  function(){ alert("FAILED "); } 
+            });
+
+                     
+        }); 
+//    }   
+    //c01
+    function confirm(){
+        var $this = $(this);
+        var $validItem = $("#form_EditComp").valid();  //validate01
+            if ($validItem === true){
+            document.getElementById("btnSave").disabled = true;
+            showYesNo({
+               title: "Confirmation needed",
+               width: 420,
+               noClose: true,
+               isModal: true,
+               body: [
+                   "<br><h4>Please confirm all the details entered before save.<h4><br>"
+               ],
+               show: function(){},
+               Yes: {
+                   text: "Yes",
+                   opt: function(){
+                       SaveDetail();
+                       hideYesNo();
+                   }
+               },
+               No: {
+                   text: "No",
+                   opt: function(){
+                       document.getElementById("btnSave").disabled = false;
+                       hideYesNo();
+                   }
+               }
+            });
+        }
+    }
+    //c01
+    function SaveDetail(){
+
+        $.ajax({
+            type:'POST',
+            url:"${pageContext.request.contextPath}/Servlet_SystemEnvironmentSettings",
+            data:  {
+                 
+                SFC: 'UPDATE_ENVSETTINGS', 
+                CODE: $('#txtCode').val(),
+                NAME: $('#txtName').val(),
+                ADD1: $('#txtAdd1').val(),
+                ADD2: $('#txtAdd2').val(),
+                ADD3: $('#txtAdd3').val(),
+                POSTCODE: $('#txtPostcode').val(),                 
+                STATE: $('#ddlState').val(),
+                COUNTRY: $('#ddlCountry').val(),
+                TEL: $('#txtPhoneNo').val(),
+                FAX: $('#txtFaxNo').val(),
+                REMARKS: $('#txtRemarks').val(),
+                CONTACTPER: $('#txtContactPerson').val(),
+                ISACTIVE: $("#chkIsActive").val(),
+                BUSREGNO: $('#txtBusRegNo').val(),                
+                GSTREGNO: $('#txtGSTRegNo').val()
+                       
+            },
+            dataType: 'json',
+            beforeSend: function(xhr){
+              $.showLoadingNoStatus();  
+            },
+            success: function(response,xhr,status) {
+                if (response.bool === true){
+                        $.bigBoxSuccess({
+                            title: "Saved Successfully.",
+                            content: "",
+                            timeout: 6000
+                        });
+                    }                             
+                else{
+                    $.bigBoxFail({
+                        title: "Save FAIL.",
+                        content: "There is some error when saving the details.<br>Please try again later...",
+                        timeout: 6000
+                    });
+                } 
+            },
+            error: function(xhr,status,error){
+                $.bigBoxFail({
+                    title: "Transaction ERROR",
+                    content: "There is some error occur during data transfer. Please try again later",
+                    timeout: 6000
+        });
+            },
+            complete: function(xhr,status){
+                if (xhr.status === 200) {
+                    $.hideLoadingNoStatus(function () {
+                       location.reload();
+                    }, 500);
+                } else {
+                    $.hideLoadingNoStatus(function () {
+                    }, 0);
+                }
+    }
+        });
+    }
+    //c01
+</script>

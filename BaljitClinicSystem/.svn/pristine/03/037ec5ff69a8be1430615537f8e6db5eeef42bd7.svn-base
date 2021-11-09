@@ -1,0 +1,1600 @@
+<!--
+Modification ID     By          Date        Comment
+--------------------------------------------------------------------------------
+font01              Aaron       10Jan2019   change font style and color for mandatory fields
+len01               Aaron       10Jan2019   set maxlength for textbox
+c02                 Aaron   10Dec2018   Add confirm function and createPO function   
+-->
+<%@taglib prefix="jstl" uri="http://java.sun.com/jsp/jstl/core" %>
+<jsp:useBean id="DDL" scope="page" class="BusinessLogic.Servlet_PopulateData" />
+<style type="text/css">
+    
+    .ui-autocomplete { 
+        cursor:pointer; 
+        height:120px; 
+        overflow-y:scroll;
+    }    
+    
+    .ui-jqgrid tr.jqgrow td {
+        word-wrap: break-word; /* IE 5.5+ CSS3 see http://www.w3.org/TR/css3-text/#text-wrap */
+        white-space: pre-wrap; /* CSS3 */
+        white-space: -moz-pre-wrap; /* Mozilla, since 1999 */
+        white-space: -pre-wrap; /* Opera 4-6 */
+        white-space: -o-pre-wrap; /* Opera 7 */
+        overflow: hidden;
+        height: auto;
+        vertical-align: middle;
+        padding-top: 3px;
+        padding-bottom: 3px 
+    }
+
+    .centered {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        margin-top: -50px;
+        margin-left: -200px;
+    }
+    div.errorContainer, div.errorContainer2{
+        display:none;
+        width:100%;
+    }
+    div.errorContainer, div.errorContainer2 ol li{
+        list-style-type:disc;
+        margin-left: 20px;
+    }
+    select:disabled{
+        background: #dddddd;
+    }
+    li{
+        list-style:none;
+    }
+    .disabledTab{
+        pointer-events: none;
+    }
+    input[type="text"].error { border: 1px solid #A94444; background-color:#FFF0F0; }
+    select.error { border: 1px solid #A94444; background-color:#FFF0F0; }
+    textarea.error { border: 1px solid #A94444; background-color:#FFF0F0; }
+</style>
+<link rel="stylesheet" type="text/css" href="css/your_style.css" />
+<link rel="stylesheet" type="text/css" href="js/plugin/jqgrid/ui.multiselect.css" />
+ 
+<section id="widget-grid" class="">
+
+
+    <div class="col-xs-12 col-sm-7 col-md-7 col-lg-12">
+        <h1 class="page-title txt-color-blueDark">
+            <!-- PAGE HEADER -->
+            <i class="fa-fw fa fa-file fa-2x"></i> 
+            Create Purchase Order(s)                                       
+        </h1>
+    </div>
+    <div class="widget-body row">
+        <article class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+            <div class="row" style="padding-bottom:10px;padding-left:10px;padding-right:10px;">
+                <div class="errorContainer alert alert-danger alert-block">
+                    <h4 class="alert-heading">There were some field left out or invalid inputs. Please brief through the form and reenter necessarily.</h4>
+                    <ol>
+                    </ol>
+                </div>
+            </div>
+            <div class="row">
+                <form id="form_AddPO" name="form_AddPO">
+                    <article class="col-sm-12 col-md-12 col-lg-12">
+                        <div class="jarviswidget jarviswidget-color-blueDark" id="wid-id-1"  data-widget-editbutton="false" data-widget-custombutton="false"
+                             data-widget-deletebutton="false" data-widget-colorbutton="false" data-widget-fullscreenbutton="false" data-widget-togglebutton="false">
+                            <header>
+                                <span class="widget-icon"> <i class="fa fa-file"></i></span>
+                                <span><h2>&nbsp;Purchase Order Info</h2></span>
+                            </header>
+                            <div class="row">
+                                <div class="widget-body">
+
+                                    <table id="tbProductInfo" class="table table-bordered table-striped" style="clear:both;">
+                                        <tbody>
+                                            <tr>
+                                                <td width="12%"><font color="red">*</font> <b>Supplier</b></td> <!--font01-->
+                                                <td width="1%">:</td>
+                                                <td width="25%"> 
+                                                    <label id="selectSupplier" class="searchbox">
+                                                        <select class="form-control" id="ddlSupplier" required name="ddlSupplier" rel="popover-hover" data-original-title="Supplier Selection" data-content="Select Supplier." style="width:250px;"  >
+                                                            <option value="">- Select Supplier -</option>                                           
+                                                        </select>    
+                                                    </label>  
+                                                    
+                                                    
+                                                </td>
+                                                <td width="12%"><font color="red">*</font> <b>Date</b></td> <!--font01-->
+                                                <td width="1%">:</td>
+                                                <td width="75%">       
+                                                    <input id="txtPoDate" name="txtPoDate" placeholder="Purchase Order Date" class="searchbox-date" readonly=""/>    
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td width="12%"><font color="red">*</font> <b>Ref No</b></td> <!--font01-->
+                                                <td width="1%">:</td>
+                                                <td width="25%">     
+                                                    <input type="text" id="txtRefNo" name="txtRefNo" required   class="form-control" rel="popover-hover" data-original-title="Reference No" data-content="Purchase Order Reference No." maxlength="30"/> <!--len01-->
+                                                </td>
+                                                <td width="12%"></td>
+                                                <td width="1%"></td>
+                                                <td width="75%">   
+<!--                                                    <input id="txtPoDate" name="txtPoDate" placeholder="Purchase Order Date" class="searchbox-date" readonly=""/>-->
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td width="12%">Address</td>
+                                                <td width="1%">:</td>
+                                                <td width="25%"> 
+                                                    <input type="text" id="txtAddr1" name="txtAddr1" class="form-control" readonly/><br>
+                                                    <input type="text" id="txtAddr2" name="txtAddr2" class="form-control" readonly/><br>
+                                                    <input type="text" id="txtAddr3" name="txtAddr3" class="form-control" readonly/>
+                                                </td>
+                                                <td width="12%">Phone</td>
+                                                <td width="1%">:</td>
+                                                <td width="75%"> 
+                                                    <input type="text" id="txtPhone" name="txtPhone"  class="form-control" rel="popover-hover" data-original-title="Phone No"  readonly/>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td width="12%">Postcode</td>
+                                                <td width="1%">:</td>
+                                                <td width="25%"> 
+                                                    <input type="text" id="txtPostCode" name="txtPostCode"  class="form-control" rel="popover-hover" data-original-title="PostCode No" data-content="PostCode" readonly/>     
+                                                </td>
+                                                <td width="12%">Fax</td>
+                                                <td width="1%">:</td>
+                                                <td width="75%">
+                                                    <input type="text" id="txtFax" name="txtFax"  class="form-control" rel="popover-hover" data-original-title="Fax No" readonly />     
+                                                </td>
+                                            </tr>
+
+                                        </tbody>
+                                    </table>
+
+                                </div>
+                            </div>
+                        </div>
+                    </article>
+
+
+
+                    <article class="col-sm-12 col-md-12 col-lg-12">
+                        <div class="jarviswidget jarviswidget-color-blueDark" id="wid-id-3"  data-widget-editbutton="false" data-widget-custombutton="false"
+                             data-widget-deletebutton="false" data-widget-colorbutton="false" data-widget-fullscreenbutton="false" data-widget-togglebutton="false">
+                            <header>
+                                <span class="widget-icon"> <i class="fa fa-file"></i></span>
+                                <span><h2>&nbsp;Purchase Order Item</h2></span>
+                            </header>
+                            <div class="padding-10">
+
+                                <input type="button" Id="btnAddItem" onclick="add_Item();"  class="btn btn-default bg-color-blueDark txt-color-white" value="Add New Item" />&nbsp;
+                                <input type="checkbox" id="chkGstInc" name="chkGstInc" value="Y"  /><label for="chkGstInc" class="label-option btn">GST Inclusive</label>
+
+                                <div class="table-responsive">
+                                    <div id="cjqgridPoItem"></div>
+                                    <table id="jqgridPoItem" class="table table-striped table-bordered"  ></table>
+                                    <div id="pjqgridPoItem"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </article>
+
+
+                    <div hidden>
+                         <input type="hidden" id="hdnArrItem" name="hdnArrItem"/>                        
+                        <input type="hidden" id="hdnPricing" name="hdnPricing"/>
+                        <input type="hidden" id="hdnTaxRate" name="hdnTaxRate"/>
+                        <input type="hidden" id="hdnTaxCode" name="hdnTaxCode"/>
+                        <input type="hidden" id="hdnStkItem" name="hdnTaxCode"/>
+                    </div>
+
+                </form>
+            </div>
+
+        </article>
+        <div>
+            <div class="row">
+                <div class="col-sm-12">
+                    <div align="center" class="padding-5" >
+                        <!-- add confirmation box when creating new purchase order -->
+                        <input type="button" Id="btnCreate"  class="btn btn-default bg-color-blueDark txt-color-white" value="Create Purchase Order" onclick = "confirm();"/>
+                        <input type="button" Id="btnCancel"  class="btn btn-default bg-color-blueDark txt-color-white"  value="Cancel" onclick="location.href = '#/PurchaseOrderList'" />
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+<div class="modal fade" id="PoDetailModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog" style="width: 91%;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">
+                    &times;
+                </button>
+                <h4 class="modal-title" id="PoDetailModalLabel">Create Purchase Order Item</h4>
+            </div>
+
+            <div class="modal-body">
+                <div class="widget-body">
+                    <div class="jarviswidget jarviswidget-color-blueDark" id="wid-id-1" data-widget-editbutton="false" data-widget-deletebutton="false" data-widget-colorbutton="false" data-widget-fullscreenbutton="false" data-widget-togglebutton="false">
+                        <header>
+                            <h2>PO Items</h2>
+                        </header>
+                        <div class="container">
+                            <table id="tblSearch" class="selection-criteria">
+                                <tr>
+                                    <td width="10%">Product Code:</td>
+                                    <td>                                            
+                                        <input type="text" id="txtPrdCode" name="txtPrdCode"  placeholder="--Enter Product Code--" class="searchbox-text"    list="PrdCodelist" />
+                                                        <datalist id="PrdCodelist">                                                           
+<!--                                                                                      
+                                                            <option value="Alice"></option>
+                                                            <option value="Anastasia"></option>
+                                                            <option value="Yasmin"></option>
+                                                            <option value="Zelma"></option>-->
+                                                        </datalist>
+                                        <input type="text" id="txtPrdName" name="txtPrdName"  placeholder="--Enter Product Name--" class="searchbox-text" list="PrdCodeName" />
+                                        <datalist id="PrdCodeName"></datalist>
+                                        <button id='btnSearchPrd' class='btn btn-default bg-color-blueDark txt-color-white' type="button" onclick="searchProduct();" ><i class="fa fa-search fa-lg"></i></button>
+                                    </td>
+                                </tr>
+                            </table>
+
+                            <div id="gridPoItemSummary" class="">
+                                <!--<div id="bar-chart" class="chart"></div>-->
+
+                                <table  class="table table-striped" id="tbPoItem" >
+                                    <thead>
+                                        <!--                                    <th>Action</th>                                        -->
+                                    <th id="UOM">UOM</th>
+                                    <th id="QTY">QTY</th>
+                                    <th id="Bonus">Bonus</th>
+                                    <th id="UCost">U.Cost</th>
+                                    <th id="DiscOption">Disc Option</th>
+                                    <th id="DiscAmt">Disc Amt</th>
+                                    <th id="GrossTotal">Gross Total</th>
+                                    <th id="GST">GST</th>
+                                    <th id="GSTIncl">GST Incl.</th>
+                                    <th id="GSTAmt">GST Amt.</th>
+                                    <th id="NettTotal">Nett Total.</th>
+                                    <th id="Company">Company</th>
+                                    </thead>
+                                    <tbody id="PoItemGrid" >
+
+                                    </tbody>
+                                </table>
+
+                            </div>
+
+                        </div>
+                        <input type="button" Id="btnAuto"  class="btn btn-default bg-color-blueDark txt-color-white" value="Auto Allocation Quantity" style="display:none;" />
+                    </div>
+                </div>
+            </div>
+            <div>
+                <div class="row">
+                    <div class="col-sm-12">
+                        <div align="Right" class="padding-5" >
+                            <input type="button" Id="btnOk" class="btn btn-default bg-color-blueDark txt-color-white" value="OK" style=" width:80px;"/>
+                            <input type="button" Id="btnSave" class="btn btn-default bg-color-blueDark txt-color-white" value="Save" style=" width:80px;display:none;"/>
+                            <input type="button" Id="btnClose" class="btn btn-default bg-color-blueDark txt-color-white" value="Close" style=" width:80px;" data-dismiss="modal" />
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+    </div>
+</div>
+
+<jsp:include page="../../../includes/loading-no-status.jsp"/>
+<jsp:include page="../../../includes/PopUpInitPage.jsp"/>
+<jsp:include page="../../../includes/yes-no.jsp"/>
+<script src="js/buttonset.js"></script>
+<script type="text/javascript">
+//pageSetUp();
+
+var mySubgrids = {};
+var myStkUOM = {};
+var arrSubGrid = {};
+var myGST = "";
+var arrData = {};
+var compStkjsonData = {};
+$('#chkGstInc').buttonset();
+
+getDLL("ddlSupplier", "GET_SUPPLIER", "", "");
+
+function getDLL (ddl, method, param1, param2) {
+    $.get('${pageContext.request.contextPath}/Servlet_PopulateData', {SFC: 'GET_DLL', METHOD: method, P1: param1, P2: param2}, function (data) {
+        for(var i=0; i < data.length; i++){                                                          
+            $("#"+ddl).append($("<option>").val(data[i].VALUE).html(data[i].TEXT));
+        }     
+    });     
+}    
+
+var pagefunction = function () {
+    $().ready(function () {
+        
+        $(".numeric").numeric();
+        var container = $('div.errorContainer');
+        //$('#loadingModal').modal('show');
+        var validator = $("#form_AddPO").validate({
+            rules: {
+                    ddlSupplier: "required",
+                    txtRefNo: "required"
+        },
+            messages: {
+                        ddlSupplier: "Supplier must be selected.",
+                        txtRefNo: "Reference no is needed."
+                      },
+                        errorContainer: container,
+                        errorLabelContainer: $("ol", container),
+                        wrapper: 'li'
+                      });
+                    });
+    };                                          
+    loadScript("js/jquery.numeric.js", pagefunction);                                            
+
+    $(document).ready(function () {
+
+
+        var tempDate = new Date();
+        $("#txtPoDate").datepicker({
+                numberOfMonths: 2,
+                changeMonth: true,
+                changeYear: true,
+                dateFormat: "yy-mm-dd",
+                onSelect: function (selected) {
+                    $("#txtPoDate").datepicker("option", "minDate", selected);
+                }                            
+            });
+        var fromDate = $.datepicker.formatDate('yy-mm-dd', new Date(tempDate.getFullYear(), tempDate.getMonth() - 2, tempDate.getDate()));
+        $("#txtPoDate").datepicker("option", "minDate", fromDate);
+        $("#txtPoDate").val($.datepicker.formatDate('yy-mm-dd', tempDate));                      
+    });                                        
+
+    function add_Item() {                 
+
+        if ($("#ddlSupplier").val() !== '') {
+            
+            $('#PoDetailModalLabel').text('Create Purchase Order Item');        
+            $("#PoDetailModal").modal("show");
+            $('#tbPoItem tbody > tr').remove();
+            $("#txtPrdCode").val("");
+            $("#txtPrdName").val("");
+            $("#hdnTaxRate").val("");
+            $("#hdnTaxCode").val("");
+            $("#PrdCodelist").empty();
+            $("#PrdCodeName").empty();
+            $("#txtPrdCode, #txtPrdName").prop('disabled', false);
+            $("#btnSearchPrd, #btnOk").show();
+            $("#btnSave").hide();
+
+            $.ajax({
+                type: "GET",
+                async: false,
+                url: "${pageContext.request.contextPath}/Servlet_Stock?SFC=SEARCH_PRODUCT_LIST",
+                data: {PRDCODE:'', PRDNAME:''},
+                contentType: "application/json; charset=utf-8",
+                dataType: "json",
+                success: function (data) {
+                        //alert(JSON.stringify(data));
+                        for (var i = 0; i < data.rows.length; i++) {
+                               //$("#PrdCodelist").append('<option value=' + (data.rows[i].StkCode).replace(" ", "_") + '>' + data.rows[i].StkDesc + '</option>');
+                               //$("#PrdCodeName").append('<option value=' + (data.rows[i].StkDesc).replace(" ", "_") + '>' + data.rows[i].StkCode + '</option>');
+                               
+                               $("#PrdCodelist").append('<option value="' + (data.rows[i].StkCode) + '">' + data.rows[i].StkDesc + '</option>');
+                               $("#PrdCodeName").append('<option value="' + (data.rows[i].StkDesc) + '">' + data.rows[i].StkCode + '</option>');                               
+                        }
+
+
+                },
+                error: function (jqXHR, textStatus, errorThrown) {
+                    alert("error in function add_Item " + errorThrown);
+                }
+            }); 
+        } else {
+            alert('Please select supplier.');
+        }
+    }   
+
+    function EditPoItem(rowId, CompCode) {
+        
+        var gridPOItem = $('#jqgridPoItem');
+        var subgridPOItem = $('#table_jqgridPoItem_' + rowId);
+ 
+        var ids = subgridPOItem.jqGrid('getDataIDs'); 
+        var subgridRowId = "";
+        
+        for (var i=0 ; i<ids.length ; i++) {
+            var rowData = subgridPOItem.getRowData(ids[i]); 
+            //alert(JSON.stringify(rowData));
+
+            if (rowData["COMPANY"] === CompCode) {
+                subgridRowId = ids[i];
+            } 
+        }
+                 
+        var sPrdCode = gridPOItem.jqGrid('getCell', rowId, 'PRDCODE'); 
+        var sPrdDesc = gridPOItem.jqGrid('getCell', rowId, 'PRDNAME'); 
+        
+        var dQty = subgridPOItem.jqGrid('getCell', subgridRowId, 'QTY'); 
+        var dBonusQty = subgridPOItem.jqGrid ('getCell', subgridRowId, 'BONUS'); 
+        var dUnitCost = subgridPOItem.jqGrid ('getCell', subgridRowId, 'UCOST');    
+        var sDiscOpt = subgridPOItem.jqGrid ('getCell', subgridRowId, 'DISC'); 
+        var dDiscAmt = subgridPOItem.jqGrid ('getCell', subgridRowId, 'DISCAMT'); 
+        var dDiscVal = subgridPOItem.jqGrid ('getCell', subgridRowId, 'DISCVal'); 
+        var dGrossTotal = subgridPOItem.jqGrid ('getCell', subgridRowId, 'GROSSTOTAL');
+        var sGSTCode = subgridPOItem.jqGrid ('getCell', subgridRowId, 'GST');
+        var sGSTInc = subgridPOItem.jqGrid ('getCell', subgridRowId, 'GSTINC');
+        var dGSTAmt = subgridPOItem.jqGrid ('getCell', subgridRowId, 'GSTAMT');
+        var dGSTRate = subgridPOItem.jqGrid ('getCell', subgridRowId, 'GSTRATE');
+        var dNettTotal = subgridPOItem.jqGrid ('getCell', subgridRowId, 'NETTTOTAL');     
+        var sCompCode = subgridPOItem.jqGrid ('getCell', subgridRowId, 'COMPANY');  
+        var sUOM = subgridPOItem.jqGrid ('getCell', subgridRowId, 'UOM'); 
+
+        $('#PoDetailModalLabel').text('Edit Purchase Order Item'); 
+        $("#txtPrdCode").val(sPrdCode);
+        $("#txtPrdName").val(sPrdDesc);            
+        $("#txtPrdCode, #txtPrdName").prop('disabled', true);
+        $("#btnSearchPrd, #btnOk").hide();    
+        $("#btnSave").show();
+        $("#PoDetailModal").modal("show");
+        $('#tbPoItem tbody > tr').remove();
+        $("#PrdCodelist").empty();
+        $("#PrdCodeName").empty();   
+        
+        $.ajax({
+            type: "GET",
+            async: false,
+            url: "${pageContext.request.contextPath}/Servlet_Stock?SFC=SEARCH_PRODUCT_LIST",
+            data: {PRDCODE: rowId.replace("_", " "), PRDNAME: ""},
+            contentType: "application/json; charset=utf-8",
+            dataType: "json",
+            success: function (data) {
+
+                BindStockUOM(data.rows[0].StkCode);               
+                  
+                var x = 0;
+                $('#tbPoItem tbody > tr').remove();
+                $("#tbPoItem tbody").append("<tr>" +
+                    "<td><label id='selectPrdUom' class='searchbox' style='width:80px' ><select class='form-control' id='ddlPrdUOM" + (x + 1) + "' name='ddlPrdUOM" + (x + 1) + "' ></select></label></td>" +
+                    "<td><input type='text' required class='form-control numeric'  ID='txtItemQty" + (x + 1) + "'  name='txtItemQty" + (x + 1) + "' style='width:70px' value='" + dQty + "' onkeyup='this.onchange();' onpaste='this.onchange();' oninput='this.onchange();' onchange='ReCalc(this.id, this.value);'/></td>" +
+                    "<td><input type='text' class='form-control numeric' ID='txtItemBonus" + (x + 1) + "' name='txtItemBonus" + (x + 1) + "' style='width:50px' value='" + dBonusQty + "'/></td>" +
+                    "<td><input type='text' class='form-control numeric' ID='txtUnitCost" + (x + 1) + "' name='txtUnitCost" + (x + 1) + "' style='width:60px' value='" + dUnitCost + "' onkeyup='this.onchange();' onpaste='this.onchange();' oninput='this.onchange();' onchange='ReCalc(this.id, this.value);' /></td>" +
+                    "<td><select class='form-control' style='width:58px' id='ddlDisOpt" + (x + 1) + "' name='ddlDisOpt" + (x + 1) + "'  onchange='ReCalc(this.id, this.value);'><option value='A'>Amt</option><option value='P' selected=''>%</option></select></td>" +
+                    "<td><input type='text' class='form-control numeric' ID='txtDiscAmt" + (x + 1) + "' name='txtDiscAmt" + (x + 1) + "' value='" + dDiscAmt + "' style='width:60px' value='0' onkeyup='this.onchange();' onpaste='this.onchange();' oninput='this.onchange();' onchange='ReCalc(this.id, this.value);'  />\n\
+                         <input type='text' class='form-control numeric' ID='txtDiscVal" + (x + 1) + "' name='txtDiscVal" + (x + 1) + "' style='display:none;' value='" + dDiscVal + "' />\n\
+                    </td>" +
+                    "<td><input type='text' class='form-control numeric' ID='txtGrossTotal" + (x + 1) + "' name='txtGrossTotal" + (x + 1) + "' value='" + dGrossTotal + "' style='width:70px' value='0' disabled /></td>" +
+                    "<td><select class='form-control' ID='ddlGst" + (x + 1) + "' name='ddlGst" + (x + 1) + "' style='width:80px;' onchange='ReCalc(this.id, this.value);' ><option value=''>- GST -</option><jstl:forEach var='ddl_GST' items="${DDL.ddlGet('GET_ACTIVEGSTCODE', 'PURCHASE', '', sessionScope.SiteName)}"><option value='${ddl_GST.VALUE}'>${ddl_GST.TEXT}</option></jstl:forEach></select></td>" +            
+                    "<td><select disabled class='form-control' style='width:58px' id='ddlGstIncl" + (x + 1) + "' name='ddlGstIncl" + (x + 1) + "'><option value='N' selected=''>No</option><option value='Y'>Yes</option></select></td>" +
+                    "<td><input type='text' class='form-control numeric' ID='txtGstAmt" + (x + 1) + "' name='txtGstAmt" + (x + 1) + "' style='width:60px' value='" + dGSTAmt + "' disabled />\n\
+                         <input type='text' class='form-control numeric' ID='txtGstRate" + (x + 1) + "' name='txtGstRate" + (x + 1) + "' style='display:none;' value='" + dGSTRate + "' />\n\
+                    </td>" +
+                    "<td><input type='text' class='form-control numeric' ID='txtNettTotal" + (x + 1) + "' name='txtNettTotal" + (x + 1) + "' style='width:70px' value='" + dNettTotal + "' disabled /></td>" +
+                    "<td><label id='selectComp' class='searchbox'><select class='form-control' id='ddlCompany" + (x + 1) + "' name='ddlCompany" + (x + 1) + "' style='width:120px' disabled><option value=''>- Select Company -</option><jstl:forEach var='ddl_Company' items="${DDL.ddlGet('GET_COMP', '', '', sessionScope.SiteName)}"><option value='${ddl_Company.VALUE}'>${ddl_Company.TEXT}</option></jstl:forEach></select></label></td>" +  
+                    "</tr>"
+                );
+
+                $.get('${pageContext.request.contextPath}/Servlet_Company', {SFC: 'GET_COMP_SUPP_STK', STKCODE: $("#txtPrdCode").val(), COMPCODE: "", SUPPCODE: $("#ddlSupplier").val()}, function (Compdata) {
+
+                    compStkjsonData = JSON.parse(Compdata); 
+                    $("#hdnStkItem").val(compStkjsonData.rows);
+
+                    for (var i = 0; i < myStkUOM.rows.length; i++) {
+                        $("#ddlPrdUOM" + (x + 1)).append('<option value=' + myStkUOM.rows[i].VALUE + '>' + myStkUOM.rows[i].TEXT + '</option>');                      
+                    }
+                    $("#ddlPrdUOM" + (x + 1)).val(sUOM);
+                });
+             
+                $("#ddlDisOpt" + (x + 1)).val(sDiscOpt);
+                $("#ddlGst" + (x + 1)).val(sGSTCode); 
+                $("#ddlGstIncl" + (x + 1)).val(sGSTInc);               
+                $("#ddlCompany" + (x + 1)).val(sCompCode);
+
+                checkStock($("#txtPrdCode").val());    
+            }
+        });
+    }   
+    
+    $("#btnSave").click(function () {
+
+        //$('#tbPoItem tr').each(function (row, th) { 
+        var row = '1'; //first row
+                
+        var SumQty = parseFloat($('#txtItemQty' + row).val());
+        var SumBonus = parseFloat($('#txtItemBonus' + row).val());
+        var SumGrossAmt = parseFloat($('#txtGrossTotal' + row).val());
+        var SumNettAmt = parseFloat($('#txtNettTotal' + row).val());
+        var SumGstAmt = parseFloat($('#txtGstAmt' + row).val());
+        var SumDiscVal = parseFloat($('#txtDiscVal' + row).val());
+
+//        arrPOItemDetail[row] = {
+//            "PRDCODE": $("#txtPrdCode").val(),
+//            "PRDNAME": $("#txtPrdName").val(),                                                          
+//            "COMPANY": $('#ddlCompany' + row).val() 
+//        };
+        
+        var TempPrdCode = $("#txtPrdCode").val().replace(" ", "_");
+        var subgridPOItem = $('#table_jqgridPoItem_' + TempPrdCode);
+ 
+        var rowNo = '1';
+        
+        var ids = subgridPOItem.jqGrid('getDataIDs');     
+        for (var i=0 ; i<ids.length ; i++) {
+            var rowData = subgridPOItem.getRowData(ids[i]); 
+
+            if (rowData["COMPANY"] === $('#ddlCompany' + rowNo).val()) { 
+                var subgridRowId = ids[i]; 
+                                  
+                subgridPOItem.jqGrid('setCell', subgridRowId, 'UOM', $('#ddlPrdUOM' + row).val()); 
+                subgridPOItem.jqGrid('setCell', subgridRowId, 'QTY', $('#txtItemQty' + row).val()); 
+                subgridPOItem.jqGrid('setCell', subgridRowId, 'UCOST', $('#txtUnitCost' + row).val()); 
+                subgridPOItem.jqGrid('setCell', subgridRowId, 'BONUS', $('#txtItemBonus' + row).val());
+                subgridPOItem.jqGrid('setCell', subgridRowId, 'DISC', $('#ddlDisOpt' + row).val()); 
+                subgridPOItem.jqGrid('setCell', subgridRowId, 'DISCAMT', $('#txtDiscAmt' + row).val());
+                subgridPOItem.jqGrid('setCell', subgridRowId, 'DISCVal', $('#txtDiscVal' + row).val());
+                subgridPOItem.jqGrid('setCell', subgridRowId, 'GROSSTOTAL', $('#txtGrossTotal' + row).val());
+                subgridPOItem.jqGrid('setCell', subgridRowId, 'GST', $('#ddlGst' + row).val());
+                subgridPOItem.jqGrid('setCell', subgridRowId, 'GSTINC', $('#ddlGstIncl' + row).val());
+                subgridPOItem.jqGrid('setCell', subgridRowId, 'GSTAMT', $('#txtGstAmt' + row).val());
+                subgridPOItem.jqGrid('setCell', subgridRowId, 'GSTRATE', $('#txtGstRate' + row).val());
+                subgridPOItem.jqGrid('setCell', subgridRowId, 'NETTTOTAL', $('#txtNettTotal' + row).val());
+            } 
+        }
+        
+        for (var i=0 ; i<ids.length ; i++) {
+            var rowData = subgridPOItem.getRowData(ids[i]); 
+
+            //sum up PO items (from different company than the selected one)
+            if (rowData["COMPANY"] !== $('#ddlCompany' + rowNo).val()) { 
+                subgridRowId = ids[i]; 
+                
+                SumQty += parseFloat(rowData["QTY"]);
+                SumBonus += parseFloat(rowData["BONUS"]);
+                SumGrossAmt += parseFloat(rowData["GROSSTOTAL"]);
+                SumNettAmt += parseFloat(rowData["NETTTOTAL"]);
+                SumGstAmt += parseFloat(rowData["GSTAMT"]);
+                SumDiscVal += parseFloat(rowData["DISCVal"]);
+            } 
+        }
+        
+        if (SumQty > 0) {
+            
+            //var rowData = $('#jqgridPoItem').jqGrid('getRowData', TempPrdCode);       
+            $('#jqgridPoItem').jqGrid('setCell', TempPrdCode, 'TOTALQTY', parseFloat(SumQty).toFixed(2));    
+            $('#jqgridPoItem').jqGrid('setCell', TempPrdCode, 'TOTALBONUS', parseFloat(SumBonus).toFixed(2));   
+            $('#jqgridPoItem').jqGrid('setCell', TempPrdCode, 'TOTALGROSS', parseFloat(SumGrossAmt).toFixed(2)); 
+            $('#jqgridPoItem').jqGrid('setCell', TempPrdCode, 'TOTALNETT', parseFloat(SumNettAmt).toFixed(2)); 
+            $('#jqgridPoItem').jqGrid('setCell', TempPrdCode, 'TOTALGSTAMT', parseFloat(SumGstAmt).toFixed(2)); 
+            $('#jqgridPoItem').jqGrid('setCell', TempPrdCode, 'TOTALDISCVAL', parseFloat(SumDiscVal).toFixed(2));            
+        } else {
+            $.bigBoxFail({
+                title: "Order Quantity.",
+                content: "Order quantity must greater then 0.",
+                timeout: 6000
+            });
+        }
+
+        $('#tbPoItem tbody > tr').remove();
+        $("#txtPrdCode, #txtPrdName, #hdnTaxRate, #hdnTaxCode").val("");
+    });      
+   
+    function searchProduct() {
+        $(".numeric").numeric();
+        $('#tbPoItem tbody > tr').remove();
+                        
+        showProduct({width: 1000, height: 600}).done(function (rowIn) {
+        // alert(JSON.stringify(rowIn.stk_stockcode));
+        $("#txtPrdCode").val(rowIn.stk_stockcode);
+        $("#txtPrdName").val(rowIn.stk_desc);
+        $("#hdnTaxRate").val(rowIn.gst_taxrate);       
+        $("#hdnTaxCode").val(rowIn.stk_gstpurcode);
+                        
+                        
+        // alert(rowIn.stk_gstpurcode);
+
+        BindStockUOM(rowIn.stk_stockcode);     
+        BuildGrid();
+        checkStock($("#txtPrdCode").val());
+
+    });
+    }
+
+    $("#btnAuto").click(function () {
+        InsertStockBal();
+        $.get('${pageContext.request.contextPath}/Servlet_Stock', {SFC: 'PO_AUTO_ALLOCATE', STKCODE: $("#txtPrdCode").val()}, function (data) {
+
+            var jsonData = JSON.parse(data);
+           // alert(JSON.stringify(jsonData));
+            var rowCount = $('#tbPoItem tr').length;
+            var sGstAmt = '';
+            var sNettAmt = '';
+            var sDicsAmt = '';
+            var sGrossTotal ='';
+            var sQty = '';
+            var sDiscOpt = '', sDiscValue = '';
+
+                $('#tbPoItem tr').each(function (row, th) {
+
+                    if (row > 0) {
+                      
+                        if ($("#ddlCompany" + row).val() === jsonData.rows[(row - 1)].CompanyCode) {
+                           sQty =  parseFloat(jsonData.rows[(row - 1)].PoOrdQty).toFixed(2);
+                           
+                           $('#txtItemQty' + row).val(parseFloat(sQty).toFixed(2));
+                           $('#txtGrossTotal' + row).val(parseFloat(sQty * $('#txtUnitCost' + row).val()).toFixed(2));
+                           sGstAmt = ($('#txtGrossTotal' + row).val() * parseFloat($("#hdnTaxRate").val()/100)) ;  
+                           sGrossTotal = parseFloat(sQty * $('#txtUnitCost' + row).val()).toFixed(2);
+                           if ($("#hdnTaxCode").val().trim().length !== 0){
+                            $('#txtGstRate' + row).val(parseFloat($("#hdnTaxRate").val()/100));
+                           }
+                          // alert('sGstAmt-->' + sGstAmt);
+                           if ($("#ddlGstIncl" + row).val() === 'N') {
+                                if ($("#hdnTaxRate").val() > '0.000' ){
+                                                    
+                                    sNettAmt = parseFloat((sQty * $('#txtUnitCost' + row).val()) + sGstAmt).toFixed(2); 
+
+                                    $("#txtGstAmt" + row).val(parseFloat(sGstAmt).toFixed(2));
+                                    $("#txtNettTotal" + row).val(parseFloat(sNettAmt).toFixed(2));
+                                }else{
+                                   // alert('else');
+                                    sNettAmt = parseFloat(sQty * $('#txtUnitCost' + row).val()).toFixed(2); 
+                                    //$("#txtGstAmt" + row).val(parseFloat(sGstAmt).toFixed(2));
+                                    $("#txtNettTotal" + row).val(parseFloat(sNettAmt).toFixed(2));
+                                }
+                            } else {                                                    
+                                sNettAmt = parseFloat(sGrossTotal).toFixed(2); 
+                                $("#txtGstAmt" + row).val(parseFloat(sGstAmt).toFixed(2));
+                                $("#txtNettTotal" + row).val(parseFloat(sNettAmt).toFixed(2));
+                            }                   
+                        }
+                    }
+                });
+             });
+        });                                   
+    
+    $("#btnOk").click(function () {
+
+        var arrPOItemHeader = new Array();
+        var arrPOItemDetail = new Array();
+        var arrActualPOItemDetail = [];
+        var SumQty = 0, SumBonus = 0, SumGrossAmt = 0, SumNettAmt = 0, SumGstAmt = 0, SumDiscVal=0, sGSTCode = "";
+
+        $('#tbPoItem tr').each(function (row, th) {
+
+            if (row > 0) {
+                //alert($('#ddlGst' + row + ' option:selected').length);
+                if ($('#ddlGst' + row + ' option:selected').length > 0){
+                    sGSTCode = $('#ddlGst' + row + ' option:selected').val();
+                }else{
+                     sGSTCode = "";   
+                }
+         //if  ($('#txtItemQty' + row).val() > 0){
+                //console.log(row);
+                // alert($('#txtItemQty' + row).val());
+                SumQty += parseFloat($('#txtItemQty' + row).val());
+                SumBonus += parseFloat($('#txtItemBonus' + row).val());
+                SumGrossAmt += parseFloat($('#txtGrossTotal' + row).val());
+                SumNettAmt += parseFloat($('#txtNettTotal' + row).val());
+                SumGstAmt += parseFloat($('#txtGstAmt' + row).val());
+                SumDiscVal += parseFloat($('#txtDiscVal' + row).val());
+                //if (parseFloat($('#txtItemQty' + row).val()) > 0) {
+                arrPOItemDetail[row] = {
+                            "TEMPPRDCODE": $("#txtPrdCode").val().replace(" ", "_")
+                          , "PRDCODE": $("#txtPrdCode").val()
+                          , "PRDNAME": $("#txtPrdName").val()
+                          , "QTY": parseFloat($('#txtItemQty' + row).val())
+                          , "BONUS": parseFloat($('#txtItemBonus' + row).val())
+                          , "UOM": $('#ddlPrdUOM' + row + ' option:selected').val()
+                          , "UCOST": parseFloat($('#txtUnitCost' + row).val())
+                          , "DISC": $('#ddlDisOpt' + row + ' option:selected').val()                                                            
+                          , "DISCAMT": parseFloat($('#txtDiscAmt' + row).val())
+                          , "DISCVal": parseFloat($('#txtDiscVal' + row).val())
+                          , "GST": sGSTCode
+                          , "GSTINC": $('#ddlGstIncl' + row + ' option:selected').val()
+                          , "GROSSTOTAL": parseFloat($('#txtGrossTotal' + row).val())
+                          , "NETTTOTAL": parseFloat($('#txtNettTotal' + row).val())
+                          , "GSTAMT": parseFloat($('#txtGstAmt' + row).val())
+                          , "GSTRATE": parseFloat($('#txtGstRate' + row).val())
+                          , "COMPANY": $('#ddlCompany' + row + ' option:selected').val() //$(th).find('td:eq(11)').val()
+                        };
+                 // }
+                       }
+                    });
+                    
+            if (arrPOItemDetail.length > 0) {
+                if (SumQty > 0) {
+                    arrPOItemHeader[1] = {
+                     "TEMPPRDCODE": $("#txtPrdCode").val().replace(" ", "_")   
+                   , "PRDCODE": $("#txtPrdCode").val()
+                   , "PRDNAME": $("#txtPrdName").val()
+                   , "TOTALQTY": parseFloat(SumQty).toFixed(2)
+                   , "TOTALBONUS": parseFloat(SumBonus).toFixed(2)
+                   , "TOTALGROSS": parseFloat(SumGrossAmt).toFixed(2)
+                   , "TOTALNETT": parseFloat(SumNettAmt).toFixed(2)
+                   , "TOTALGSTAMT": parseFloat(SumGstAmt).toFixed(2)
+                   , "TOTALDISCVAL": parseFloat(SumDiscVal).toFixed(2)
+                };
+                } else {
+                    $.bigBoxFail({
+                        title: "Order Quantity.",
+                        content: "Order quantity must greater then 0.",
+                        timeout: 6000
+                    });
+                }
+                }
+                else {
+                    $.bigBoxFail({
+                    title: "No Item To Purchase.",
+                    content: "There is no product to order.",
+                    timeout: 6000
+                });
+               }
+               // removeNulls(arrPOItemDetail);
+               arrPOItemHeader.splice(0, 1);
+               arrPOItemDetail.splice(0, 1);
+                // console.log(JSON.stringify(arrPOItemDetail));
+                // alert("arrPOItemDetail.length-->" + arrPOItemDetail.length);
+                for (var j = 0; j < arrPOItemDetail.length; j++) {                  
+                    if (arrPOItemDetail[j].QTY > 0) { 
+                     // arrActualPOItemDetail = (JSON.stringify(arrPOItemDetail[j])) ;
+                        arrActualPOItemDetail.push(arrPOItemDetail[j]);
+                      //  alert(JSON.stringify(arrPOItemDetail[j]));
+                       // console.log(JSON.stringify(arrActualPOItemDetail));
+                   //     arrPOItemDetail.splice(j,j);                        
+                    }
+                }
+                 
+               // alert(JSON.stringify(arrActualPOItemDetail));
+                mySubgrids[$("#txtPrdCode").val().replace(" ", "_")] = arrActualPOItemDetail;
+              //alert("mySubgrids-->" +JSON.stringify(mySubgrids[$("#txtPrdCode").val().replace(" ", "_")]));
+                var ItemHeader = JSON.stringify(arrPOItemHeader);
+                var data = $("#jqgridPoItem").jqGrid('getGridParam', 'data');
+                var isSet = false;
+               //  alert(JSON.stringify(data));
+                 if (data.length > 0)
+                    {
+                     for (var z = 0; z < data.length; z++) {
+                          var prdcode = data[z].PRDCODE.replace(" ", "_");
+                          //alert(prdcode);
+
+                   if ($("#txtPrdCode").val().replace(" ", "_") === prdcode) {
+                       isSet = false;
+                       break;
+                    }
+                   else {
+                         isSet = true;
+                     }
+                }
+               }
+                else
+                {
+                    isSet = true;
+                }
+
+
+           //alert(isSet);
+                if (isSet) {
+                    $("#jqgridPoItem").addRowData("TEMPPRDCODE", JSON.parse(ItemHeader));
+                } 
+                else {
+                    $.bigBoxFail({
+                    title: "Duplicated Item.",
+                    content: "Item already exists.",
+                    timeout: 6000
+                    });
+                }
+
+                $('#tbPoItem tbody > tr').remove();
+                $("#txtPrdCode").val("");
+                $("#txtPrdName").val("");
+                $("#hdnTaxRate").val("");
+                $("#hdnTaxCode").val("");
+        });                                          
+
+    
+    //c02
+    //Aaron
+    function confirm(){
+        var $this = $(this);
+        var json = mySubgrids;
+        var arr = [];
+        
+        $.each(json, function (key, data) {
+        $.each(data, function (index, data) {
+            arr.push(data);
+        });
+        });
+
+        var saveItem = (arr.reduce(function (result, current) {
+            result[current.COMPANY] = result[current.COMPANY] || [];
+            result[current.COMPANY].push(current);
+            $("#hdnArrItem").val(JSON.stringify(result));
+                return result;
+        }, {}));
+        
+        var $validPO = $("#form_AddPO").valid();
+         if ($validPO === true) {
+            if (arr.length <= 0){
+                //Aaron
+               //add a warning box if there no product selected to purchase
+                $.bigBoxWarning({
+                    title: "No product to purchase",
+                    content: "Please add products and try again.",
+                    timeout: 6000
+                    });
+            }
+            else{
+                //Aaron
+                //add confirmation box when creating purchase order
+                document.getElementById("btnCreate").disabled = true;
+                showYesNo({
+                            title: "Confirm Purchase Order?",
+                            width: 420,
+                            noClose: true,
+                            isModal: true,
+                            body: [
+                                "<br><h4>Are you sure to proceed Creating Purchase Order?<h4><br>"
+                            ],
+                            show: function(){
+                            },
+                            Yes: {
+                                text: "Yes",
+                                opt: function(){
+                                    createPO();
+                                    document.getElementById("btnCreate").disabled = false;
+                                    hideYesNo();
+                                }
+                                
+                            },
+                            No: {
+                                text: "No",
+                                opt: function(){
+                                    document.getElementById("btnCreate").disabled = false;
+                                    hideYesNo();
+                                }
+                            }
+                        });
+                        }
+         
+            }
+            
+    }
+    //c02
+    //Aaron
+    function createPO(){
+        var $this = $(this);
+        $this.off('click');
+        
+        $.ajax({
+                type: "POST",
+                url: "${pageContext.request.contextPath}/Servlet_PurchaseOrder?SFC=INSERT_PURCHASEORDER",
+                data: {
+                     POMASTER: JSON.stringify($('#form_AddPO').serializeArray()),
+                     PODETAIL: $('#hdnArrItem').val()
+                },
+                dataType: 'json',
+                beforeSend: function (xhr) {
+                      $.showLoadingNoStatus();
+                },
+                success: function(response,status,xhr) {
+                    if (response.bool === true) {
+                   
+                        $.bigBoxSuccess({
+                            title: "PURCAHSE ORDER SUCCESS CREATED.",
+                            content: "Purchase Order Group No " + response.msg +  " SUCCESS Created.",
+                            timeout: 6000
+                        });
+                   
+                    } 
+                    else {
+                        $.bigBoxFail({
+                            title: "FAILED To Create Purchase Order.",
+                            content: "There is some error during Purchase Order creation.<br> Please try again...",
+                            timeout: 6000
+                        });
+                    }
+                },
+                error: function(xhr,status,error){
+                    $.bigBoxFail({
+                        title: "Transaction ERROR",
+                        content: "There is some error occur during data transfer. Please try again later",
+                        timeout: 6000 
+                    });
+                },
+                complete: function(xhr,status){
+                    if (xhr.status === 200){
+                       $.hideLoadingNoStatus(function(){
+                           window.location.href = "#/PurchaseOrderList";
+                         },500);
+                         }
+                    else{
+                        $.hideLoadingNoStatus(function(){
+                        },0);
+                    }
+                }
+
+            });
+        }
+    //c02
+    //Aaron
+    
+    
+    //-------
+//    $("#ddlSupplier").change(function(){  
+//            
+//       alert("AAAA");     
+//        });
+        
+        
+        $("#ddlSupplier").change(function(){  
+            
+                      
+            var sSupplier = this.value;
+            if (sSupplier !== "") {                
+                $.ajax({
+                    type: "GET",
+                    url: "${pageContext.request.contextPath}/Servlet_Supplier?SFC=GET_SUP_DETAIL",
+                    data: {
+                        SUPCODE: sSupplier
+                    },
+                    dataType: 'json',
+                    success: function(data) {
+                        
+                        var arrData = data.object1[0];
+                        
+                       
+                           
+                            $('#txtAddr1').val(arrData.sup_add1);
+                    $('#txtAddr2').val(arrData.sup_add2);
+                    $('#txtAddr3').val(arrData.sup_add3);
+                    $('#txtPhone').val(arrData.sup_telephone);
+                    $('#txtFax').val(arrData.sup_fax);                    
+                    $('#txtPostCode').val(arrData.sup_postcode);                 
+                    }
+                });                                                           
+                
+            } 
+        });
+        
+        
+    //-------
+    function BuildGrid(){
+    
+        $('#tbPoItem tbody > tr').remove();
+        $.get('${pageContext.request.contextPath}/Servlet_Company', {SFC: 'GET_TOTAL_COMP'}, function (data) {
+         arrData = data.object1[0];
+                            //alert(arrData.Total);
+        for (var x = 0; x < arrData.Total; x++)
+            {
+            //alert(stkPrdCode.);
+            $("#tbPoItem tbody").append("<tr>" +
+//                            "<td width='60px'>" +
+//                            "<button type='button' class='editSummaryGrid' onclick='summaryDelete(this);'>Delete</button>\n\
+//                             <button  class='btnSummaryGrid' onclick='savePricingChanges(this);'><span class='glyphicon glyphicon-save'></span>Save</button>\n\
+//                             <button  class='btnSummaryGrid' onclick='summaryCancel(this);'>Cancel</button>\n\
+//                            </td>" +
+            "<td><label id='selectPrdUom' class='searchbox' style='width:80px' ><select class='form-control' id='ddlPrdUOM" + (x + 1) + "' name='ddlPrdUOM" + (x + 1) + "' ></select></label>" +
+            "</td>" +
+            "<td><input type='text' required   class='form-control numeric'  ID='txtItemQty" + (x + 1) + "'  name='txtItemQty" + (x + 1) + "' style='width:70px' value='0' onkeyup='this.onchange();' onpaste='this.onchange();' oninput='this.onchange();' onchange='ReCalc(this.id, this.value);'   /></td>" +
+            "<td><input type='text' class='form-control numeric' ID='txtItemBonus" + (x + 1) + "' name='txtItemBonus" + (x + 1) + "' style='width:50px' value='0'    /></td>" +
+            "<td><input type='text' class='form-control numeric' ID='txtUnitCost" + (x + 1) + "' name='txtUnitCost" + (x + 1) + "' style='width:60px' value='0' onkeyup='this.onchange();' onpaste='this.onchange();' oninput='this.onchange();' onchange='ReCalc(this.id, this.value);'   /></td>" +
+            "<td><select class='form-control' style='width:58px' id='ddlDisOpt" + (x + 1) + "' name='ddlDisOpt" + (x + 1) + "' onchange='ReCalc(this.id, this.value);'><option value='A'>Amt</option><option value='P' selected=''>%</option></select></td>" +
+            "<td><input type='text' class='form-control numeric' ID='txtDiscAmt" + (x + 1) + "' name='txtDiscAmt" + (x + 1) + "' style='width:60px' value='0' onkeyup='this.onchange();' onpaste='this.onchange();' oninput='this.onchange();' onchange='ReCalc(this.id, this.value);'  />\n\
+                 <input type='text' class='form-control numeric' ID='txtDiscVal" + (x + 1) + "' name='txtDiscVal" + (x + 1) + "' style='width:60px; display:none;' value='0'   />\n\
+            </td>" +
+            "<td><input type='text' class='form-control numeric' ID='txtGrossTotal" + (x + 1) + "' name='txtGrossTotal" + (x + 1) + "' style='width:70px' value='0' disabled /></td>" +
+            "<td><select class='form-control' ID='ddlGst" + (x + 1) + "'  name='ddlGst" + (x + 1) + "' style='width:80px;' onchange='ReCalc(this.id, this.value);' ><option value=''>- GST -</option><jstl:forEach var='ddl_GST' items="${DDL.ddlGet('GET_ACTIVEGSTCODE', 'PURCHASE', '', sessionScope.SiteName)}"><option value='${ddl_GST.VALUE}'>${ddl_GST.TEXT}</option></jstl:forEach></select></td>" +            
+            "<td><select disabled class='form-control' style='width:58px' id='ddlGstIncl" + (x + 1) + "' name='ddlGstIncl" + (x + 1) + "'><option value='N' selected=''>No</option><option value='Y'>Yes</option></select></td>" +
+            "<td><input type='text' class='form-control numeric' ID='txtGstAmt" + (x + 1) + "' name='txtGstAmt" + (x + 1) + "' style='width:60px' value='0' disabled />\n\
+                 <input type='text' class='form-control numeric' ID='txtGstRate" + (x + 1) + "' name='txtGstRate" + (x + 1) + "' style='width:60px;display:none;' value='0'   />\n\
+            </td>" +
+            "<td><input type='text' class='form-control numeric' ID='txtNettTotal" + (x + 1) + "' name='txtNettTotal" + (x + 1) + "' style='width:70px' value='0' disabled /></td>" +
+            "<td><label id='selectComp' class='searchbox'><select class='form-control' id='ddlCompany" + (x + 1) + "' name='ddlCompany" + (x + 1) + "' style='width:120px'><option value=''>- Select Company -</option><jstl:forEach var='ddl_Company' items="${DDL.ddlGet('GET_COMP', '', '', sessionScope.SiteName)}"><option value='${ddl_Company.VALUE}'>${ddl_Company.TEXT}</option></jstl:forEach></select></label></td>" +            
+            //"<td><label id='selectComp' class='searchbox'><select class='form-control' id='ddlCompany" + (x + 1) + "' name='ddlCompany" + (x + 1) + "' style='width:120px'><option value=''>- Select Company -</option></select></label></td>" +
+            "</tr>"
+        );
+
+       // getDLL("ddlGst"+(x+1), "GET_ACTIVEGSTCODE", "PURCHASE", "");
+       // getDLL("ddlCompany"+(x+1), "GET_COMP", "", "");    
+            
+            $("#ddlCompany" + (x + 1)).prop('selectedIndex', (x + 1));
+            $("#ddlGst" + (x + 1)).val($("#hdnTaxCode").val());
+
+            if ($('#chkGstInc').is(':checked')) {
+                $("#ddlGstIncl" + (x + 1)).val('Y');
+            } else {
+                $("#ddlGstIncl" + (x + 1)).val('N');
+            }
+
+        }
+
+        $.get('${pageContext.request.contextPath}/Servlet_Company', {SFC: 'GET_COMP_SUPP_STK', STKCODE: $("#txtPrdCode").val(), COMPCODE: "", SUPPCODE: $("#ddlSupplier").val()}, function (Compdata) {
+                                                   
+            compStkjsonData = JSON.parse(Compdata); 
+            $("#hdnStkItem").val(compStkjsonData.rows);
+
+            $('#tbPoItem tr').each(function (row, th) {                                                                  
+                if (row > 0) {
+                    for (var i=0 ; i<myStkUOM.rows.length ; i++) { 
+                        $("#ddlPrdUOM" + row).append('<option value=' + myStkUOM.rows[i].VALUE + '>' + myStkUOM.rows[i].TEXT + '</option>');
+                    }
+                   // if (compStkjsonData.rows.length > 0) { 
+                    for (var i=0 ; i<compStkjsonData.rows.length ; i++) {
+                        if ($("#ddlCompany" + row).val() === compStkjsonData.rows[i].CompCode) {
+
+                            $("#ddlPrdUOM" + row).val(compStkjsonData.rows[i].UomCode);
+                            $('#txtUnitCost' + row).val(parseFloat(compStkjsonData.rows[i].UnitCost).toFixed(2));
+                        }
+                    }
+                    //}
+                }
+            });
+        });
+        });
+    }
+
+$("#txtPrdCode").on('input', function () {
+    var val = this.value;
+    
+    if($('#PrdCodelist option').filter(function(){
+
+        return this.value === val;     
+                
+    }).length) {
+      
+       $.ajax({
+            type: "GET",
+            async: false,
+            url: "${pageContext.request.contextPath}/Servlet_Stock?SFC=SEARCH_PRODUCT_LIST",
+            data: {
+                //PRDCODE:val.replace("_", " "), 
+                PRDCODE:val,
+                PRDNAME:''
+            },
+            contentType: "application/json; charset=utf-8",
+            dataType: "json",
+            success: function (data) {
+                                       
+                $("#txtPrdCode").val(data.rows[0].StkCode);
+                $("#txtPrdName").val(data.rows[0].StkDesc);
+                $("#hdnTaxRate").val(data.rows[0].gst_taxrate);       
+                $("#hdnTaxCode").val(data.rows[0].stk_gstpurcode);
+
+                BindStockUOM(data.rows[0].StkCode);         
+                BuildGrid();
+                checkStock($("#txtPrdCode").val());                                              
+            },
+            error: function (jqXHR, textStatus, errorThrown) {
+                alert("error : " + errorThrown);
+            }
+        });
+    }
+});
+
+$("#txtPrdName").on('input', function () {
+    var val = this.value;
+   // alert(val);
+   // var name = this.text;
+    if($('#PrdCodeName option').filter(function(){
+        return this.value === val;        
+    }).length) {
+        
+        $.ajax({
+            type: "GET",
+            async: false,
+            url: "${pageContext.request.contextPath}/Servlet_Stock?SFC=SEARCH_PRODUCT_LIST",
+            data: {PRDCODE:'', PRDNAME:val.replace("_", " ")},
+            contentType: "application/json; charset=utf-8",
+            dataType: "json",
+            success: function (data) {
+                   
+                    $("#txtPrdCode").val(data.rows[0].StkCode);
+                    $("#txtPrdName").val(data.rows[0].StkDesc);
+                    $("#hdnTaxRate").val(data.rows[0].gst_taxrate);       
+                    $("#hdnTaxCode").val(data.rows[0].stk_gstpurcode);
+
+                    BindStockUOM(data.rows[0].StkCode);               
+                    BuildGrid();
+                    checkStock($("#txtPrdCode").val());
+          
+            },
+            error: function (jqXHR, textStatus, errorThrown) {
+                alert("error (txtPrdName on input) " + errorThrown);
+            }
+        });
+    }
+});
+                                                
+    function checkStock(stkCode){
+        //alert(stkCode);
+        $.ajax({
+            type: "GET",
+            async: true,
+            url: "${pageContext.request.contextPath}/Servlet_Stock?SFC=CHECK_STOCK",
+            data: {PRDCODE:stkCode},
+            contentType: "application/json; charset=utf-8",
+            dataType: "json",
+            success: function (data) {
+                   
+                   //alert(JSON.stringify(arrData));
+                   
+                   if (data.rows.length === 0){
+                      // console.log(JSON.stringify(compStkjsonData.rows));
+                      
+                    $("#hdnStkItem").val(JSON.stringify(compStkjsonData.rows));
+                       
+                  // InsertStockBal();
+                       
+                       //alert("compStkjsonData-->" + JSON.stringify(compStkjsonData));
+                   }  
+              
+            },
+            error: function (jqXHR, textStatus, errorThrown) {
+                alert("error checkStock " + errorThrown);
+            }
+        });
+     
+    }
+    
+    function InsertStockBal(){
+    
+       // if ($("#hdnStkItem").val().size() > 0){
+             $.ajax({
+                        type: "GET",
+                        async: false,
+                        url: "${pageContext.request.contextPath}/Servlet_Stock?SFC=PO_INSERT_STOCK_BALANCE",
+                        data: {STKITEM:JSON.stringify(compStkjsonData.rows)},
+                        contentType: "application/json; charset=utf-8",
+                        dataType: "json",
+                        success: function (msg) {                       
+                                //alert(JSON.stringify(msg));
+                                $("#hdnStkItem").val('');
+                            }
+                        });
+                       // }
+    }
+    
+    function ReCalc(key, value) 
+    {       
+        var row = key.replace( /^\D+/g, ''); //row number
+             
+        //var itemqty = $("#txtItemQty" + key.substr(key.length - 1)).val();
+        var itemqty = $("#txtItemQty" + row).val();
+        var itemUC = $("#txtUnitCost" + row).val();
+        var sGst = $("#ddlGst" + row).val();
+        var sGstInc = $("#ddlGstIncl" + row).val();
+        var sGrossTotal = 0;
+        var sGrossTotal_AfterGst = 0;
+        var sDiscOpt = $("#ddlDisOpt" + row).val();
+        var sDiscValue = '';
+        var sDicsAmt = '';
+        var sGstAmt = 0;
+        var sNettAmt = 0;
+        var sGstVal = 0;
+        $("#txtGstAmt" + row).val(0);
+        $("#txtGstRate" + row).val(0);
+
+        // $("#hdnTaxCode").val(sGst);
+        if (sDiscOpt === 'P') {
+            sDiscValue = $("#txtDiscAmt" + row).val() / 100;                                               
+            sDicsAmt = (itemqty * itemUC) * sDiscValue;            
+        } else {
+            sDiscValue = $("#txtDiscAmt" + row).val();                                                   
+            sDicsAmt = sDiscValue;
+        } 
+        $("#txtDiscVal" + row).val(sDicsAmt);
+        
+        sGrossTotal = (itemqty * itemUC) - sDicsAmt;
+        $('#txtGrossTotal' + row).val(sGrossTotal.toFixed(2));
+
+        if (sGst !== ""){                 
+            sGstVal = GetGstVal(sGst);   
+        }
+        $("#txtGstRate" + row).val(sGstVal); 
+
+        if (sGstInc === 'N') {        
+            if (sGstVal > '0'){
+                
+                sGstAmt = sGrossTotal * sGstVal;
+                sNettAmt = parseFloat(sGstAmt) + parseFloat(sGrossTotal);
+
+                $("#txtGstAmt" + row).val(parseFloat(sGstAmt).toFixed(2));
+                $("#txtNettTotal" + row).val(parseFloat(sNettAmt).toFixed(2));
+            } else {
+                $("#txtNettTotal" + row).val(sGrossTotal.toFixed(2));
+            }
+        } else {
+            
+            if (sGstVal > '0'){
+                sGrossTotal_AfterGst = sGrossTotal / 106 * 100;           
+                sGstAmt = sGrossTotal - sGrossTotal_AfterGst;
+
+                //sGstAmt = (sGrossTotal - sDicsAmt) * (sGstVal);
+                $('#txtGrossTotal' + row).val(sGrossTotal_AfterGst.toFixed(2));
+                $("#txtGstAmt" + row).val(sGstAmt.toFixed(2));
+
+                //sNettAmt = parseFloat(sGrossTotal) - parseFloat(sDicsAmt);
+                sNettAmt = sGrossTotal_AfterGst + sGstAmt;
+                $("#txtNettTotal" + row).val(sNettAmt.toFixed(2));
+            } else {
+                $("#txtNettTotal" + row).val(sGrossTotal.toFixed(2));
+            }
+        }            
+    }
+            
+    function GetGstVal(sGstCode) {
+        var paramList = "";
+        $.ajax({
+            type: "get",
+            async: false,
+            url: "${pageContext.request.contextPath}/Servlet_GST?SFC=GET_GST",
+            data: {GSTCODE: sGstCode, GSTTYPE:'PURCHASE'},
+            contentType: "application/json; charset=utf-8",
+            dataType: "json",
+            success: function (msg) {
+                
+                 var arrGstData = msg.object1[0];        
+               //  alert(JSON.stringify(arrGstData).length);
+              //  if (arrGstData !== 'undefined'){
+             // if ($("#hdnTaxCode").val().trim().length !== 0){
+                    paramList = parseFloat(arrGstData.gst_taxrate /100); 
+              //  }
+              //  }
+            },
+            error: function (jqXHR, textStatus, errorThrown) {
+                alert("error (GetGstVal) : " + errorThrown);
+            }
+        });
+       //alert("returnValue"+paramList);
+        return paramList;
+    };
+                                            
+                    
+
+    function BindStockUOM(stkCode) { 
+            $.get('${pageContext.request.contextPath}/Servlet_Stock', {SFC: 'GET_REL_STKUOM', STKCODE: stkCode}, function (data) {
+                myStkUOM = JSON.parse(data);               
+               //var arrData = JSON.parse(data.object1[0]);
+             //alert(JSON.stringify(myStkUOM));
+            });
+
+    }
+
+    function summaryDelete(e) {
+        $(e).closest('tr').remove();
+    }
+
+    (function () {
+        // var delay = 25; //1 seconds
+        setTimeout(function () {
+                loadScript("js/column-chooser.js", function () {
+                loadScript("js/plugin/jqgrid/ui.multiselect.js", function () {
+                loadScript("js/plugin/jqgrid/grid.locale-en.min.js", function () {
+                loadScript("js/plugin/jqgrid/jquery.jqGrid.min.js", run_jqgrid_function);
+                });
+            });
+         });
+        });
+    })();                                        
+
+    function run_jqgrid_function() {
+        var grid = $("#jqgridPoItem"),
+            gridPager = "#p" + grid.selector.toString().substring(1),
+            conDiv = $("#c" + grid.selector.toString().substring(1)),
+            defaultColName = ['Action','TEMPCODE','Product Code', 'Product Name', 'Total Qty', 'Total Bonus', 'Total Gross', 'Total Gst', 'Total Nett'],
+            defaultColMol = [
+                            {name: '', index: '', sortable: false, search: false, formatter: RemoveRow, width: 50}, 
+                            {name: 'TEMPPRDCODE', index: 'TEMPPRDCODE', sortable: true, search: false, width: 120, hidden: true},
+                            {name: 'PRDCODE', index: 'PRDCODE', sortable: true, search: false, width: 120},
+                            {name: 'PRDNAME', index: 'PRDNAME', sortable: true, search: false, width: 220},
+                            {name: 'TOTALQTY', index: 'TOTALQTY', sortable: true, search: false, width: 120},
+                            {name: 'TOTALBONUS', index: 'TOTALBONUS', sortable: true, search: false, width: 120},
+                            {name: 'TOTALGROSS', index: 'TOTALGROSS', sortable: true, search: false, width: 120},
+                            {name: 'TOTALGSTAMT', index: 'TOTALGSTAMT', sortable: true, search: false, width: 120},
+                            {name: 'TOTALNETT', index: 'TOTALNETT', sortable: true, search: false, width: 120}
+                            ];
+           // mainGridName = grid.selector.toString().substring(1);
+            // temp = readSettings({settingArray:${sessionScope.settings}, defaultColName: defaultColName, defaultColMol: defaultColMol, settingName: mainGridName}),
+           // temp = readSettings({settingArray: "admin", defaultColName: defaultColName, defaultColMol: defaultColMol, settingName: mainGridName}),
+            //currentColName = temp[0],
+            //currentColMol = temp[1];
+
+            grid.jqGrid({
+            //datatype: "json",
+            //mtype: 'POST',
+            datatype: 'local',
+            colNames: defaultColName,
+            colModel: defaultColMol,
+            //rownumbers: true,
+            gridview: true,
+            rownumWidth: 'auto',
+            //  rowNum: 20,
+            //  rowList: [10, 20, 25, 30, 50, 100],
+            // pager: gridPager,
+            sortname: 'TEMPPRDCODE ',
+            viewrecords: true,
+            sortorder: "asc ",
+            toolbarfilter: true,
+            height: 'auto',
+            shrinkToFit: true,
+            loadonce: true,
+            scrollerbar: false,
+            subGrid: true,
+            subGridRowExpanded: function (subgrid_id, row_id) {
+                //alert(subgrid_id);
+               // alert(row_id);
+                var defaultSubColName = ['Action','TEMPPRDCODE', 'Product Code', 'Product Name', 'Company', 'UOM', 'Qty', 'Unit Cost', 'Bonus', 'Disc Option', 'Disc Amt', 'Disc Val', 'Gross Amt', 'GST', 'Gst Incl.', 'GST Amt', 'GST Rate', 'Nett Amt'],
+                defaultSubColMol = [                                    
+                                    {name: '', index: '', sortable: false, search: false, formatter: EditRow, width: 80}, 
+                                    {name: 'TEMPPRDCODE', index: 'TEMPPRDCODE', sortable: true, search: false, width: 120, hidden: true},
+                                    {name: 'PRDCODE', index: 'PRDCODE', sortable: true, search: false, width: 150},
+                                    {name: 'PRDNAME', index: 'PRDNAME', sortable: true, search: false, width: 220},
+                                    {name: 'COMPANY', index: 'COMPANY', sortable: true, search: false, width: 220},
+                                    {name: 'UOM', index: 'UOM', sortable: true, search: false, width: 100},
+                                    {name: 'QTY', index: 'QTY', sortable: true, search: false, width: 100, formatter: 'number', formatoptions: { decimalPlaces: 2 }},
+                                    {name: 'UCOST', index: 'UCOST', sortable: true, search: false, width: 120, formatter: 'number', formatoptions: { decimalPlaces: 2 }},
+                                    {name: 'BONUS', index: 'BONUS', sortable: true, search: false, width: 80, formatter: 'number', formatoptions: { decimalPlaces: 2 }},
+                                    {name: 'DISC', index: 'DISC', sortable: true, search: false, width: 120},
+                                    {name: 'DISCAMT', index: 'DISCAMT', sortable: true, search: false, width: 120, formatter: 'number', formatoptions: { decimalPlaces: 2 }},
+                                    {name: 'DISCVal', index: 'DISCVal', sortable: true, search: false, width: 120, formatter: 'number', formatoptions: { decimalPlaces: 2 }},
+                                    {name: 'GROSSTOTAL', index: 'GROSSTOTAL', sortable: true, search: false, width: 120, formatter: 'number', formatoptions: { decimalPlaces: 2 }},
+                                    {name: 'GST', index: 'GST', sortable: true, search: false, width: 60},
+                                    {name: 'GSTINC', index: 'GSTINC', sortable: true, search: false, width: 120},
+                                    {name: 'GSTAMT', index: 'GSTAMT', sortable: true, search: false, width: 120, formatter: 'number', formatoptions: { decimalPlaces: 2 }},
+                                    {name: 'GSTRATE', index: 'GSTRATE', sortable: true, search: false, width: 120, formatter: 'number', formatoptions: { decimalPlaces: 2 }},
+                                    {name: 'NETTTOTAL', index: 'NETTTOTAL', sortable: true, search: false, width: 120, formatter: 'number', formatoptions: { decimalPlaces: 2 }}
+                                    ],
+                                    //subTemp = readSettings({settingArray:${sessionScope.settings}, defaultColName: defaultSubColName, defaultColMol: defaultSubColMol, settingName: "ProvClmDisbSubGrid"}),
+                                  //  subTemp = readSettings({settingArray: "admin", defaultColName: defaultSubColName, defaultColMol: defaultSubColMol, settingName: "PoItemHeader"}),
+                                    currentSubColName = defaultSubColName, //subTemp[0], 
+                                    currentSubColMol = defaultSubColMol, //subTemp[1],
+                                    subGridWidth = $("#jqgridPoItem").width();
+                                   // subGridName = "POItemDetail";
+
+                                    //alert("this-->" + this);
+                                    scrollToRow(this, row_id);
+
+                                    var subgridTableId = "table_" + subgrid_id,
+                                            pagerID = "p" + subgrid_id,
+                                            PrdCode = $(this).jqGrid('getCell', row_id, 'TEMPPRDCODE');
+                                   // alert("subgridTableId-->" + subgridTableId);
+                                   // alert("PrdCode-->" + PrdCode);
+                                   //alert(pagerID);
+                                   //alert(row_id);
+                                    $("#" + subgrid_id).html("<table id='" + subgridTableId + "'></table>" +
+                                            "<div id='" + pagerID + "'></div>"); 
+                                    //                    $("#" + subgrid_id).html("<table id='" + subgridTableId + "'></table>");
+                                   // alert(JSON.stringify(mySubgrids[row_id]));
+                                    $("#" + subgridTableId).jqGrid({
+                                        datatype: 'local',
+                                        data: mySubgrids[row_id],
+                                        //mtype: 'POST',
+                                        colNames: currentSubColName,
+                                        colModel: currentSubColMol,
+                                        rownumbers: true,
+                                        rownumWidth: 40,
+                                        pager: "#" + pagerID,
+                                        height: 'auto',
+                                        shrinkToFit: true,
+                                        autowidth: true,
+                                        loadonce: false,
+                                        rowNum: 20,
+                                        rowList: [10, 20, 25, 30, 50, 100],
+                                        sortname: "PRDCODE",
+                                        sortorder: 'desc',
+                                        idPrefix: subgridTableId + "_Row_",                                                           
+                                        loadComplete: function () {
+                                        }
+                                    });
+
+                                    $(".ui-jqgrid-htable").addClass("table table-bordered table-hover");
+                                    $(".ui-jqgrid-btable").addClass("table table-bordered table-striped");
+                                    $(this).removeClass(".ui-jqgrid .ui-jqgrid-bdiv").addClass(".ui-jqgrid .ui-jqgrid-bdiv-nested");
+                                    // remove classes
+                                    $(".ui-jqgrid").removeClass("ui-widget ui-widget-content");
+                                    $(".ui-jqgrid-view").children().removeClass("ui-widget-header ui-state-default");
+                                    $(".ui-jqgrid-labels, .ui-search-toolbar").children().removeClass("ui-state-default ui-th-column ui-th-ltr");
+                                    $(".ui-jqgrid-pager").removeClass("ui-state-default");
+                                    $(".ui-jqgrid").removeClass("ui-widget-content");
+                                    // add classes
+                                    $(".ui-jqgrid-htable").addClass("table table-bordered table-hover");
+                                    $(".ui-jqgrid-btable").addClass("table table-bordered table-striped");
+                                    $(".ui-pg-div").removeClass().addClass("btn btn-sm btn-primary");
+                                    $(".ui-icon.ui-icon-plus").removeClass().addClass("fa fa-plus");
+                                    $(".ui-icon.ui-icon-pencil").removeClass().addClass("fa fa-pencil");
+                                    $(".ui-icon.ui-icon-trash").removeClass().addClass("fa fa-trash-o");
+                                    $(".ui-icon.ui-icon-search").removeClass().addClass("fa fa-search");
+                                    $(".ui-icon.ui-icon-refresh").removeClass().addClass("fa fa-refresh");
+                                    $(".ui-icon.ui-icon-disk").removeClass().addClass("fa fa-save").parent(".btn-primary").removeClass("btn-primary").addClass("btn-success");
+                                    $(".ui-icon.ui-icon-cancel").removeClass().addClass("fa fa-times").parent(".btn-primary").removeClass("btn-primary").addClass("btn-danger");
+                                    $(".ui-icon.ui-icon-seek-prev").wrap("<div class='btn btn-sm btn-default'></div>");
+                                    $(".ui-icon.ui-icon-seek-prev").removeClass().addClass("fa fa-backward");
+                                    $(".ui-icon.ui-icon-seek-first").wrap("<div class='btn btn-sm btn-default'></div>");
+                                    $(".ui-icon.ui-icon-seek-first").removeClass().addClass("fa fa-fast-backward");
+                                    $(".ui-icon.ui-icon-seek-next").wrap("<div class='btn btn-sm btn-default'></div>");
+                                    $(".ui-icon.ui-icon-seek-next").removeClass().addClass("fa fa-forward");
+                                    $(".ui-icon.ui-icon-seek-end").wrap("<div class='btn btn-sm btn-default'></div>");
+                                    $(".ui-icon.ui-icon-seek-end").removeClass().addClass("fa fa-fast-forward");
+                                    $(".ui-pg-input").addClass("pg-input");
+                                    //alert(JSON.stringify($("#" + subgridTableId)));
+                                    //alert(JSON.stringify($("#" + subgrid_id.replace(" ", "_"))));
+                                    resizeWidth({grid: $("#" + subgridTableId), gridDiv: $("#" + subgrid_id)});
+                                    $("#" + subgridTableId).closest('div.ui-jqgrid-bdiv').css("max-height", "300px").css("max-width", subGridWidth + "px");
+                                    //                        $("#" + subgridTableId).closest('div.ui-jqgrid-hdiv.ui-corner-top').addClass('hello');
+                                    $("#" + subgridTableId).closest('div.ui-jqgrid-hdiv.ui-corner-top').css("max-width", subGridWidth + "px");
+                                    $("#" + subgridTableId).closest('div.ui-jqgrid-pager.ui-corner-bottom').css("max-width", subGridWidth + "px");
+//                                                        quickSetupChooser({grid: $("#" + subgridTableId), defaultColMol: defaultSubColMol, settingName: subGridName, settingArray: "admin",
+//                                                            //settingArray:${sessionScope.settings},
+//                                                            done: function () {
+//                                                                grid.jqGrid('collapseSubGridRow', row_id);
+//                                                                setTimeout(function () {
+//                                                                    grid.jqGrid('expandSubGridRow', row_id);
+//                                                                }, 50);
+//                                                            }
+//                                                        });
+                                    $(window).on('resize', function () {
+                                        grid.jqGrid('setGridWidth', conDiv.width());
+                                    });
+                                    grid.on('myRefresh', function () {
+                                        resizeWidth({grid: grid, gridDiv: conDiv});
+                                    });
+                                    //         quickSetupChooser({grid: grid, defaultColMol: defaultColMol, settingName: mainGridName,
+                                    //            settingArray:${sessionScope.settings},
+//                                                        quickSetupChooser({grid: $("#" + subgridTableId), defaultColMol: defaultSubColMol, settingName: subGridName,
+//                                                            settingArray: "admin",
+//                                                            done: function () {
+//                                                                resizeWidth({grid: grid, gridDiv: conDiv});
+//                                                            }
+//                                                        });
+                                    grid.jqGrid('setGridWidth', conDiv.width());
+
+                                    //                $(window).on('resize', function () {
+                                    //                    $("#" + subgridTableId).jqGrid('setGridWidth', subGridWidth);
+//                });
+
+                                }
+                            });
+                                                
+                            function EditRow(cellvalue, options, rowObject) {
+                                return "<div class='text-center'><a class='' style='cursor:pointer;' onclick='EditPoItem(\"" +  rowObject.TEMPPRDCODE + "\",\"" + rowObject.COMPANY + "\")'' title='Edit Item'><i class='glyphicon glyphicon-pencil' /></a></div>";
+                            }           
+                                                
+                            function RemoveRow(cellvalue, options, rowObject) {
+                                return "<div class='text-center'><a class='' style='cursor:pointer;' onclick='Remove_PoItem(\"" +  cellvalue + "\")'' title='Remove Item'><i class='fa fa-fw fa-lg fa-trash-o' /></a></div>";
+                            }
+                                                
+                                                function Blue(cellvalue, options, rowObject) {
+                                                    return "<font color='blue'>" + cellvalue + "</font>";
+                                                }
+
+                                                function Green(cellvalue, options, rowObject) {
+                                                    return "<font color='green'>" + cellvalue + "</font>";
+                                                }
+
+                                                function Orange(cellvalue, options, rowObject) {
+                                                    return "<font color='orange'>" + cellvalue + "</font>";
+                                                }
+
+                                                function Red(cellvalue, options, rowObject) {
+                                                    return "<font color='red'>" + cellvalue + "</font>";
+                                                }
+
+                                                function Color(cellvalue, options, rowObject) {
+                                                    return cellvalue;
+                                                }
+                                                function formatColor_RedBold(val, row) {
+                                                    return '<span style="color:red;"><b><font size="4">' + val + '</font></b><span>';
+                                                }
+
+                                                // remove classes
+                                                $(".ui-jqgrid").removeClass("ui-widget ui-widget-content");
+                                                $(".ui-jqgrid-view").children().removeClass("ui-widget-header ui-state-default");
+                                                $(".ui-jqgrid-labels, .ui-search-toolbar").children().removeClass("ui-state-default ui-th-column ui-th-ltr");
+                                                $(".ui-jqgrid-pager").removeClass("ui-state-default");
+                                                $(".ui-jqgrid").removeClass("ui-widget-content");
+                                                // add classes
+                                                $(".ui-jqgrid-htable").addClass("table table-bordered table-hover");
+                                                $(".ui-jqgrid-btable").addClass("table table-bordered table-striped");
+                                                $(".ui-pg-div").removeClass().addClass("btn btn-sm btn-primary");
+                                                $(".ui-icon.ui-icon-plus").removeClass().addClass("fa fa-plus");
+                                                $(".ui-icon.ui-icon-pencil").removeClass().addClass("fa fa-pencil");
+                                                $(".ui-icon.ui-icon-trash").removeClass().addClass("fa fa-trash-o");
+                                                $(".ui-icon.ui-icon-search").removeClass().addClass("fa fa-search");
+                                                $(".ui-icon.ui-icon-refresh").removeClass().addClass("fa fa-refresh");
+                                                $(".ui-icon.ui-icon-disk").removeClass().addClass("fa fa-save").parent(".btn-primary").removeClass("btn-primary").addClass("btn-success");
+                                                $(".ui-icon.ui-icon-cancel").removeClass().addClass("fa fa-times").parent(".btn-primary").removeClass("btn-primary").addClass("btn-danger");
+                                                $(".ui-icon.ui-icon-seek-prev").wrap("<div class='btn btn-sm btn-default'></div>");
+                                                $(".ui-icon.ui-icon-seek-prev").removeClass().addClass("fa fa-backward");
+                                                $(".ui-icon.ui-icon-seek-first").wrap("<div class='btn btn-sm btn-default'></div>");
+                                                $(".ui-icon.ui-icon-seek-first").removeClass().addClass("fa fa-fast-backward");
+                                                $(".ui-icon.ui-icon-seek-next").wrap("<div class='btn btn-sm btn-default'></div>");
+                                                $(".ui-icon.ui-icon-seek-next").removeClass().addClass("fa fa-forward");
+                                                $(".ui-icon.ui-icon-seek-end").wrap("<div class='btn btn-sm btn-default'></div>");
+                                                $(".ui-icon.ui-icon-seek-end").removeClass().addClass("fa fa-fast-forward");
+                                                $(".ui-pg-input").addClass("pg-input");
+                                                // resize
+                                                $(window).on('resize', function () {
+                                                    grid.jqGrid('setGridWidth', conDiv.width());
+                                                });
+                                                grid.on('myRefresh', function () {
+                                                    resizeWidth({grid: grid, gridDiv: conDiv});
+                                                });
+                                                resizeWidth({grid: grid, gridDiv: conDiv});
+                                                //            grid.one('initColl', function () {
+//                                                quickSetupChooser({grid: grid, defaultColMol: defaultColMol, settingName: mainGridName,
+//                                                    //settingArray:${sessionScope.settings},
+//                                                    settingArray: "admin",
+//                                                    done: function () {
+//                                                        resizeWidth({grid: grid, gridDiv: conDiv});
+//                                                    }
+//                                                });
+                                            }
+
+    function Remove_PoItem(s_param) {
+              
+        showYesNo({
+            title: "Are you sure remove particular item?",
+            width: 520,
+            _HtmlBody:
+                    "<table class='selection-criteria' style='width:100%' >" +
+                    "<tr><td align='center'>" +
+                    "<button style='width:180px' class='btn btn-default bg-color-blueDark txt-color-white' onclick='RemovePoItem(\"" + s_param + "\");' data-dismiss='modal'>Yes</button>" +
+                    "</td><td align='center'>" +
+                    "<input type='button' Id='btnCloseDelete'  class='btn btn-default bg-color-blueDark txt-color-white' value='No' style=' width: 180px;' data-dismiss='modal' />" +
+                    "</td>" +
+                    "</tr>" +
+                    "</table>",
+            Yes: false,
+            No: false
+
+        });
+        
+    }
+    
+    function RemovePoItem(sParam) {
+         var myGrid = $('#jqgridPoItem'),
+           selectedRowId = myGrid.jqGrid ('getGridParam', 'selrow');
+          // cellValue = myGrid.jqGrid ('getCell', selectedRowId, 'PRDCODE');
+          // alert(selectedRowId);
+           $('#jqgridPoItem').jqGrid('delRowData', selectedRowId);
+           //delete the item also in mySubgrids
+           delete mySubgrids[selectedRowId];
+           
+    }
+    
+
+    
+    function getGridRowHeight(targetGrid) {
+              var height = null; // Default
+              try {
+                    height = $(targetGrid).find('tbody').find('tr:eq(2)').outerHeight();
+                  }
+              catch (e) {
+                    height = 23;
+                    }
+                    return height;
+                }                                                                    
+
+    function scrollToRow(targetGrid, id) {
+        
+            var rowHeight = getGridRowHeight(targetGrid); // Default height
+           // alert("rowHeight-->" + rowHeight);
+            
+            var index = $(targetGrid).getInd(id - 1);
+            $(targetGrid).closest(".ui-jqgrid-bdiv").animate({scrollTop: rowHeight * index}, '250', 'swing', function () {
+
+            });                                    
+    }
+
+    pagefunction();
+                                            
+
+</script>

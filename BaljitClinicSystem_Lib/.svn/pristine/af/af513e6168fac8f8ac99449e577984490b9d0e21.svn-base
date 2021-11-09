@@ -1,0 +1,25 @@
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package BusinessData;
+
+import BusinessData.BaseDAL;
+import BusinessLogic.BLL_Common;
+
+ 
+public class DAL_SystemEnvironmentSettings {
+    BaseDAL DAL = new BaseDAL();
+    
+    public BLL_Common.Common_Object DAL_GET_SYSTEM_ENV_SETTINGS(String SiteName, String[] sIn)
+    {
+        return BaseDAL.Get_Multiple_QueryReturn("SP_GET_SYSTEM_ENVIRONMENT_SETTINGS(?)", sIn, new int[]{}, SiteName);
+    }
+    public BLL_Common.Common_Object DAL_UPDATE_SYSTEM_ENV_SETTINGS(String SiteName, String[] sStringIn) {        
+        return BaseDAL.Get_Multiple_QueryReturn_No_Commit("SP_TRX_SYSTEM_ENVIRONMENT_SETTINGS(?,?,?,?,?,?,?,?,?,?,"             
+            + "?,?,?,?,?,?,?)", sStringIn, new int[]{java.sql.Types.VARCHAR}, SiteName); 
+    }
+    
+ 
+}

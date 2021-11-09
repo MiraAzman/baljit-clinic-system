@@ -1,0 +1,149 @@
+package BusinessLogic;
+
+import BusinessData.DAL_StockCostQty;
+import BusinessData.DAL_StockLedger;
+import java.io.IOException;
+import java.sql.SQLException;
+import net.sf.json.JSONArray;
+import net.sf.json.JSONObject;
+
+/**
+ *
+ * @author N0535
+ */
+public class BLL_GRNDataExchange implements Runnable{
+    BLL_GRNDataExchange() {
+		
+		}
+ 
+		@Override
+		public void run() {
+//                   DataTransfer_GRN(); //amira 20171123
+                }
+                public static String DataTransfer_GRN(String SiteName) {
+        BLL_GRN grn = new BLL_GRN();
+        DAL_StockCostQty obj_SCQ = new DAL_StockCostQty();
+        DAL_StockLedger obj_STKLEDG = new DAL_StockLedger();
+        JSONObject obj_add = new JSONObject();
+        JSONObject obj_pass = new JSONObject();
+        String sMessage = "";
+        boolean b = true;
+//        int AllowableThreadCount = 50;
+        String[] arySCQ = {
+            "GET_DATAEX",     /*0. sMethod    varchar(30)  */
+            "",             /*1. sStkCode    varchar(20)  */
+            "",             /*2. sConvUOM    varchar(10)  */
+            "",             /*3. sCompCode    varchar(20)  */
+            "",             /*4. sLocationCode    varchar(30)  */
+            ""              /*5. sSortMethod    varchar(10)  */           
+        };
+        
+        String[] arrStkl = {
+            "GET_DATAEX",     /*0. sMethod    varchar(30)  */
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            ""           
+        };
+       
+        BLL_Common.Common_Object obj = obj_SCQ.DAL_GET_STOCK_COSTQTY_DETAILS(SiteName, arySCQ);
+        BLL_Common.Common_Object objstkl = obj_STKLEDG.DAL_GET_STOCK_LEDGER(SiteName, arrStkl);
+        
+        try {
+                if(obj.getJSONArray(0).size() > 0 || objstkl.getJSONArray(0).size() > 0){
+                    JSONArray conarr = BLL_Common.concatArray(obj.getJSONArray(1),objstkl.getJSONArray(1));
+                    JSONObject mergeObj = BLL_Common.mergeObjectValue(conarr,"Location");
+                    JSONArray arrLoc = mergeObj.names();
+                    //filter by location
+//                     ExecutorService executor = Executors.newFixedThreadPool(AllowableThreadCount);  
+                    
+                    for (int i = 0; i < arrLoc.size(); i++) {
+                        String sLocation = arrLoc.getString(i);
+                        JSONArray innerArray = new JSONArray();
+                        innerArray.add(mergeObj.getJSONObject(sLocation));
+                        String sURL="";
+                        String sID="";
+                        String sPW="";
+                    String sLoc = "";
+                        for(Object jsURL : innerArray){
+                            JSONObject objURL = (JSONObject)jsURL;
+                            
+                            sURL = objURL.get("WSC_URL").toString();
+                            sID = objURL.get("WSC_UserID").toString();
+                            sPW = objURL.get("WSC_Password").toString();
+                            sLoc = objURL.get("WSC_URL").toString();
+                        }
+                        
+                        
+                        // --- get stock cost qty and stockledger data ---
+                        if (obj.getJSONArray(0).size() > 0){ 
+                            JSONArray arrSCQ = new JSONArray();
+                            
+                            for(Object jsonSCQ : obj.getJSONArray(0)){
+                                JSONObject jsSCQ = (JSONObject) jsonSCQ;
+                                
+                                if(jsSCQ.get("Location").equals(sLocation)){
+                                    arrSCQ.add(jsSCQ);
+                                }
+                            }
+                            obj_add.put("SCQ", arrSCQ);
+                        }
+                        
+                        if (objstkl.getJSONArray(0).size()>0){
+                            JSONArray arrSTKL = new JSONArray();
+                            
+                            for(Object jsonSTKL : objstkl.getJSONArray(0)){
+                                JSONObject jsSTKL = (JSONObject) jsonSTKL;
+/* 2016-04-07 By CPK 1. Fixed Error-> Location field not exists. 2. Pick up right location from between Header/Detail 
+                                accoridng to SLDG_TrxType, if SALE use SLDG_Location and if GRN use SLDL_Location.
+                                */  
+                                if(jsSTKL.get("SLDG_TrxType").equals("SALE"))
+                                {
+                                    if(jsSTKL.get("SLDG_Location").equals(sLocation)){
+                                        arrSTKL.add(jsSTKL);
+                                    }
+                                }
+                                else
+                                {
+                                    if(jsSTKL.get("SLDL_Location").equals(sLocation)){
+                                        arrSTKL.add(jsSTKL);
+                                    }
+                                }
+//                                if(jsSTKL.get("Location").equals(sLocation)){
+//                                    arrSTKL.add(jsSTKL);
+//                                }
+                            }
+                            obj_add.put("STKLEDG", arrSTKL);
+                        }                        
+                        // --- END get stock cost qty and stockledger data ---
+                        
+                        obj_pass.put("GRN", obj_add);
+//before implement multi-thread 
+                        grn.DataTransfer_GRN(obj_pass.toString(), sURL, sID, sPW, SiteName);  
+//                          Runnable DEThread = new BLL_GRN(obj_pass.toString(), sURL, sID, sPW);
+//                          executor.execute(DEThread); 
+                    }
+                    //END filter by location              
+                } else{
+                    sMessage = "No data transfer.";
+                    b = false;
+                }
+            } catch (Exception e) {
+                sMessage = e.toString();
+                b = false;  
+            }
+            
+        return sMessage;
+           
+        //String input = "{\"DISP\":{\"SCQ\":[{\"STKCOSTCOMPANY\":\"a\",\"STKCOSTWAREHOUSE\":\"1\"},{\"STKCOSTCOMPANY\":\"b\",\"STKCOSTWAREHOUSE\":\"2\"}],\"STKLEDG\":[{\"STKCOSTCOMPANY\":\"a\",\"STKCOSTWAREHOUSE\":\"1\"},{\"STKCOSTCOMPANY\":\"b\",\"STKCOSTWAREHOUSE\":\"2\"}]}}";
+
+    }
+}

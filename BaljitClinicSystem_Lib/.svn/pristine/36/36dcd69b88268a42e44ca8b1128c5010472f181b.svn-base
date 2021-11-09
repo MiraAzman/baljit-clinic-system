@@ -1,0 +1,350 @@
+CREATE DEFINER=`root`@`localhost` PROCEDURE `SP_GET_CODEDESC`(
+IN sMethod varchar(30),
+IN sValue1 varchar(30),
+IN sValue2 varchar(20)
+)
+BEGIN
+
+
+
+
+
+
+
+
+
+
+
+
+
+     DECLARE _statement VARCHAR(8000);
+     DECLARE isString VARCHAR(1);
+
+  SET isString = 'Y';
+
+     IF sMethod = 'GET_CODEDESC' THEN
+
+             SET _statement = ' SELECT UPPER(CD_CDCODE) as VALUE, UPPER(CD_CDDESC) as TEXT
+                                FROM stkc_codedesc
+                                WHERE CD_CDTYPE IS NOT NULL and recstatus = 1 ' ;
+
+
+           IF (sValue1 <> '') THEN
+                    SET _statement = CONCAT(_statement, ' AND CD_CDTYPE = ',"'",sValue1 ,"'", ' ');
+           END IF;
+
+              SET _statement = CONCAT(_statement, ' ORDER BY CD_CDDESC ');
+
+     END IF;
+
+     IF sMethod = 'GET_STOCKUOM' THEN
+
+             SET _statement = ' SELECT UPPER(UOM_UOMCODE) as VALUE, UPPER(uom_uomdesc) as TEXT
+                                FROM stkm_stockuom
+                                WHERE UOM_UOMCODE IS NOT NULL and recstatus = 1  ' ;
+
+
+           IF (sValue1 <> '') THEN
+                    SET _statement = CONCAT(_statement, ' AND UOM_UOMCODE = ',"'",sValue1 ,"'", ' ');
+           END IF;
+
+              SET _statement = CONCAT(_statement, ' ORDER BY uom_uomdesc ');
+
+     END IF;
+
+    IF sMethod = 'GET_COMP' THEN
+
+             SET _statement = ' SELECT UPPER(COMP_CODE) as VALUE, UPPER(COMP_NAME) as TEXT
+                                FROM stkm_company
+                                WHERE COMP_CODE IS NOT NULL and recstatus = 1  ' ;
+
+
+           IF (sValue1 <> '') THEN
+                    SET _statement = CONCAT(_statement, ' AND COMP_CODE = ',"'",sValue1 ,"'", ' ');
+           END IF;
+
+              SET _statement = CONCAT(_statement, ' ORDER BY COMP_NAME ');
+
+     END IF;
+
+     IF sMethod = 'GET_REL_STKUOM' THEN
+
+             SET _statement = ' SELECT DISTINCT(uomconv.uomc_convuomcode) as VALUE, stkUOM.uom_uomdesc as TEXT
+                                FROM stkm_uomconversion uomconv
+                                Left outer join stkm_stockuom stkUOM on uomconv.uomc_convuomcode = stkUOM.uom_uomCode
+                                Where  uomconv.uomc_convuomcode IS NOT NULL ' ;
+
+                                IF (sValue1 <> '') THEN
+                                    SET _statement = CONCAT(_statement, ' AND uomconv.uomc_stockcode  = ',"'",sValue1 ,"'", ' ');
+                                END IF;
+
+              SET _statement = CONCAT(_statement, ' Union
+                                                    SELECT DISTINCT(uomconv.uomc_baseuomcode) as VALUE, stkUOM.uom_uomdesc as TEXT
+                                                    FROM stkm_uomconversion uomconv
+                                                    Left outer join stkm_stockuom stkUOM on uomconv.uomc_baseuomcode = stkUOM.uom_uomCode
+                                                    WHERE uomconv.uomc_baseuomcode IS NOT NULL');
+
+                         IF (sValue1 <> '') THEN
+                            SET _statement = CONCAT(_statement, ' AND uomconv.uomc_stockcode  = ',"'",sValue1 ,"'", ' ');
+                         END IF;
+
+              SET _statement = CONCAT(_statement, ' Union
+                                                    SELECT stkM.stk_baseuomcode as VALUE, stkUOM.uom_uomdesc as TEXT
+                                                    From stkm_stockmaster stkM
+                                                    Left outer join stkm_stockuom stkUOM on stkM.stk_baseuomcode = stkUOM.uom_uomCode
+                                                    WHERE stkM.stk_baseuomcode  IS NOT NULL');
+                           IF (sValue1 <> '') THEN
+                            SET _statement = CONCAT(_statement, ' AND stkM.stk_stockcode  = ',"'",sValue1 ,"'", ' ');
+                           END IF;
+
+
+     END IF;
+
+     IF sMethod = 'GET_ACTIVEGSTCODE' THEN
+
+             SET _statement = 'SELECT gst_code as VALUE, CONCAT(gst_code, " - ", gst_desc) as TEXT
+                               FROM stkm_gstcodemalaysia
+                               WHERE gst_code IS NOT NULL and gst_active = "Y" ';
+
+             IF (sValue1 <> '') THEN
+                     SET _statement = CONCAT(_statement, ' AND gst_type = ', "'", sValue1, "'", ' ');
+             END IF;
+
+             SET _statement = CONCAT(_statement, ' ORDER BY gst_code ');
+     END IF;
+
+      IF sMethod = 'GET_GST' THEN
+
+             SET _statement = 'SELECT CONCAT(gst_code, ",", CAST(ROUND(gst_taxrate,2) AS CHAR(10)))  as VALUE
+             , CONCAT(gst_code, " - ", gst_desc) as TEXT
+                               FROM stkm_gstcodemalaysia
+                               WHERE gst_code IS NOT NULL and gst_active = "Y" ';
+
+             IF (sValue1 <> '') THEN
+                     SET _statement = CONCAT(_statement, ' AND gst_type = ', "'", sValue1, "'", ' ');
+             END IF;
+
+             SET _statement = CONCAT(_statement, ' ORDER BY gst_code ');
+     END IF;
+
+      IF sMethod = 'GET_SUPPLIER' THEN
+
+             SET _statement = ' SELECT UPPER(SUP_CODE) as VALUE, UPPER(SUP_NAME) as TEXT
+                                FROM stkm_suppliermaster
+                                WHERE SUP_CODE IS NOT NULL and recstatus = 1  ' ;
+
+
+           IF (sValue1 <> '') THEN
+                    SET _statement = CONCAT(_statement, ' AND SUP_CODE = ',"'",sValue1 ,"'", ' ');
+           END IF;
+
+              SET _statement = CONCAT(_statement, ' ORDER BY SUP_NAME ');
+
+     END IF;
+
+    IF sMethod = 'COUNT_SUPPLIER' THEN
+
+             SET _statement = ' SELECT COUNT(recstatus) AS rowcount
+                                FROM stkm_suppliermaster
+                                WHERE SUP_CODE IS NOT NULL and recstatus = 1  ' ;
+
+              SET _statement = CONCAT(_statement, ' ORDER BY SUP_NAME ');
+     END IF;    
+
+   IF sMethod = 'LIST_SUPPLIER' THEN
+
+             SET _statement = ' SELECT UPPER(SUP_CODE) as VALUE, UPPER(SUP_NAME) as TEXT
+                                FROM stkm_suppliermaster
+                                WHERE SUP_CODE IS NOT NULL and recstatus = 1  ' ;
+
+
+              SET _statement = CONCAT(_statement, ' ORDER BY SUP_NAME ');
+
+
+    IF (sValue1 <> '')  THEN
+     SET _statement = CONCAT(_statement, ' LIMIT ',  (sValue1 - 1) * sValue2, ",", sValue2 );
+                END IF;
+
+     END IF;
+
+     IF sMethod = 'GET_LOCATION' THEN
+   SET _statement = 'SELECT UPPER(loc_code) as VALUE, UPPER(loc_name) as TEXT
+                                         , loc_ismainstore as IS_MAINSTORE 
+                                          FROM stkm_location
+                                          WHERE loc_code IS NOT NULL and recstatus = 1 ';
+
+            IF (sValue1 <> '') THEN
+    SET _statement = CONCAT(_statement, ' AND loc_companycode = ', "'", sValue1, "'", ' ');
+            END IF;
+
+            IF (sValue2 <> '') THEN
+    SET _statement = CONCAT(_statement, ' AND loc_code = ', "'", sValue2, "'", ' ');
+            END IF;
+
+            SET _statement = CONCAT(_statement, ' ORDER BY loc_name');
+     END IF;
+
+     IF sMethod = 'GET_LOCATION_WSM' THEN
+
+            SET _statement = 'SELECT distinct VALUE, TEXT
+                              FROM (
+                                  SELECT UPPER(loc_code) as VALUE, UPPER(loc_name) as TEXT, loc_companycode
+                                  FROM stkm_location
+                                  WHERE loc_code IS NOT NULL and recstatus = 1 ';
+
+            SET _statement = CONCAT(_statement, ' AND loc_companycode = ', "'", sValue1, "'", '
+
+                                 ORDER BY loc_name  ) Loc
+
+                             LEFT JOIN wsm_config ON Loc_CompanyCode = wsc_companycode
+
+                             WHERE NOT EXISTS (SELECT * FROM wsm_config WHERE wsc_companycode = loc_companycode AND wsc_locationcode = VALUE) ');
+
+     END IF;
+
+
+     IF sMethod = 'GET_CODETYPE' THEN
+
+        SET _statement = ' SELECT UPPER(CT_CDTYPECODE) as VALUE, UPPER(CT_TYPEDESC) as TEXT
+                           FROM stkc_codetype
+                           WHERE CT_CDTYPECODE IS NOT NULL AND ct_maintainabletype = "Y"
+                           ORDER BY ct_groupnumber, CT_TYPEDESC ';
+     END IF;
+
+     IF sMethod = 'GET_STOCK' THEN
+
+        SET _statement = ' SELECT UPPER(stk_stockcode) as VALUE, UPPER(stk_desc) as TEXT
+                          , stk_unitcost AS COST, stk_baseuomcode AS UOM, stk_unitcost AS PRICE1
+                           FROM stkm_stockmaster
+                           WHERE stk_stockcode IS NOT NULL';
+
+            IF (sValue1 <> '') THEN
+         SET _statement = CONCAT(_statement, ' AND stk_desc LIKE ', "'%", sValue1, "%'", ' ');
+            END IF;
+
+            SET _statement = CONCAT(_statement, ' ORDER BY stk_desc ');
+     END IF;
+
+     IF sMethod = 'GET_XFER_LOCATION' THEN
+
+
+            SET _statement = 'SELECT UPPER(xfrd_issuelocation) as ISSUE_LOC, UPPER(xfrd_recievelocation) as REC_LOC
+                              FROM stkt_stocktransferheader
+                              LEFT JOIN stkt_stocktransferdetail ON xfrh_stockxfrhdridx = xfrd_stockxfrhdridx
+                              WHERE xfrd_stockxfrdtlidx IS NOT NULL ';
+
+
+            IF (sValue1 <> '') THEN
+  SET _statement = CONCAT(_statement, ' AND xfrh_company = ', "'", sValue1, "'", ' ');
+            END IF;
+
+            IF (sValue2 = 'GET_ISSUE_LOC') THEN
+                    SET _statement = CONCAT(_statement, ' GROUP BY ISSUE_LOC');
+            END IF;
+
+            IF (sValue2 = 'GET_RECEIVE_LOC') THEN
+                    SET _statement = CONCAT(_statement, ' GROUP BY REC_LOC');
+            END IF;
+
+     END IF;
+
+     IF sMethod = 'GET_DATAEX' THEN
+  SET isString = 'N';
+  SELECT * FROM stkc_codedesc WHERE cd_cdtype = sValue1 AND cd_cdcode = sValue2;
+
+        /* SELECT IFNULL(wsc_url,'') AS wsc_url FROM wsm_config WHERE wsc_url is not null AND wsc_url <> ''; */
+        SELECT IFNULL(wsc_url,'') AS wsc_url, IFNULL(wsc_companycode,'') AS wsc_companycode
+  , IFNULL(wsc_locationcode,'') AS wsc_locationcode
+  FROM wsm_config; /* WHERE wsc_url is not null AND wsc_url <> ''; */
+     END IF;
+
+      IF sMethod = 'GET_GRN_SUPPLIER' THEN
+
+
+            SET _statement = 'SELECT UPPER(sgrh_suppliercode) as SUPPLIER
+                              FROM stkt_grnheader
+                              WHERE sgrh_grnhdridx IS NOT NULL ';
+
+
+            IF (sValue1 <> '') THEN
+  SET _statement = CONCAT(_statement, ' AND sgrh_company = ', "'", sValue1, "'", ' ');
+            END IF;
+
+
+            SET _statement = CONCAT(_statement, ' GROUP BY SUPPLIER');
+
+     END IF;
+
+     IF sMethod = 'GET_ITEM_HIS' THEN
+
+            SET _statement = 'SELECT DISTINCT(bld_chgcode) AS VALUE, bld_chgdesc AS TEXT
+                              FROM his_billdetail
+                              WHERE bld_idx IS NOT NULL ';
+
+            IF (sValue1 <> '') THEN
+                 SET _statement = CONCAT(_statement, ' AND bld_category IN (',sValue1,') ');
+            END IF;
+
+            SET _statement = CONCAT(_statement, ' ORDER BY bld_chgdesc ');
+
+     END IF;
+
+     IF sMethod = 'GET_CHGGROUP_HIS' THEN
+
+            SET _statement = 'SELECT DISTINCT(bld_chggrp) AS VALUE
+                              FROM his_billdetail
+                              WHERE bld_idx IS NOT NULL ';
+
+            IF (sValue1 <> '') THEN
+                 SET _statement = CONCAT(_statement, ' AND bld_category IN (',sValue1,') ');
+            END IF;
+
+            SET _statement = CONCAT(_statement, ' ORDER BY bld_chggrp ');
+
+     END IF;
+
+     IF sMethod = 'GET_CODETYPE_HIS' THEN
+
+            SET _statement = 'SELECT ct_cdtypecode AS VALUE, ct_typedesc AS TEXT
+                              FROM stkc_codetype
+                              WHERE ct_cdtypecode IS NOT NULL ';
+
+            IF (sValue1 <> '') THEN
+                    SET _statement = CONCAT(_statement, ' AND ct_cdtypecode IN (',sValue1,') ');
+            END IF;
+
+            SET _statement = CONCAT(_statement, ' ORDER BY ct_cdtypecode ');
+
+     END IF;
+
+     IF sMethod = 'GET_CHGGROUP_CHGITEM' THEN
+
+            SET _statement = 'SELECT cd_cdcode AS VALUE, cd_cddesc AS TEXT
+                              FROM stkc_codedesc
+                              WHERE cd_cdidx IS NOT NULL ';
+
+            IF (sValue1 <> '') THEN
+                    SET _statement = CONCAT(_statement, ' AND cd_cdtype = ',"'",sValue1,"'");
+            END IF;
+     END IF;
+
+     IF sMethod = 'GET_BRAND_OWNER' THEN
+
+            SET _statement = 'SELECT sup_code AS VALUE, sup_name AS TEXT
+                              FROM stkm_suppliermaster WHERE sup_isbrandowner = ''Y'' ';
+     END IF;
+
+     IF sMethod = 'ROLE_SEARCH' THEN
+
+            SET _statement = 'SELECT rol_code AS VALUE, rol_businessapp AS TEXT
+                              FROM afc_role ORDER BY rol_businessapp ASC ';
+     END IF;
+
+IF isString = 'Y' THEN
+ SET @statement = _statement;
+ PREPARE dynquery FROM @statement;
+ EXECUTE dynquery;
+ DEALLOCATE PREPARE dynquery;
+END IF;
+
+END

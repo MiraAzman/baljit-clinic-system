@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="src" path="BusinessData"/>
+	<classpathentry kind="src" path="BusinessLogic"/>
+	<classpathentry kind="lib" path="dist/BaljitClinicSystem_Lib.jar"/>
+	<classpathentry kind="output" path="build/classes"/>
+</classpath>
