@@ -144,7 +144,7 @@ BLL_Common BLL_Common = new BLL_Common();
 
                         }
                         session.setAttribute("gridSettings", jsonTemp);
-                        response.sendRedirect(response.encodeRedirectURL(contextPath + "/Admin/index.jsp#/PatientList"));
+                        response.sendRedirect(response.encodeRedirectURL(contextPath + "/Admin/index.jsp#/QueueList"));
                         
                         
                     }else {

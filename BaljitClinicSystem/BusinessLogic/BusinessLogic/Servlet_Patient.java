@@ -113,6 +113,9 @@ public class Servlet_Patient extends HttpServlet {
         String sMethod = request.getParameter("METHOD");     
         String sIndex = "0";
         String sSP_Method = "";
+        String dHeight = "0";
+        String dWeight = "0";
+        String sDOB = null;
         
         if (sMethod.equals("INSERT")) {
             sSP_Method = "ADD_PATIENT";
@@ -122,13 +125,22 @@ public class Servlet_Patient extends HttpServlet {
             sIndex = request.getParameter("INDEX");
         }
         
+        if (!request.getParameter("HEIGHT").equals("")) {
+            dHeight = request.getParameter("HEIGHT"); 
+        }       
+        if (!request.getParameter("WEIGHT").equals("")) {
+            dWeight = request.getParameter("WEIGHT"); 
+        }
+        if (!request.getParameter("DOB").equals("")) {
+            sDOB = request.getParameter("DOB"); 
+        }
         
         String[] aryPatient = {
             sSP_Method, // 0-sMethod
             sIndex, // 1-spt_id
             request.getParameter("NAME"), 
             request.getParameter("IC_NO"), 
-            request.getParameter("DOB"),
+            sDOB,
             request.getParameter("CONTACT_NO"), 
             request.getParameter("EMAIL"),
             request.getParameter("GENDER"), 
@@ -136,8 +148,8 @@ public class Servlet_Patient extends HttpServlet {
             request.getParameter("NATIONALITY"), 
             request.getParameter("ETHNIC_GROUP"), 
             request.getParameter("BLOOD_GROUP"), 
-            request.getParameter("HEIGHT"),
-            request.getParameter("WEIGHT"),
+            dHeight,
+            dWeight,
             request.getParameter("HEALTH_HISTORY"),
             request.getParameter("ALLERGY_NOTES"),
             request.getParameter("IS_SMOKING"),
