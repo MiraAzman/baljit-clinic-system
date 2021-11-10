@@ -85,13 +85,15 @@
 
 <!DOCTYPE html>
 <!--<html lang="en-us" id="extr-page" data-ng-app="smartApp" style="background: url('img/bg/bg_services.jpg')no-repeat center center fixed;-webkit-background-size: auto;-moz-background-size: auto;-o-background-size: auto;background-size: 100% 100%;">-->
-<html lang="en-us" id="extr-page" data-ng-app="smartApp" style="background-color:#FFF;padding-top:0px;padding-bottom:0px;-webkit-background-size: auto;-moz-background-size: auto;-o-background-size: auto;background-size: 100% 100%;">
+<!--<html lang="en-us" id="extr-page" data-ng-app="smartApp" style="background-color:#FFF;padding-top:0px;padding-bottom:0px;-webkit-background-size: auto;-moz-background-size: auto;-o-background-size: auto;background-size: 100% 100%;">-->
+    
+    <html lang="en-us" id="extr-page" data-ng-app="smartApp" style="background: url('img/baljitbackground.jpg')no-repeat center center fixed;-webkit-background-size: auto;-moz-background-size: auto;-o-background-size: auto;background-size: 100% 100%;">
 <!--<html lang="en-us" id="extr-page" data-ng-app="smartApp" style="-webkit-background-size: auto;-moz-background-size: auto;-o-background-size: auto;background-size: 100% 100%;">-->
 	<head>
 		<meta charset="utf-8">
 		<!--<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">-->
 
-		<title> Baljit Clinic System  </title>
+		<!--<title> Baljit Clinic System  </title>-->
 		<meta name="description" content="">
 		<meta name="author" content="">
 
@@ -143,20 +145,22 @@
 		<link rel="apple-touch-startup-image" href="img/splash/iphone.png" media="screen and (max-device-width: 320px)">
 
 	</head>
-	<body class="animated fadeInDown" >
-            
+<!--	<body class="animated fadeInDown" style="background: url('img/baljitbackground.jpg') center center / 100% 100% no-repeat fixed;">-->
+	<body>
+<!--            <img src='BALJIT.jpg' style='position:fixed;top:0px;left:0px;width:100%;height:100%;z-index:-1;'>-->
 		<!-- possible classes: minified, no-right-panel, fixed-ribbon, fixed-header, fixed-width-->
 		
 
-		<!--<div id="main" role="main" style="background: url('img/bg/bg_services.jpg')no-repeat center center fixed;-webkit-background-size: auto;-moz-background-size: auto;-o-background-size: auto;background-size: 100% 100%;">-->
-                <div id="main" role="main" style="background-color:#FFF;padding-top:0px;padding-bottom:0px;-webkit-background-size: auto;-moz-background-size: auto;-o-background-size: auto;background-size: 100% 100%;">
+<!--		<div id="main" role="main" style="background: url('img/baljitbackground.jpg');padding-top:0px;padding-bottom:0px;-webkit-background-size: 100%;-moz-background-size: 100%;-o-background-size: 100%;background-size: 100% 100%;">-->
+                <div id="main" role="main" style="background: url('img/baljitbackground.jpg')no-repeat center center fixed; -webkit-background-size: auto;-moz-background-size: auto;-o-background-size: auto;background-size: 100% 100%;">
+<!--                <div id="main" role="main">-->
 
 			<!-- MAIN CONTENT -->
 			<div id="content" class="container">
 
 				<div class="row">
 					<div class="col-xs-12 col-sm-12 col-md-7 col-lg-8 hidden-xs hidden-sm">
-						<h1 class="txt-color-red login-header-big">Baljit Clinic System</h1>
+<!--						<h1 class="txt-color-red login-header-big">Baljit Clinic System</h1>-->
 						<div class="hero" style="display:none;">
 
 							<div class="pull-left login-desc-box-l">
@@ -197,7 +201,7 @@
 							</div>
 						</div>
 					</div>
-					<div class="col-xs-12 col-sm-12 col-md-5 col-lg-4" >
+					<div class="col-xs-12 col-sm-12 col-md-5 col-lg-4">
 						<div class="well no-padding">
                                                     <form action="${pageContext.request.contextPath}/Servlet_User?SFC=Check_User_Login" id="login-form" class="smart-form client-form" method="post">
                                                         <header>
@@ -254,9 +258,10 @@
                                                 </div>						
 						
 					</div>
+                                        </br></br></br></br></br></br></br></br>
 				</div>
 			</div>
-
+                        
 		</div>
                                                                         
     <input type="hidden" id="site" value="<%= s_SiteName %>" />

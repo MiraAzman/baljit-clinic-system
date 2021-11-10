@@ -1,244 +1,5 @@
 <script type="text/javascript">
 
-    function showPayor(objIn) {
-        var sReturn = $.Deferred(), windowsSize = "width=" + objIn.width + ", height=" + objIn.height,
-                myWindows = window.open("${pageContext.request.contextPath}/includes/PopUpWindows.jsp", "", windowsSize);
-        myWindows.header = '<div class="col-xs-12 col-sm-7 col-md-7 col-lg-4">' +
-                '<h1 class="page-title txt-color-blueDark">' +
-                '<i onclick="" class="fa-fw fa fa-user-md fa-2x"></i> ' +
-                'Payer Selection' +
-                '</h1>' +
-                '</div>';
-        myWindows.selection = "<table class='selection-criteria'><tr><td><input id='corpCode' class='searchbox-text' type='text' placeholder='Search Corporate Code'></td><td><input id='corpName' type='text' class='searchbox-text' placeholder='Search Corporate Name'></td><td>" +
-                "<a class='btn btn-default bg-color-blueDark txt-color-white' onclick='reload()'>Search</a></td>" +
-                "</tr></table>";
-
-        myWindows.reload = function () {
-            myWindows.refresh({
-                postData: {
-                    PARAM1: $(myWindows.document).find("#corpCode").val(),
-                    PARAM2: $(myWindows.document).find("#corpName").val()
-                }
-            });
-        };
-
-        myWindows.object = {
-            url: '${pageContext.request.contextPath}/Servlet_Payer',
-            postData: {PMTD: 'Payer_Pop_Up_List', METHOD: "GET_PYR_POP_UP"},
-            datatype: "json",
-            mtype: 'GET',
-            colNames: ['', 'Payer Code', 'Payer Name', 'Type', 'Pay Frequency 1', 'Pay Frequency 2', 'Date Created', 'Status'],
-            colModel: [
-                //  {name:'MEM_NRIC',index:'MEM_NRIC', sortable:true, searchoptions: { sopt: ['cn']}, formatter:'showlink',formatoptions:{baseLinkUrl:'../ProviderPortal/Prov_Patient_Detail.jsp',addParam: '',showAction:'',idName:'PMemNRIC'}},                     
-                {name: 'PYR_DEBTORCODE', index: 'PYR_DEBTORCODE', hidden: true},
-                {name: 'PYR_CODE', index: 'PYR_CODE', sortable: true, formatter: 'showlink'},
-                {name: 'PYR_NAME', index: 'PYR_NAME', sortable: true},
-                {name: 'PYR_TYPE', index: 'PYR_TYPE', sortable: true, stype: 'select'},
-                {name: 'PYR_PAYFREQPARAM1', index: 'PYR_PAYFREQPARAM1', sortable: true, search: false},
-                {name: 'PYR_PAYFREQPARAM2', index: 'PYR_PAYFREQPARAM2', sortable: true, search: false},
-                {name: 'createdate', index: 'createdate', sortable: true, search: false},
-                {name: 'PYR_recstatus', index: 'PYR_recstatus', sortable: true, formatter: function (val, row) {
-                        // alert(val);
-                        if (val === 'Active') {
-                            return '<span style="color:#008000;"><b>' + val + '</b><span>';
-                        } else if (val === 'Inactive') {
-                            return '<span style="color:#000099;"><b>' + val + '</b></span>';
-                        } else {
-                            return val;
-                        }
-                    }, stype: 'select'}
-            ],
-            rowNum: 20,
-            rowList: [10, 20, 30, 50, 100],
-            pager: '#pjqgrid',
-            sortname: 'PYR_Name',
-            viewrecords: true,
-            sortorder: "asc",
-            toolbarfilter: true,
-            autowidth: true,
-            shrinkToFit: true,
-            loadonce: false,
-            height: 'auto',
-            beforeSelectRow: function (rowid, e) {
-                var rowData = $(this).jqGrid('getRowData', rowid);
-                sReturn.resolve(rowData);
-                myWindows.close();
-            }
-        };
-        return sReturn;
-    }
-
-     function showCorp(objIn) {
-        var method = "Get_TypeC_CorpList";
-        var prov = "";
-
-        if (typeof objIn.PROV !== "undefined") {
-            prov = objIn.PROV;
-            method = "Get_CorpProv";
-                alert(prov);
-        }
-
-        var sReturn = $.Deferred(), windowsSize = "width=" + objIn.width + ", height=" + objIn.height,
-                myWindows = window.open("${pageContext.request.contextPath}/includes/PopUpWindows.jsp", "", windowsSize);
-        myWindows.header = '<div class="col-xs-12 col-sm-7 col-md-7 col-lg-4">' +
-                '<h1 class="page-title txt-color-blueDark">' +
-                '<i onclick="" class="fa-fw fa fa-user-md fa-2x"></i> ' +
-                'Corporate Selection' +
-                '</h1>' +
-                '</div>';
-        myWindows.selection = "<table class='selection-criteria'><tr><td><input id='corpCode' class='searchbox-text' type='text' placeholder='Search Corporate Code'></td><td><input id='corpName' type='text' class='searchbox-text' placeholder='Search Corporate Name'></td><td>" +
-                "<a class='btn btn-default bg-color-blueDark txt-color-white' onclick='reload()'>Search</a></td>" +
-                "</tr></table>";
-
-        myWindows.reload = function () {
-
-            myWindows.refresh({
-                postData: {
-                    CORPCODE: $(myWindows.document).find("#corpCode").val(),
-                    CORPNAME: $(myWindows.document).find("#corpName").val(),
-                    PROV: prov
-                }
-            });
-        };
-        myWindows.object = {
-            url: '${pageContext.request.contextPath}/Servlet_CorpBenCtrl',
-            postData: {
-                PMTD: method,
-                PROV: prov
-            },
-            datatype: "json",
-            mtype: 'POST',
-            colNames: ['Action', 'Corporate Name', 'Corporate Type', 'Corporate Network', 'Corporate Code', 'Status'],
-            colModel: [
-                //  {name:'MEM_NRIC',index:'MEM_NRIC', sortable:true, searchoptions: { sopt: ['cn']}, formatter:'showlink',formatoptions:{baseLinkUrl:'../ProviderPortal/Prov_Patient_Detail.jsp',addParam: '',showAction:'',idName:'PMemNRIC'}},                     
-                {name: 'select', formatter: function (val, row) {
-                        return "<a style='cursor:pointer;' id='select'>Select</a>";
-                    }
-                },
-                {name: 'CP_Name', index: 'CP_NAME', sortable: true, width: 300},
-                {name: 'CP_Type', index: 'CP_TYPE', sortable: true, search: false, width: 80},
-                {name: 'CP_CorpProvNetwork', index: 'CP_CORPPROVNETWORK', sortable: false, search: false, width: 200},
-                {name: 'CP_Code', index: 'CP_CODE', sortable: true, width: 100},
-                {name: 'CP_recstatus', index: 'CP_recstatus', sortable: true, formatter: function (val, row) {
-                        // alert(val);
-                        if (val === 'Active') {
-                            return '<span style="color:#008000;"><b>' + val + '</b><span>';
-                        }
-                        else if (val === 'Inactive') {
-                            return '<span style="color:#000099;"><b>' + val + '</b></span>';
-                        }
-                        else {
-                            return val;
-                        }
-                    }, stype: 'select'}
-            ],
-            rowNum: 20,
-            rowList: [10, 20, 30, 50, 100],
-            pager: '#pjqgrid',
-            sortname: 'CP_Name',
-            viewrecords: true,
-            sortorder: "asc",
-            toolbarfilter: true,
-            autowidth: true,
-            shrinkToFit: true,
-            loadonce: false,
-            height: 'auto',
-            beforeSelectRow: function (rowid, e) {
-                if (e.target.id === 'select') {
-                    var rowData = $(this).jqGrid('getRowData', rowid);
-//                console.log(e.target.id);
-//                 var target = $(e.target);
-//                    if (target.is(".cbox")) {
-                    sReturn.resolve(rowData);
-                    myWindows.close();
-                }
-            }
-        };
-        return sReturn;
-    }
-
-
-    function showProv(objIn) {
-        var sReturn = $.Deferred(), windowsSize = "width=" + objIn.width + ", height=" + objIn.height,
-                myWindows = window.open("${pageContext.request.contextPath}/includes/PopUpWindows.jsp", "", windowsSize);
-        myWindows.header = '<div class="col-xs-12 col-sm-7 col-md-7 col-lg-4">' +
-                '<h1 class="page-title txt-color-blueDark">' +
-                '<i onclick="" class="fa-fw fa fa-user-md fa-2x"></i> ' +
-                'Provider Selection' +
-                '</h1>' +
-                '</div>';
-        myWindows.selection = "<table class='selection-criteria'><tr><td><input id='txtSearchProviderCode' class='searchbox-text' type='text' placeholder='Search Provider Code'></td><td><input id='txtSearchProviderName' type='text' class='searchbox-text' placeholder='Search Provider Name'></td><td>" +
-                "<a class='btn btn-default bg-color-blueDark txt-color-white' onclick='reload()'>Search</a></td>" +
-                "</tr></table>";
-
-        myWindows.reload = function () {
-            myWindows.refresh({
-                postData: {
-                    PRVCODE: $(myWindows.document).find('#txtSearchProviderCode').val(),
-                    PRVNAME: $(myWindows.document).find('#txtSearchProviderName').val(),
-                    CPPCODE: '${sessionScope.cppcode}'
-                }
-            });
-        };
-        myWindows.object = {
-            url: '${pageContext.request.contextPath}/Servlet_Provider',
-            postData: {PMTD: 'Get_Provider_Cpp', CPPCODE: '${sessionScope.cppcode}', METHOD: 'PROVCPP_SEARCH', METHOD2: 'TOTAL_ROW_PROVCPP'},
-            datatype: "json",
-            mtype: 'POST',
-            colNames: ['Provider Name', 'System', 'Type', 'Status', 'State Code', 'Date Created', 'Register No', 'Provider Code'],
-            colModel: [
-                //  {name:'MEM_NRIC',index:'MEM_NRIC', sortable:true, searchoptions: { sopt: ['cn']}, formatter:'showlink',formatoptions:{baseLinkUrl:'../ProviderPortal/Prov_Patient_Detail.jsp',addParam: '',showAction:'',idName:'PMemNRIC'}},                     
-
-                {name: 'PRV_Name', index: 'PRV_Name', sortable: true, width: 300, formatter: formatColor2, unformat: noFormat},
-                {name: 'PRV_Sys', index: 'PRV_Sys', sortable: true, search: false, align: 'center', width: 110},
-                {name: 'PRV_Type', index: 'PRV_Type', sortable: true, stype: 'select', align: 'center', width: 50},
-                {name: 'PRV_recstatus', index: 'PRV_recstatus', sortable: true, stype: 'select', width: 60, formatter: formatColor, align: 'center', unformat: noFormat},
-                {name: 'PRV_StateCode', index: 'PRV_StateCode', sortable: true, stype: 'select', width: 90, align: 'center'},
-                {name: 'PRV_createdate', index: 'createdate', sortable: true, search: false, align: 'center', width: 90},
-                {name: 'PRV_RegNo', index: 'PRV_RegNo', sortable: true, search: false, width: 80, align: 'center'},
-                {name: 'PRV_Code', index: 'PRV_Code', sortable: true, width: 80, align: 'center', unformat: noFormat},
-            ],
-            rowNum: 20,
-            rowList: [10, 20, 30, 50, 100],
-            pager: '#pjqgrid',
-            sortname: 'PRV_Name',
-            viewrecords: true,
-            sortorder: "asc",
-            toolbarfilter: true,
-            autowidth: true,
-            shrinkToFit: true,
-            loadonce: false,
-            height: 'auto',
-            beforeSelectRow: function (rowid, e) {
-                var rowData = $(this).jqGrid('getRowData', rowid);
-                sReturn.resolve(rowData);
-                myWindows.close();
-            }
-        };
-        function formatColor2(val, row) {
-            return '<span style="color:#0070C0;"><b>' + val + '</b><span>';
-        }
-
-
-        function formatColor(val, row) {
-            // alert(val);
-            if (val === 'Active') {
-                return '<span style="color:#008000;"><b>' + val + '</b><span>';
-            }
-            else if (val === 'Inactive') {
-                return '<span style="color:#000099;"><b>' + val + '</b></span>';
-            }
-            else {
-                return val;
-            }
-        }
-        function noFormat(val, row) {
-            return val;
-        }
-        return sReturn;
-
-    }
-
     function showDrug(objIn) {
         var sReturn = $.Deferred(), windowsSize = "width=" + objIn.width + ", height=" + objIn.height,
                 myWindows = window.open("${pageContext.request.contextPath}/includes/PopUpWindows.jsp", "", windowsSize);
@@ -302,6 +63,67 @@
 
             // return  "<a href=# id=modal_link class=btn bg-color-purple txt-color-white>" + cellvalue + "</a>";
         }
+        return sReturn;
+
+    }
+
+    function showMedicine(objIn) {
+        var sReturn = $.Deferred(), windowsSize = "width=" + objIn.width + ", height=" + objIn.height,
+                myWindows = window.open("${pageContext.request.contextPath}/includes/PopUpWindows.jsp", "", windowsSize);
+        myWindows.header = '<div class="col-xs-12 col-sm-7 col-md-7 col-lg-4">' +
+                '<h1 class="page-title txt-color-blueDark">' +
+                '<i onclick="" class="fa-fw fa fa-medkit fa-2x"></i> ' +
+                'Medicine Selection' +
+                '</h1>' +
+                '</div>';
+        myWindows.selection = "<table class='selection-criteria'><tr><td><input id='txtName' type='text' class='searchbox-text' placeholder='Search Medicine Name'></td>" +
+                "<td><a class='btn btn-default bg-color-blueDark txt-color-white' onclick='reload()'>Search</a></td>" +
+                "</tr></table>";
+
+        myWindows.reload = function () {
+            myWindows.refresh({
+                postData: {
+                    NAME:  $(myWindows.document).find('#txtName').val()                   
+                }
+            });
+        };
+        myWindows.object = {
+            url: '${pageContext.request.contextPath}/Servlet_Medicine',
+            postData: {SFC: "GET_MEDICINE_LIST"},
+            datatype: 'json',
+            mtype: 'POST',
+            colNames: ['Action','Medicine Name','Unit of Measurement','Unit Cost','Price','Expiry Date','Qty','INDEX'],
+            colModel: [
+                {name: 'select', formatter: function (val, row) {
+                        return "<a style='cursor:pointer;' id='select'>Select</a>";
+                    }
+                },
+                {name: 'md_name', index: 'md_name', sortable: true, must: true, hidedlg: true, width: 200},
+                {name: 'md_uom', index: 'md_uom', sortable: true, must: true, hidedlg: true, width: 100},
+                {name: 'md_unitcost', index: 'md_unitcost', sortable: true, must: true, hidedlg: true, width: 100},
+                {name: 'md_price', index: 'md_price', sortable: true, must: true, hidedlg: true, width: 100},
+                {name: 'md_expirydate', index: 'md_expirydate', sortable: true, width: 100},
+                {name: 'md_qty', index: 'md_qty', sortable: true, width: 80},
+                {name: 'md_id', index: 'md_id', hidden:true}
+            ],
+            rowNum: 20,
+            rowList: [10, 20, 30, 50, 100],
+            pager: '#pjqgrid',
+            sortname: '',
+            viewrecords: true,
+            sortorder: "desc",
+            toolbarfilter: true,
+            autowidth: true,
+            shrinkToFit: true,
+            loadonce: false,
+            height: 'auto',
+            beforeSelectRow: function (rowid, e) {
+                var rowData = $(this).jqGrid('getRowData', rowid);
+                sReturn.resolve(rowData);
+                myWindows.close();
+            }
+        };
+       
         return sReturn;
 
     }

@@ -28,13 +28,13 @@
         <script src="Script/jquery-1.7.2.min.js" type="text/javascript"></script>
         <script src="Script/jquery.metro-btn.js" type="text/javascript"></script>
         <script type="text/javascript">
-            $(document).ready(function () {
+           // $(document).ready(function () {
 
                 //$("#metroaqui_novo").AddMetroSimpleButton('bt1', 'metro-verde', 'img/admin.png', 'Provider', 'window.location = "prov_login.jsp"');
                 //$("#metroaqui_novo").AddMetroSimpleButton('bt1', 'metro-verde', 'img/admin.png', 'Corporate / Payor', 'window.location = "corp_login.jsp"');
                 //$("#metroaqui_novo").AddMetroSimpleButton('bt1', 'metro-verde', 'img/admin.png', 'Administration', 'window.location = "admin_login.jsp"');
                 //$("#metroaqui_novo").AddMetroSimpleButton('bt1', 'metro-verde', 'img/admin.png', 'Personal Health Care', 'window.location = "phr_login.jsp"');
-            });
+            //});
         </script>
 
         <!-- FAVICONS -->
