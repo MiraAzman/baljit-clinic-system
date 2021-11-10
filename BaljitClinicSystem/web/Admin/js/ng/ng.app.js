@@ -91,10 +91,18 @@ smartApp.config(['$routeProvider', '$provide', function ($routeProvider, $provid
                     controller: 'DetailViewController'
                 }) 
                 
-                //Registration Queue 
+                //Operation 
                 .when('/QueueList', {
-                    templateUrl: 'views/Queue/Queue_Listing.jsp',
+                    templateUrl: 'views/Operation/Queue_Listing.jsp',
                     controller: 'PageViewController'
+                })
+                .when('/Consultation/:qu_id/:pt_id', {
+                    templateUrl: 'views/Operation/Consultation.jsp',
+                    controller: 'DetailViewController'
+                })
+                .when('/Billing/:qu_id', {
+                    templateUrl: 'views/Operation/Billing.jsp',
+                    controller: 'DetailViewController'
                 })
                 
                 //Medicine Setup 
