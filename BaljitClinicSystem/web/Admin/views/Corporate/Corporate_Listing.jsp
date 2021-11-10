@@ -38,7 +38,7 @@
         <h1 class="page-title txt-color-blueDark">
             <!-- PAGE HEADER -->
             <i class="fa-fw fa fa-building fa-2x"></i> 
-            Corporate / Panel Company                                  
+            Panel Company                                  
         </h1>
     </div>
     <div class="row">

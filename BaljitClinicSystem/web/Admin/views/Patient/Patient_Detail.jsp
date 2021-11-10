@@ -312,6 +312,26 @@
 
     var Patient_ID = "";
 
+    $("#chkIsSmoking, #chkIsAlcohol, #chkIsPregnant").click(function(){                
+        if ( $('#chkIsSmoking').is(":checked") ) { 
+            $('#chkIsSmoking').val('Y');
+        } else if ( $('#chkIsSmoking').is(":unchecked") )
+            $('#chkIsSmoking').val('N'); {
+        }
+
+        if ( $('#chkIsAlcohol').is(":checked") ) { 
+            $('#chkIsAlcohol').val('Y');
+        } else if ( $('#chkIsAlcohol').is(":unchecked") )
+            $('#chkIsAlcohol').val('N'); {
+        }
+
+        if ( $('#chkIsPregnant').is(":checked") ) { 
+            $('#chkIsPregnant').val('Y');
+        } else if ( $('#chkIsPregnant').is(":unchecked") )
+            $('#chkIsPregnant').val('N'); {
+        }
+    });
+
     function bindData(sParam) {
          
         Patient_ID = sParam.pt_id;   

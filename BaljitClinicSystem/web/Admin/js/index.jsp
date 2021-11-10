@@ -4,7 +4,7 @@
 		<meta charset="utf-8">
 		<!--<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">-->
 
-		<title> Stock Inventory Control Management </title>
+		<title> Baljit Clinic System </title>
 		<meta name="description" content="">
 		<meta name="author" content="">
 

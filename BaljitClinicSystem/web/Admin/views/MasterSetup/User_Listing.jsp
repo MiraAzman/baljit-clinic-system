@@ -79,26 +79,6 @@
                                         </td>  
                                     </tr>
                                     <tr>
-                                        <td width="15%">Company:</td>
-                                        <td width="100%">                                            
-                                            <label id="selectComp" class="searchbox">
-                                                <select class="form-control" id="ddlComp" name="ddlComp" rel="popover-hover" data-original-title="Company" data-content="Select Company." style="width:300px;">
-                                                    <option value="">- Select Company -</option>                                        
-                                                </select>    
-                                            </label>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td width="15%">Location:</td>
-                                        <td width="100%">                                            
-                                            <label id="selectLoc" class="searchbox">
-                                                <select class="form-control" id="ddlLoc" name="ddlLoc" rel="popover-hover" data-original-title="Location" data-content="Select Location." style="width:300px;cursor:default;">
-                                                    <option value="">- Select Location -</option>                                          
-                                                </select>    
-                                            </label>
-                                        </td>
-                                    </tr> 
-                                    <tr>
                                          <td colspan="6">
                                               <div align="right" class="padding-5" >
                                                 <input type="submit" Id="btnSearch"  class="btn btn-default bg-color-blueDark txt-color-white"  value="Search" />
@@ -150,17 +130,6 @@
 <script type="text/javascript">
     
     pageSetUp();
-    
-    getDLL("ddlComp", "GET_COMP", "", "");
-    getDLL("ddlLoc", "GET_LOCATION", "", "");
-
-    function getDLL (ddl, method, param1, param2) {
-        $.get('${pageContext.request.contextPath}/Servlet_PopulateData', {SFC: 'GET_DLL', METHOD: method, P1: param1, P2: param2}, function (data) {
-            for(var i=0; i < data.length; i++){                                                          
-                $("#"+ddl).append($("<option>").val(data[i].VALUE).html(data[i].TEXT));
-            }     
-        });     
-    }     
     
     $().ready(function(){
         $("#ddlLoc").prop("disabled", true);       

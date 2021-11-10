@@ -44,8 +44,16 @@
     <div class="row">
         <form id="form_User" name="form_User">
         <article class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+            
+            <div id="WarningAlert" class="alert alert-block alert-warning" style="display:none;">
+                <h4 class="alert-heading">Warning!</h4>
+                <span id="LowLevelAlert" style="display:none;">- Some medicines are low on stock. Please update medicine quantity.</span><br>
+                <span id="ExpiredAlert" style="display:none;">- Some medicines are expired or soon to be expired. Please update the medicine batch.</span>
+            </div>
+            
             <div class="row" style="padding-left:20px;padding-bottom:20px;">
                 <input type="button" class="btn btn-default bg-color-blueDark txt-color-white" id="btnAddMedicine" name="btnAddMedicine" value="Add New Medicine" style="margin-right:20px;"/>
+                <input type="button" class="btn btn-default bg-color-blueDark txt-color-white" id="btnReport" name="btnReport" value="Generate Balance Report" style="margin-right:20px;" onclick="LoadPrintPreview();"/>
             </div>
             
             <div class="jarviswidget jarviswidget-color-blueDark" id="wid-id-2"  data-widget-editbutton="false" data-widget-colorbutton="false" data-widget-fullscreenbutton="false" data-widget-custombutton="false" data-widget-deletebutton="false">
@@ -108,9 +116,7 @@
  <jsp:include page="../../includes/loading-no-status.jsp"/>  
 <script src="js/buttonset.js"></script>
     
-<script type="text/javascript">
-    
-    pageSetUp();  
+<script type="text/javascript"> 
     
     $().ready(function(){    
         
@@ -118,6 +124,40 @@
             location.href = '#/AddNewMedicine';
         });       
     });
+    
+    function AlertLowLevel() {
+        $('#WarningAlert, #LowLevelAlert').show();
+    }
+    
+    function AlertExpired() {
+        $('#WarningAlert, #ExpiredAlert').show();
+    }
+    
+    function LoadPrintPreview() {
+    
+        var jasperFile = "MedicineBalanceReport";
+        
+        loadScript("js/print-preview.js", function () {
+            var jObj = {              
+                1: "GET_BALANCE_RPT",
+                2: "", 
+                3: "", 
+                4: "",
+                5: ""
+            };
+ 
+            var param = {};           
+//            alert(JSON.stringify(jObj));               
+            var object = {};
+            object.procParam = jObj;
+            object.jasperName = jasperFile;
+            object.procString = 'SP_GET_MEDICINE(?,?,?,?,?)';
+            object.fixParam = param;
+            object.format = 'pdf';  //indicate which format is being used
+            
+            printToPage(object);     
+        });      
+    };
     
     var pagefunction = function () {
         
@@ -132,19 +172,23 @@
         });            
     };
     
-    function run_jqgrid_function() {
+    function run_jqgrid_function() {  
+        
+        var bFoundLowLevel = false, bFoundExpired = false;
             
             var grid = $("#jqgridMedicineList"),
                 gridPager = "#p" + grid.selector.toString().substring(1),
                 conDiv = $("#c" + grid.selector.toString().substring(1)),
-                defaultColName =  ['Action','INDEX','Medicine Name','Unit of Measurement','Expiry Date','Qty'],
+                defaultColName =  ['Action','INDEX','Medicine Name','Expiry Date','Days To Expired','Qty','Unit of Measurement','Quantity Level'],
                 defaultColMol = [                    
                     {name: 'details', index: 'details', formatter: viewDetail,  search: false, sortable: false, width: 80, align:'center',must: true, hidedlg: true},
                     {name: 'md_id', index: 'md_id', hidden:true},
                     {name: 'md_name', index: 'md_name', sortable: true, must: true, hidedlg: true, width: 150},
-                    {name: 'md_uom', index: 'md_uom', sortable: true, must: true, hidedlg: true, width: 80},
                     {name: 'md_expirydate', index: 'md_expirydate', sortable: true, width: 100},
-                    {name: 'md_qty', index: 'md_qty', sortable: true, width: 80}
+                    {name: 'DaysToExpired', index: 'DaysToExpired', width: 80, formatter: formatColor2},
+                    {name: 'md_qty', index: 'md_qty', sortable: true, width: 80},
+                    {name: 'md_uom', index: 'md_uom', sortable: true, must: true, hidedlg: true, width: 80},
+                    {name: 'Status', index: 'Status', sortable: true, width: 80, formatter: formatColor}    
                 ],
               
                 mainGridName = grid.selector.toString().substring(1),
@@ -183,7 +227,8 @@
                     sortColumn({settingArray:"admin", order: relativeColumnOrder, grid: grid, defaultColMol: defaultColMol, settingName: mainGridName});
                 }
             },
-                loadComplete: function () {
+            loadComplete: function () { 
+        
                 var iLastPage = parseInt($(this).getGridParam('lastpage'));
                 $(".ui-jqgrid .ui-pg-input").keydown(function (e) {
                     this.value = this.value.replace(/\D/g, '');
@@ -196,11 +241,40 @@
                         }
                     }
                 });
+                
+                if (bFoundLowLevel) {
+                    AlertLowLevel();
+                }
+                if (bFoundExpired) {
+                    AlertExpired();
+                }
             }
         });
         
         function viewDetail(cellvalue, options, rowObject) {         
             return"<a style='cursor: pointer;' title='View Details' href='#/MedicineDetail/" + rowObject.md_id +  "'><i class='fa fa-fw fa-lg fa-list-alt' /></a>";  
+        }
+        
+        function formatColor(cellvalue, options, rowObject) {
+            
+            if (cellvalue === 'Low') {
+                bFoundLowLevel = true;
+                return "<span style='color:#F00;'><b>LOW!</b><span>"; 
+            }
+            else if (cellvalue === 'Sufficient') {
+                return "<span style='color:#008000;'><b>SUFFICIENT</b><span>"; 
+            }           
+        }
+        
+        function formatColor2(cellvalue, options, rowObject) {
+            
+            if (cellvalue <= 5) {
+                bFoundExpired = true;
+                return "<span style='color:#F00;'><b>" + cellvalue + "Days!</b><span>"; 
+            }
+            else {
+                return cellvalue + " Days"; 
+            }           
         }
           
         // remove classes
@@ -246,7 +320,7 @@
             }
         });
         grid.jqGrid('setGridWidth', conDiv.width());
-        };//END OF run_jqgrid_function 
+    };//END OF run_jqgrid_function 
 
     function Search() {      
         $("#jqgridMedicineList").jqGrid('setGridParam', {
@@ -264,7 +338,5 @@
             });
         });
     });
-                         
-    pageSetUp();
    
 </script>

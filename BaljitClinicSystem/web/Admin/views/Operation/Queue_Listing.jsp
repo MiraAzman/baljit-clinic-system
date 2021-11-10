@@ -104,34 +104,37 @@
     
     function run_jqgrid_function() {
             
-            var grid = $("#jqgridQueueList"),
-                gridPager = "#p" + grid.selector.toString().substring(1),
-                conDiv = $("#c" + grid.selector.toString().substring(1)),
-                defaultColName =  ['Action','INDEX','Corporate Name','Address','Telephone No.'],
-                defaultColMol = [                    
-                    {name: 'details', index: 'details', formatter: viewDetail,  search: false, sortable: false, width: 80, align:'center',must: true, hidedlg: true},
-                    {name: 'cp_id', index: 'cp_id', hidden:true},
-                    {name: 'cp_name', index: 'cp_name', sortable: true, must: true, hidedlg: true, width: 150},
-                    {name: 'cp_address', index: 'cp_address', sortable: true, must: true, hidedlg: true, width: 220},
-                    {name: 'cp_telno', index: 'cp_telno', sortable: true, width: 120}
-                ],
-              
-                mainGridName = grid.selector.toString().substring(1),
-                temp = readSettings({settingArray:"admin", defaultColName: defaultColName, defaultColMol: defaultColMol, settingName: mainGridName}),
-              currentColName = temp[0],
-              currentColMol = temp[1];
+        var grid = $("#jqgridQueueList"),
+            gridPager = "#p" + grid.selector.toString().substring(1),
+            conDiv = $("#c" + grid.selector.toString().substring(1)),
+            defaultColName =  ['INDEX','PATIENT_INDEX','Status','Patient Name','Patient IC','Time In','Time Out','Action'],
+            defaultColMol = [                    
+                //{name: 'details', index: 'details', formatter: viewDetail,  search: false, sortable: false, width: 80, align:'center',must: true, hidedlg: true},
+                {name: 'qu_id', index: 'qu_id', hidden:true},
+                {name: 'pt_id', index: 'pt_id', hidden:true},
+                {name: 'qu_status', index: 'qu_status', sortable: true, must: true, hidedlg: true, width: 100, formatter: formatColor},
+                {name: 'pt_name', index: 'pt_name', sortable: true, must: true, hidedlg: true, width: 200},
+                {name: 'pt_icno', index: 'pt_icno', sortable: true, width: 120},
+                {name: 'qu_timein', index: 'qu_timein', sortable: true, width: 100},
+                {name: 'qu_timeout', index: 'qu_timeout', sortable: true, width: 100},
+                {name: 'action', index: 'action', formatter: ActionButton, search: false, sortable: false, width: 80, align:'center',must: true, hidedlg: true}
+            ],
+
+            mainGridName = grid.selector.toString().substring(1),
+            temp = readSettings({settingArray:"admin", defaultColName: defaultColName, defaultColMol: defaultColMol, settingName: mainGridName}),
+          currentColName = temp[0],
+          currentColMol = temp[1];
 
         grid.jqGrid({
-            url: '${pageContext.request.contextPath}/Servlet_Corporate',
+            url: '${pageContext.request.contextPath}/Servlet_Queue',
                 postData: {
-                    SFC: 'GET_CORPORATE_LIST', 
-                    NAME: $('#txtName').val()
+                    SFC: 'GET_QUEUE_LIST'
                 },
             datatype: "json",
             mtype: 'POST',
             colNames: currentColName,
             colModel: currentColMol,
-           // rownumbers: true,
+            rownumbers: true,
             gridview: true,
             rownumWidth: 40,
             rowNum: 20,
@@ -170,6 +173,40 @@
         
         function viewDetail(cellvalue, options, rowObject) {         
             return"<a style='cursor: pointer;' title='View Details' href='#/CorporateDetail/" + rowObject.cp_id +  "'><i class='fa fa-fw fa-lg fa-list-alt' /></a>";  
+        }
+        
+        function ActionButton(cellvalue, options, rowObject) {
+            
+            if ((rowObject.qu_status === 'REGISTERED') || (rowObject.qu_status === 'CONSULTATION')) {
+                return "<input type='button' id='btnAction' class='btn btn-primary' value='Start Consultation' onclick='ProceedToPage(\"Consultation\",\"" + rowObject.qu_id + "\",\"" + rowObject.pt_id + "\");'/> "; 
+            }
+            else if (rowObject.qu_status === 'BILLING') {
+                return "<input type='button' id='btnAction' class='btn btn-primary' value='Start Billing' onclick='ProceedToPage(\"Billing\",\"" + rowObject.qu_id + "\",\"" + rowObject.pt_id + "\");'/>"; 
+            }
+            else if (rowObject.qu_status === 'COMPLETED') {
+                return "<input type='button' id='btnAction' class='btn btn-default' value='Print Receipt' onclick='ProceedToPage(\"Receipt\",\"" + rowObject.qu_id + "\",\"" + rowObject.pt_id + "\");'/>"; 
+            }
+            else {
+                return "";
+            }
+        }
+        
+        function formatColor(val, row) {
+            if (val === 'REGISTERED') {
+                return '<span style="color:#27D500;"><b>REGISTERED</b><span>';
+            }
+            else if (val === 'CONSULTATION') {
+                return '<span style="color:#FFA027"><b>CONSULTATION</b></span>';
+            }
+            else if (val === 'BILLING') {
+                return '<span style="color:#277FFF;"><b>BILLING</b></span>';
+            }
+            else if (val === 'COMPLETED') {
+                return '<span style="color:#F631FF;"><b>COMPLETED</b></span>';
+            }
+            else {
+                return val;
+            }
         }
           
         // remove classes
@@ -215,17 +252,7 @@
             }
         });
         grid.jqGrid('setGridWidth', conDiv.width());
-        };//END OF run_jqgrid_function 
-
-    function Search() {      
-        $("#wid-id-1").show();
-        $("#jqgridQueueList").jqGrid('setGridParam', {
-            postData: {
-                SFC: 'GET_QUEUE_LIST', 
-                NAME: $('#txtName').val()
-            }
-        }).trigger("reloadGrid", [{page: 1}]);       
-    }
+    };//END OF run_jqgrid_function 
     
     loadScript("js/plugin/jqgrid/grid.locale-en.min.js", function () {
         loadScript("js/buttonset.js", function () {
@@ -234,7 +261,42 @@
             });
         });
     });
-                         
-    pageSetUp();
+    
+    function ProceedToPage(page, qu_id, pt_id) {
+        if (page === 'Consultation') {
+            location.href = "#/Consultation/"+qu_id+"/"+pt_id;
+        }
+        else if (page === 'Billing') { 
+            location.href = "#/Billing/"+qu_id;
+        }
+        else if (page === 'Receipt') { 
+            LoadPrintPreview(qu_id);
+        }
+    }
+    
+    function LoadPrintPreview(qu_id) {
+    
+        var jasperFile = "Receipt";
+        
+        loadScript("js/print-preview.js", function () {
+            var jObj = {              
+                1: "GENERATE_RECEIPT",
+                2: qu_id, 
+                3: "", 
+                4: ""
+            };
+ 
+            var param = {};           
+//            alert(JSON.stringify(jObj));               
+            var object = {};
+            object.procParam = jObj;
+            object.jasperName = jasperFile;
+            object.procString = 'SP_GET_BILLING(?,?,?,?)';
+            object.fixParam = param;
+            object.format = 'pdf';  //indicate which format is being used
+            
+            printToPage(object);     
+        });      
+    };
    
 </script>
