@@ -12,7 +12,6 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
-import BusinessData.DAL_Patient;
 import net.sf.json.JSONSerializer;
 import BusinessData.DAL_ShowGrid;
 import java.util.concurrent.ExecutorService;
@@ -71,13 +70,23 @@ public class Servlet_Patient extends HttpServlet {
         String sName = request.getParameter("NAME");
         String sICNo = request.getParameter("IC_NO");
 
-        DAL_Patient DAL_Patient = new DAL_Patient();
-        BLL_Common.Common_Object ObjList = DAL_Patient.DAL_GET_PATIENT(SiteName, new String[]{
-            "GET_PATIENT_LIST", "", sName, sICNo, Integer.toString(page), Integer.toString(rows)});
+       // DAL_Patient DAL_Patient = new DAL_Patient();
+       //BLL_Common.Common_Object ObjList = DAL_Patient.DAL_GET_PATIENT(SiteName, new String[]{
+        //    "GET_PATIENT_LIST", "", sName, sICNo, Integer.toString(page), Integer.toString(rows)});
 
-        BLL_Common.Common_Object ObjTotalRow = DAL_Patient.DAL_GET_PATIENT(SiteName, new String[]{
-            "COUNT_PATIENT_LIST", "", sName, sICNo, "", ""});
+        //BLL_Common.Common_Object ObjTotalRow = DAL_Patient.DAL_GET_PATIENT(SiteName, new String[]{
+       //     "COUNT_PATIENT_LIST", "", sName, sICNo, "", ""});
 
+        BLL_Common.Common_Object ObjList = BaseDAL.Get_Multiple_QueryReturn
+        		("SP_GET_PATIENT(?,?,?,?,?,?" //6                 
+                + ")", new String[]{"GET_PATIENT_LIST", "", sName, sICNo, Integer.toString(page), Integer.toString(rows)}, 
+                new int[]{}, SiteName);
+        
+        BLL_Common.Common_Object ObjTotalRow = BaseDAL.Get_Multiple_QueryReturn
+        		("SP_GET_PATIENT(?,?,?,?,?,?" //6                 
+                + ")", new String[]{"COUNT_PATIENT_LIST", "", sName, sICNo, "", ""}, 
+                new int[]{}, SiteName);
+        
         try {
             total = ObjTotalRow.getJSONArray(0).getJSONObject(0).getInt("Total");
 
@@ -137,7 +146,9 @@ public class Servlet_Patient extends HttpServlet {
         out.println(json);
     }
 
-    public void Get_Patient_Detail(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException, SQLException {
+    public void Get_Patient_Detail(HttpServletRequest request, HttpServletResponse response) 
+    		throws ServletException, IOException, SQLException 
+    {
         
         HttpSession session = request.getSession();
         String SiteName = (String) session.getAttribute("SiteName");
@@ -147,11 +158,12 @@ public class Servlet_Patient extends HttpServlet {
         net.sf.json.JSONObject json = new net.sf.json.JSONObject();
 
         try {
-            String sPatientID = request.getParameter("PATIENT_ID");
+            String sPatientID = request.getParameter("PATIENT_ID");        
             
-            DAL_Patient DAL_Patient = new DAL_Patient();
-            BLL_Common.Common_Object obj = DAL_Patient.DAL_GET_PATIENT(SiteName, new String[]{
-                "GET_PATIENT_DETAIL", sPatientID, "", "", "", ""});
+            BLL_Common.Common_Object obj = BaseDAL.Get_Multiple_QueryReturn
+            		("SP_GET_PATIENT(?,?,?,?,?,?" //6                 
+                    + ")", new String[]{"GET_PATIENT_DETAIL", sPatientID, "", "", "", ""}, 
+                    new int[]{}, SiteName);
              
             json.put("rows", obj.getJSONArray(0));
             out.print(obj.getJSONArrayAsJSONObject("object"));

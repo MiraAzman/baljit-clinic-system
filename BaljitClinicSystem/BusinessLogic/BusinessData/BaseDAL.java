@@ -1106,7 +1106,9 @@ public class BaseDAL {
     }
 
     
-    public static BLL_Common.Common_Object Get_Multiple_QueryReturn(String sp_query, String[] s_array, int[] typeIn, String SiteName) {
+    public static BLL_Common.Common_Object Get_Multiple_QueryReturn(
+    		String sp_query, String[] s_array, int[] typeIn, String SiteName) 
+    {
         Connection conn = null;
         CallableStatement stmt = null;
         String str_array = "";
