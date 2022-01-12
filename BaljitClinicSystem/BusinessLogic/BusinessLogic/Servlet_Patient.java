@@ -24,6 +24,7 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import BusinessLogic.Patient;
 
 @WebServlet(name = "Servlet_Patient", urlPatterns = {"/Servlet_Patient"})
 public class Servlet_Patient extends HttpServlet {
@@ -102,87 +103,36 @@ public class Servlet_Patient extends HttpServlet {
 
     protected void UPDATE_PATIENT(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException, SQLException {
         
-        HttpSession session = request.getSession();
-        String SiteName = (String) session.getAttribute("SiteName");
-        String sUserCode = (String) session.getAttribute("usercode");
+	    HttpSession session = request.getSession();
+	    String SiteName = (String) session.getAttribute("SiteName");
+	    String sUserCode = (String) session.getAttribute("usercode");
+	    
+	    response.setContentType("text/html");
+	    PrintWriter out = response.getWriter();
+	    net.sf.json.JSONObject json = new net.sf.json.JSONObject();
+	
+	    String sMethod = request.getParameter("METHOD");     
+	    String sIndex = "0";
+	    String sSP_Method = "";      
+	    
+	    if (sMethod.equals("INSERT")) {
+	        sSP_Method = "ADD_PATIENT";
+	    } 
+	    else if (sMethod.equals("UPDATE")) {
+	        sSP_Method = "UPDATE_PATIENT";
+	        sIndex = request.getParameter("INDEX");
+	    }                
         
-        response.setContentType("text/html");
-        PrintWriter out = response.getWriter();
-        net.sf.json.JSONObject json = new net.sf.json.JSONObject();
-
-        String sMethod = request.getParameter("METHOD");     
-        String sIndex = "0";
-        String sSP_Method = "";
-        String dHeight = "0";
-        String dWeight = "0";
-        String sDOB = null;
-        
-        if (sMethod.equals("INSERT")) {
-            sSP_Method = "ADD_PATIENT";
-        } 
-        else if (sMethod.equals("UPDATE")) {
-            sSP_Method = "UPDATE_PATIENT";
-            sIndex = request.getParameter("INDEX");
-        }
-        
-        if (!request.getParameter("HEIGHT").equals("")) {
-            dHeight = request.getParameter("HEIGHT"); 
-        }       
-        if (!request.getParameter("WEIGHT").equals("")) {
-            dWeight = request.getParameter("WEIGHT"); 
-        }
-        if (!request.getParameter("DOB").equals("")) {
-            sDOB = request.getParameter("DOB"); 
-        }
+	    Patient patient = new Patient();
+	    patient.setPatient(request, sIndex);
         
         String[] aryPatient = {
             sSP_Method, // 0-sMethod
-            sIndex, // 1-spt_id
-            request.getParameter("NAME"), 
-            request.getParameter("IC_NO"), 
-            sDOB,
-            request.getParameter("CONTACT_NO"), 
-            request.getParameter("EMAIL"),
-            request.getParameter("GENDER"), 
-            request.getParameter("ADDRESS"), 
-            request.getParameter("NATIONALITY"), 
-            request.getParameter("ETHNIC_GROUP"), 
-            request.getParameter("BLOOD_GROUP"), 
-            dHeight,
-            dWeight,
-            request.getParameter("HEALTH_HISTORY"),
-            request.getParameter("ALLERGY_NOTES"),
-            request.getParameter("IS_SMOKING"),
-            request.getParameter("IS_ALCOHOL"),
-            request.getParameter("IS_PREGNANT"),
-            request.getParameter("PANEL_COMPANY"),
-            request.getParameter("EMPLOYEE_NAME"),
-            request.getParameter("EMPLOYEE_CODE"),
-            request.getParameter("RELATIONSHIP"),
             sUserCode
         };
-        
-        DAL_Patient DAL_Patient = new DAL_Patient();
-        BLL_Common.Common_Object obj = DAL_Patient.DAL_UPDATE_PATIENT(SiteName, aryPatient);
+            
+        boolean bReturn = BaseDAL.call_SP_TRX_PATIENT(aryPatient, SiteName, patient);
 
-        boolean bReturn = false;
-
-        try {
-            if (obj.getObjectArray(0).toString().equals("00000")) {
-
-                obj.commit();
-                bReturn = true;              
-            } 
-            else {
-                obj.rollback();
-            }
-        } catch (Exception e) {
-            try {
-                obj.rollback();
-            } catch (SQLException ex) {
-                bReturn = false;
-            }
-        }
         json.put("bool", bReturn);
         out.println(json);
     }

@@ -12,12 +12,4 @@ public class DAL_Patient {
             + "?,?,?,?,?,?" //6                 
             + ")", sIn, new int[]{}, SiteName);
     }   
-    
-     public BLL_Common.Common_Object DAL_UPDATE_PATIENT(String SiteName, String[] sStringIn) {
-        return BaseDAL.Get_Multiple_QueryReturn_No_Commit("SP_TRX_PATIENT("
-            + "?,?,?,?,?,?,?,?,?,?," //10
-            + "?,?,?,?,?,?,?,?,?,?," //10
-            + "?,?,?,?,?" //5
-            + ")", sStringIn, new int[]{java.sql.Types.VARCHAR}, SiteName);
-    }
 }
