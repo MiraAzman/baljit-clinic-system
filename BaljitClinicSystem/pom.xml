@@ -69,7 +69,7 @@
   
 	<build>
     	<sourceDirectory>BusinessLogic</sourceDirectory>
-    	<finalName>BaljitClinicSystem2</finalName>
+    	<finalName>BaljitClinicSystem</finalName>
     	<plugins>
       		<plugin>
         		<artifactId>maven-compiler-plugin</artifactId>
