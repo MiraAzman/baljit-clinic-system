@@ -3,6 +3,7 @@ package BusinessData;
 import java.sql.ResultSet;
 import BusinessData.BaseDAL;
 import BusinessLogic.BLL_Common;
+import BusinessLogic.Medicine;
 
 public class DAL_Medicine {
     BaseDAL DAL = new BaseDAL();
@@ -13,7 +14,7 @@ public class DAL_Medicine {
             + ")", sIn, new int[]{}, SiteName);
     }   
     
-    public BLL_Common.Common_Object DAL_UPDATE_MEDICINE(String SiteName, String[] sStringIn) {
+    public BLL_Common.Common_Object DAL_UPDATE_MEDICINE(String SiteName, String[] sStringIn, Medicine medicine) {
         return BaseDAL.Get_Multiple_QueryReturn_No_Commit("SP_TRX_MEDICINE("
             + "?,?,?,?,?,?,?,?,?,?," //10
             + "?,?" //2

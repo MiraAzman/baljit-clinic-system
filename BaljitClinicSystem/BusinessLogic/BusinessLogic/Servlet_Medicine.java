@@ -82,41 +82,16 @@ public class Servlet_Medicine extends HttpServlet {
             sIndex = request.getParameter("INDEX");
         }
         
+        Medicine medicine = new Medicine(sIndex, sName, sBatchNo, sUOM, sExpiryDate,
+        		dUnitCost, iQty, dPrice, sIsActive);
+        
         String[] aryMedicine = {
             sSP_Method, 
-            sIndex, 
-            sName, 
-            sUOM,
-            dUnitCost,
-            dPrice,
-            sIsActive,
-            sBatchNo,
-            sExpiryDate, 
-            iQty,
             sUserCode 
         };
         
-        DAL_Medicine DAL_Medicine = new DAL_Medicine();
-        BLL_Common.Common_Object obj = DAL_Medicine.DAL_UPDATE_MEDICINE(SiteName, aryMedicine);
+        boolean bReturn = BaseDAL.call_SP_TRX_MEDICINE(aryMedicine, SiteName, medicine);;
 
-        boolean bReturn = false;
-
-        try {
-            if (obj.getObjectArray(0).toString().equals("00000")) {
-
-                obj.commit();
-                bReturn = true;              
-            } 
-            else {
-                obj.rollback();
-            }
-        } catch (Exception e) {
-            try {
-                obj.rollback();
-            } catch (SQLException ex) {
-                bReturn = false;
-            }
-        }
         json.put("bool", bReturn);
         out.println(json);
     }

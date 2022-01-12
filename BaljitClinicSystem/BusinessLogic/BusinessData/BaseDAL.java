@@ -1,6 +1,7 @@
 package BusinessData;
 
 import BusinessLogic.BLL_Common;
+import BusinessLogic.Medicine;
 import BusinessLogic.Patient;
 
 import com.sun.rowset.CachedRowSetImpl;
@@ -1207,6 +1208,79 @@ public class BaseDAL {
 
         Object_BLL_Common.write_log("end call " + sp_query, "SP_Log");
         return new BLL_Common.Common_Object(rsList, objectList, conn, stmt);
+    }
+    
+    public static Boolean call_SP_TRX_MEDICINE(String[] s_array, String SiteName, Medicine medicine) {
+        Connection conn = null;
+        CallableStatement stmt = null;
+        String str_array = "";
+        List<JSONArray> rsList = new ArrayList<JSONArray>();
+        List<Object> objectList = new ArrayList<Object>();
+        Boolean bReturn = false;
+        
+        String sp_query = "{call SP_TRX_MEDICINE("
+                + "?,?,?,?,?,?,?,?,?,?," //10
+                + "?,?)}"; //2
+
+        try {
+            conn = Get_Connection(false, "", "", SiteName);                     
+            
+            //String get_query = "{call " + sp_query + "}";
+            stmt = conn.prepareCall(sp_query);
+            
+            Object_BLL_Common.write_log("call_SP_TRX_MEDICINE", "");
+            Object_BLL_Common.write_log("name: " + medicine.getName(), "");
+            stmt = medicine.set_SP_TRX_MEDICINE_param(stmt, s_array);
+            
+            if (s_array.length > 0) {
+                for (int i = 0; i < s_array.length; i++) {
+                    if (str_array.equals("")) {
+                        str_array += "'" + s_array[i] + "'";
+                    } else {
+                        str_array += ",'" + s_array[i] + "'";
+                    }
+                }
+            }
+
+            Object_BLL_Common.write_log("start call SP_TRX_MEDICINE (" + str_array + ")", "SP_Log");
+            boolean results = stmt.execute();
+            while (results) {
+                rsList.add(BLL_Common.rsToJSONArray(stmt.getResultSet()));
+                results = stmt.getMoreResults();
+            }
+            objectList.add(stmt.getObject(12));
+        } catch (Exception ex) {
+            Object_BLL_Common.write_log("Get_QueryResultSet Error : " + ex.toString(), "");
+            objectList.add(ex.toString());  //Author: LLT, Date : 2015/03/04 - add this line to trigger the error message
+            Object_BLL_Common.write_log("Error: " + ex.fillInStackTrace(), "SP_Log");
+            ex.printStackTrace();  
+        }
+
+        Object_BLL_Common.write_log("end call SP_TRX_MEDICINE", "SP_Log");
+        
+        BLL_Common.Common_Object obj = new BLL_Common.Common_Object(rsList, objectList, conn, stmt);
+        
+        try {
+            if (obj.getObjectArray(0).toString().equals("00000")) {
+
+            	obj.commit();
+                bReturn = true;     
+                Object_BLL_Common.write_log("Commit successfully!", "SP_Log");
+            } 
+            else {
+            	Object_BLL_Common.write_log("Rollback!", "SP_Log");
+            	obj.rollback();
+            }
+        } catch (Exception e) {
+        	Object_BLL_Common.write_log("Error1: " + e.toString(), "SP_Log");
+        	Object_BLL_Common.write_log("Error1: " + e.fillInStackTrace(), "SP_Log");
+            try {
+            	obj.rollback();
+            } catch (SQLException ex) {
+                bReturn = false;
+            }
+        }
+        return bReturn;
     }
     
     public static Boolean call_SP_TRX_PATIENT(String[] s_array, String SiteName, Patient patient) {
