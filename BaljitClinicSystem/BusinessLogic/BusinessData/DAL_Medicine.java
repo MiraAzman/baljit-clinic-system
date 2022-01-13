@@ -3,7 +3,7 @@ package BusinessData;
 import java.sql.ResultSet;
 import BusinessData.BaseDAL;
 import BusinessLogic.BLL_Common;
-import BusinessLogic.Medicine;
+import Model.Medicine;
 
 public class DAL_Medicine {
     BaseDAL DAL = new BaseDAL();

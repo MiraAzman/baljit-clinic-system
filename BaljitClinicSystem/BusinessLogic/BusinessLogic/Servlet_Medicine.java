@@ -2,6 +2,8 @@ package BusinessLogic;
 
 import BusinessData.BaseDAL;
 import BusinessData.DAL_PopulateData;
+import Model.Medicine;
+
 import java.io.PrintWriter;
 import java.sql.SQLException;
 import javax.servlet.ServletException;
@@ -93,7 +95,7 @@ public class Servlet_Medicine extends HttpServlet {
         boolean bReturn = BaseDAL.call_SP_TRX_MEDICINE(aryMedicine, SiteName, medicine);
 
         json.put("bool", bReturn);
-        out.println(json);
+        out.println(json);           
     }
 
     public void Get_Medicine_List(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException, SQLException {
@@ -198,7 +200,7 @@ public class Servlet_Medicine extends HttpServlet {
             throws ServletException, IOException {
 
         // processRequest(request, response);
-
+   	
         String p_method = null;
         p_method = request.getParameter("SFC");
 

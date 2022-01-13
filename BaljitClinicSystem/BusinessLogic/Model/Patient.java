@@ -1,8 +1,10 @@
-package BusinessLogic;
+package Model;
 
 import java.sql.CallableStatement;
 
 import javax.servlet.http.HttpServletRequest;
+
+import BusinessLogic.BLL_Common;
 
 public class Patient {
 	
