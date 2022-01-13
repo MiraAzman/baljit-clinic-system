@@ -90,7 +90,7 @@ public class Servlet_Medicine extends HttpServlet {
             sUserCode 
         };
         
-        boolean bReturn = BaseDAL.call_SP_TRX_MEDICINE(aryMedicine, SiteName, medicine);;
+        boolean bReturn = BaseDAL.call_SP_TRX_MEDICINE(aryMedicine, SiteName, medicine);
 
         json.put("bool", bReturn);
         out.println(json);
