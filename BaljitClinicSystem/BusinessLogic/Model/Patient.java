@@ -208,9 +208,9 @@ public class Patient {
         this.relationship = request.getParameter("RELATIONSHIP");
 	}
 	
-	public CallableStatement set_SP_TRX_PATIENT_param(CallableStatement stmt, String[] s_array) throws Exception {
+	public CallableStatement set_SP_TRX_PATIENT_param(CallableStatement stmt, String SP_Method, String userCode) throws Exception {
 				
-		stmt.setString(1, s_array[0]);
+		stmt.setString(1, SP_Method);
         stmt.setString(2, this.patientId); 
         stmt.setString(3, this.name);
         stmt.setString(4, this.icNo);
@@ -235,12 +235,8 @@ public class Patient {
         stmt.setString(21, this.employeeName);
         stmt.setString(22, this.employeeCode);
         stmt.setString(23, this.relationship);
-        stmt.setString(24, s_array[1]);
+        stmt.setString(24, userCode);
         stmt.registerOutParameter(25, java.sql.Types.VARCHAR);
-        
-        Object_BLL_Common.write_log("Email: " + this.email, "");
-        Object_BLL_Common.write_log("ID: " + this.patientId, "");
-        Object_BLL_Common.write_log("METHOD: " + s_array[0], "");
         
         return stmt;
 	}

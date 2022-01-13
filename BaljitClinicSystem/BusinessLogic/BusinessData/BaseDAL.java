@@ -1283,78 +1283,54 @@ public class BaseDAL {
         return bReturn;
     }
     
-    public static Boolean call_SP_TRX_PATIENT(String[] s_array, String SiteName, Patient patient) {
+    public static Boolean call_SP_TRX_PATIENT(String SP_Method, String userCode, String SiteName, Patient patient) {
         Connection conn = null;
         CallableStatement stmt = null;
-        String str_array = "";
         List<JSONArray> rsList = new ArrayList<JSONArray>();
         List<Object> objectList = new ArrayList<Object>();
         Boolean bReturn = false;
-        
-        String sp_query = "{call SP_TRX_PATIENT("
-                + "?,?,?,?,?,?,?,?,?,?," //10
-                + "?,?,?,?,?,?,?,?,?,?," //10
-                + "?,?,?,?,?)}"; //5
-        
+        BLL_Common.Common_Object obj = new BLL_Common.Common_Object();
+        		
         try {
             conn = Get_Connection(false, "", "", SiteName);                     
             
-            //String get_query = "{call " + sp_query + "}";
-            stmt = conn.prepareCall(sp_query);
+            stmt = conn.prepareCall("{call SP_TRX_PATIENT("
+                    + "?,?,?,?,?,?,?,?,?,?," //10
+                    + "?,?,?,?,?,?,?,?,?,?," //10
+                    + "?,?,?,?,?)}");
             
-            Object_BLL_Common.write_log("call_SP_TRX_PATIENT", "");
-            Object_BLL_Common.write_log("name: " + patient.getName(), "");
-            Object_BLL_Common.write_log("email: " + patient.getEmail(), "");
-            stmt = patient.set_SP_TRX_PATIENT_param(stmt, s_array);
-            
-            if (s_array.length > 0) {
-                for (int i = 0; i < s_array.length; i++) {
-                    if (str_array.equals("")) {
-                        str_array += "'" + s_array[i] + "'";
-                    } else {
-                        str_array += ",'" + s_array[i] + "'";
-                    }
-                }
-            }
+            stmt = patient.set_SP_TRX_PATIENT_param(stmt, SP_Method, userCode);          
 
-            Object_BLL_Common.write_log("start call SP_TRX_PATIENT (" + str_array + ")", "SP_Log");
             boolean results = stmt.execute();
             while (results) {
                 rsList.add(BLL_Common.rsToJSONArray(stmt.getResultSet()));
                 results = stmt.getMoreResults();
             }
             objectList.add(stmt.getObject(25));
-        } catch (Exception ex) {
-            Object_BLL_Common.write_log("Get_QueryResultSet Error : " + ex.toString(), "");
-            objectList.add(ex.toString());  //Author: LLT, Date : 2015/03/04 - add this line to trigger the error message
-            Object_BLL_Common.write_log("Error: " + ex.fillInStackTrace(), "SP_Log");
-            ex.printStackTrace();  
-        }
-
-        Object_BLL_Common.write_log("end call SP_TRX_PATIENT", "SP_Log");
-        
-        BLL_Common.Common_Object obj = new BLL_Common.Common_Object(rsList, objectList, conn, stmt);
-        
-        try {
+            
+            Object_BLL_Common.write_log("end call SP_TRX_PATIENT", "SP_Log");
+            
+            obj = new BLL_Common.Common_Object(rsList, objectList, conn, stmt);    
+            
             if (obj.getObjectArray(0).toString().equals("00000")) {
 
             	obj.commit();
                 bReturn = true;     
-                Object_BLL_Common.write_log("Commit successfully!", "SP_Log");
             } 
             else {
-            	Object_BLL_Common.write_log("Rollback!", "SP_Log");
             	obj.rollback();
             }
-        } catch (Exception e) {
-        	Object_BLL_Common.write_log("Error1: " + e.toString(), "SP_Log");
-        	Object_BLL_Common.write_log("Error1: " + e.fillInStackTrace(), "SP_Log");
+        } 
+        catch (Exception ex) {
+            Object_BLL_Common.write_log("Exception at call_SP_TRX_PATIENT: " + ex.toString(), "");
+        	Object_BLL_Common.write_log("Exception at call_SP_TRX_PATIENT: " + ex.fillInStackTrace(), "");
+            
             try {
             	obj.rollback();
-            } catch (SQLException ex) {
+            } catch (SQLException e) {
                 bReturn = false;
             }
-        }
+        } 
         return bReturn;
     }
 }

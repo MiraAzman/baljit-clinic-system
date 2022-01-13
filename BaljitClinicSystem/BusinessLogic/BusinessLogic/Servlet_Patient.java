@@ -136,20 +136,15 @@ public class Servlet_Patient extends HttpServlet {
         
 	    Patient patient = new Patient();
 	    patient.setPatient(request, sIndex);
-        
-        String[] aryPatient = {
-            sSP_Method, // 0-sMethod
-            sUserCode
-        };
             
-        boolean bReturn = BaseDAL.call_SP_TRX_PATIENT(aryPatient, SiteName, patient);
+        boolean bReturn = BaseDAL.call_SP_TRX_PATIENT(sSP_Method, sUserCode, SiteName, patient);
 
         json.put("bool", bReturn);
         out.println(json);
         
         long startTime = (long) session.getAttribute("startTime");			
 		long duration = (System.nanoTime() - startTime) / 1000; //microsecond
-        Object_BLL_Common.write_log("duration: " + duration + " microsecond", "");
+        Object_BLL_Common.write_log("After refactoring - Duration: " + duration + " microsecond", "Performance_Log");
     }
 
     public void Get_Patient_Detail(HttpServletRequest request, HttpServletResponse response) 
@@ -218,11 +213,6 @@ public class Servlet_Patient extends HttpServlet {
             throws ServletException, IOException {
 
         // processRequest(request, response);
-
-    	long startTime = System.nanoTime();
-    	HttpSession session = request.getSession();
-    	session.setAttribute("startTime", startTime);
-    	Object_BLL_Common.write_log("startTime: " + startTime, "");
     	
         String p_method = null;
         p_method = request.getParameter("SFC");
@@ -234,6 +224,12 @@ public class Servlet_Patient extends HttpServlet {
                 e.printStackTrace();
             }
         } else if (p_method.equals("UPDATE_PATIENT")) {
+        	
+        	long startTime = System.nanoTime();
+        	HttpSession session = request.getSession();
+        	session.setAttribute("startTime", startTime);
+        	Object_BLL_Common.write_log("startTime: " + startTime, "");
+        	
             try {
                 UPDATE_PATIENT(request, response);
             } catch (SQLException e) {
