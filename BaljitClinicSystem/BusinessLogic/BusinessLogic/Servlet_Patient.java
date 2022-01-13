@@ -14,6 +14,8 @@ import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 import net.sf.json.JSONSerializer;
 import BusinessData.DAL_ShowGrid;
+import Model.Patient;
+
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -23,11 +25,11 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
-import BusinessLogic.Patient;
 
 @WebServlet(name = "Servlet_Patient", urlPatterns = {"/Servlet_Patient"})
 public class Servlet_Patient extends HttpServlet {
 
+	public static BLL_Common Object_BLL_Common = new BLL_Common();
     /**
      * Processes requests for both HTTP <code>GET</code> and <code>POST</code>
      * methods.
@@ -144,6 +146,10 @@ public class Servlet_Patient extends HttpServlet {
 
         json.put("bool", bReturn);
         out.println(json);
+        
+        long startTime = (long) session.getAttribute("startTime");			
+		long duration = (System.nanoTime() - startTime) / 1000; //microsecond
+        Object_BLL_Common.write_log("duration: " + duration + " microsecond", "");
     }
 
     public void Get_Patient_Detail(HttpServletRequest request, HttpServletResponse response) 
@@ -213,6 +219,11 @@ public class Servlet_Patient extends HttpServlet {
 
         // processRequest(request, response);
 
+    	long startTime = System.nanoTime();
+    	HttpSession session = request.getSession();
+    	session.setAttribute("startTime", startTime);
+    	Object_BLL_Common.write_log("startTime: " + startTime, "");
+    	
         String p_method = null;
         p_method = request.getParameter("SFC");
 
