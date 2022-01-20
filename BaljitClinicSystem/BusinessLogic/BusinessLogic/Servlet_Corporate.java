@@ -66,14 +66,6 @@ public class Servlet_Corporate extends HttpServlet {
 
         String sMethod = request.getParameter("METHOD");
         String sIndex = "0";
-        String sName = request.getParameter("NAME");
-        String sEmail = request.getParameter("EMAIL");
-        String sWebsite = request.getParameter("WEBSITE");
-        String sAddress = request.getParameter("ADDRESS");
-        String sContactPerson = request.getParameter("CONTACT_PERSON");
-        String sTelNo = request.getParameter("TEL_NO");
-        String sFaxNo = request.getParameter("FAX_NO");
-        String sIsActive = request.getParameter("IS_ACTIVE");   
         String sSP_Method = "";
         
         if (sMethod.equals("INSERT")) {
@@ -84,22 +76,19 @@ public class Servlet_Corporate extends HttpServlet {
             sIndex = request.getParameter("INDEX");
         }
         
-        String[] aryCorporate = {
-            sSP_Method, // sMethod
-            sIndex, //scp_id
-            sName, // scp_name
-            sAddress, // scp_address
-            sContactPerson, // scp_contactperson
-            sTelNo, // scp_telno
-            sFaxNo, // scp_faxno
-            sEmail, // scp_email
-            sWebsite, // scp_website
-            sIsActive, // scp_isactive
-            sUserCode // sBy
-        };
+        Corporate corporate = new Corporate();
+        corporate.setCorporateId(sIndex);
+        corporate.setName(request.getParameter("NAME"));
+        corporate.setEmail(request.getParameter("EMAIL"));
+        corporate.setWebsite(request.getParameter("WEBSITE"));
+        corporate.setAddress(request.getParameter("ADDRESS"));
+        corporate.setContactPerson(request.getParameter("CONTACT_PERSON"));
+        corporate.setTelNo(request.getParameter("TEL_NO"));
+        corporate.setFaxNo(request.getParameter("FAX_NO"));
+        corporate.setIsActive(request.getParameter("IS_ACTIVE"));
         
         DAL_Corporate DAL_Corporate = new DAL_Corporate();
-        BLL_Common.Common_Object obj = DAL_Corporate.DAL_UPDATE_CORPORATE(SiteName, aryCorporate);
+        BLL_Common.Common_Object obj = DAL_Corporate.DAL_UPDATE_CORPORATE(SiteName, corporate, sSP_Method, sUserCode);
 
         boolean bReturn = false;
 
