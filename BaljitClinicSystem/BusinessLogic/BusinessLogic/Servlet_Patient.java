@@ -14,7 +14,7 @@ import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 import net.sf.json.JSONSerializer;
 import BusinessData.DAL_ShowGrid;
-import Model.Patient;
+import BusinessLogic.Patient;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;

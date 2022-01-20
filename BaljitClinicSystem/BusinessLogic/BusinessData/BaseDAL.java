@@ -1,8 +1,8 @@
 package BusinessData;
 
 import BusinessLogic.BLL_Common;
-import Model.Medicine;
-import Model.Patient;
+import BusinessLogic.Medicine;
+import BusinessLogic.Patient;
 
 import com.sun.rowset.CachedRowSetImpl;
 import java.io.BufferedReader;
