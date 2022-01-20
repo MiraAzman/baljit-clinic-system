@@ -92,6 +92,23 @@ public class Servlet_Medicine extends HttpServlet {
             sUserCode 
         };
         
+        String[] aryMedicine2 = {
+                sSP_Method, 
+                sIndex, 
+                sName, 
+                sUOM,
+                dUnitCost,
+                dPrice,
+                sIsActive,
+                sBatchNo,
+                sExpiryDate, 
+                iQty,
+                sUserCode 
+            };
+            
+        DAL_Medicine DAL_Medicine = new DAL_Medicine();
+        BLL_Common.Common_Object obj = DAL_Medicine.DAL_UPDATE_MEDICINE(SiteName, aryMedicine, medicine);
+        
         boolean bReturn = BaseDAL.call_SP_TRX_MEDICINE(aryMedicine, SiteName, medicine);
 
         json.put("bool", bReturn);
