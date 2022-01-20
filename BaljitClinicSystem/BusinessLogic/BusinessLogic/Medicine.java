@@ -18,21 +18,6 @@ public class Medicine {
 	private String price;
 	private String isActive;
 	
-	public Medicine(String medicineId, String name, String batchNo,
-		String uom, String expiryDate, String unitCost,
-		String qty, String price, String isActive) 
-	{
-		this.medicineId = medicineId;
-		this.name = name;
-		this.batchNo = batchNo;
-		this.uom = uom;
-		this.expiryDate = expiryDate;
-		this.unitCost = unitCost;
-		this.qty = qty;
-		this.price = price;
-		this.isActive = isActive;
-	}
-	
 	public String getMedicineId() {
 		return medicineId;
 	}
