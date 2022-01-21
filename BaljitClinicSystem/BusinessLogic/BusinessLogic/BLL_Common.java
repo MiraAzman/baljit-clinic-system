@@ -754,14 +754,14 @@ public class BLL_Common {
         try {
         	write_log("SiteName: " + SiteName, "");
         	write_log("URL: " + BusinessData.BaseDAL.getAddress(SiteName), "");
-        	write_log("User: " + BusinessData.BaseDAL.DataBase_USER, "");
-        	write_log("Pwd: " + BusinessData.BaseDAL.DataBase_PWD, "");
+        	write_log("User: " + BusinessData.BaseDAL.getDataBase_USER(), "");
+        	write_log("Pwd: " + BusinessData.BaseDAL.getDataBase_PWD(), "");
         	
             if (BaseDAL.p_db_conn == null) {
                 write_log("p_db_conn is null, need to connect now ", "");
                 //Class.forName(BusinessData.BaseDAL.JavaDB2Driver);
                 Class.forName(BusinessData.BaseDAL.JavaMySQLDriver);
-                BaseDAL.p_db_conn = DriverManager.getConnection(BusinessData.BaseDAL.getAddress(SiteName), BusinessData.BaseDAL.DataBase_USER, BusinessData.BaseDAL.DataBase_PWD);
+                BaseDAL.p_db_conn = DriverManager.getConnection(BusinessData.BaseDAL.getAddress(SiteName), BusinessData.BaseDAL.getDataBase_USER(), BusinessData.BaseDAL.getDataBase_PWD());
             } else {
                 //stmt = BaseDAL.p_db_conn.createStatement();
                // String query = "Select count(*) From \"clm\".afc_menu";
@@ -775,7 +775,7 @@ public class BLL_Common {
                 //Class.forName(BusinessData.BaseDAL.JavaDB2Driver);
                 Class.forName(BusinessData.BaseDAL.JavaMySQLDriver);
                // BaseDAL.p_db_conn = DriverManager.getConnection(BusinessData.BaseDAL.Db2_EstablishConn, BusinessData.BaseDAL.DataBase_USER, BusinessData.BaseDAL.DataBase_PWD);
-                 BaseDAL.p_db_conn = DriverManager.getConnection(BusinessData.BaseDAL.MySQL_EstablishConn, BusinessData.BaseDAL.DataBase_USER, BusinessData.BaseDAL.DataBase_PWD);
+                 BaseDAL.p_db_conn = DriverManager.getConnection(BusinessData.BaseDAL.MySQL_EstablishConn, BusinessData.BaseDAL.getDataBase_USER(), BusinessData.BaseDAL.getDataBase_PWD());
                 s_return = "";
             }
 
