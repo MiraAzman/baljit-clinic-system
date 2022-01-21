@@ -33,59 +33,41 @@ import net.sf.json.JSONObject;
 public class BaseDAL {  
 
     public static String SiteCode = null;
-    public static String CMSIntegrationType = "";
-    public static final String SiteDB_URL =  "jdbc:mysql://localhost:3306/" + "inventorycontrol_sites?serverTimezone=UTC" ;
-//    public static final String SiteDB_URL =  "jdbc:mysql://192.168.0.97:3306/" + "inventorycontrol_sites" ; //TEST SERVER
- //   public static final String SiteDB_URL =  "jdbc:mysql://192.168.0.175:3306/" + "inventorycontrol_sites" ; //TEST SERVER    
+    public static String CMSIntegrationType = "";   
     
-    //for siena linux server
-    public static final String SiteDB_USER = "root";      
-    public static final String SiteDB_PWD = "1234";  
+    private static final String SiteDB_USER = "root";      
+    private static final String SiteDB_PWD = "1234";  
 
+    private static  String DataBase_USER =  "root";
+    private static  String DataBase_PWD =  "1234";
+    
+    public static final String Deploy_Path = "/BaljitClinicSystem";
+    public static final String LogFile_Path = "C:/BaljitClinicSystem_log";  //Windows Server
+    
     public static Connection p_db_conn = null;     
     public static final String JavaMySQLDriver = "com.mysql.jdbc.Driver";
     public static final String MySQLDataBase_Name = "BaljitClinicSystem_empty"; 
      
     //Local
+    public static final String SiteDB_URL =  "jdbc:mysql://localhost:3306/" + "inventorycontrol_sites?serverTimezone=UTC" ;
     public static final String MySQL_EstablishConn = "jdbc:mysql://localhost:3306/" + MySQLDataBase_Name + "?serverTimezone=UTC";
     public static final String DataBase_URL = "jdbc:mysql://localhost:3306/" + MySQLDataBase_Name + "?serverTimezone=UTC";//+ ":retrieveMessagesFromServerOnGetMessage=true;";   
-   
-    //Local
-//    public static final String MySQL_EstablishConn = "jdbc:mysql://localhost:3306/" + MySQLDataBase_Name;
-//    public static final String DataBase_URL = "jdbc:mysql://localhost:3306/" + MySQLDataBase_Name ;//+ ":retrieveMessagesFromServerOnGetMessage=true;";
-//    public static final String DataBase_USER =  "root";  
-//    public static final String DataBase_PWD =  "admin";  
-    
-    //for siena linux server
-//    public static  String DataBase_USER =  "root"; //2018jul31
-//    public static  String DataBase_PWD =  "admin"; //2018jul31
-    
-    public static  String DataBase_USER =  "root";
-    public static  String DataBase_PWD =  "1234";
-//    public static final String DataBase_URL = "jdbc:mysql://192.168.1.133:3306/" + MySQLDataBase_Name ;//+ ":retrieveMessagesFromServerOnGetMessage=true;";   
-    
-    public static final String Deploy_Path = "/BaljitClinicSystem";
-    //public static final String Deploy_Path = "";
-
-   
-    public static final String LogFile_Path = "C:/BaljitClinicSystem_log";  //Windows Server
-   
-    
+           
     //public Jasper folder directories
     public static final String JasperReport_DirPath = "C:"+ File.separator+"BaljitClinicSystem_data"+ File.separator+"JasperReport" + File.separator;  //Windows Server
     public static final String User_Settings_DirPath = "C:"+ File.separator+"BaljitClinicSystem_data"+ File.separator+"settings" + File.separator;    
-    //public static final String JasperReport_DirPath = "C:"+ File.separator+"ClaimEX_data"+ File.separator+"JasperReport" + File.separator;  //Windows Server
-    //public static final String User_Settings_DirPath = "C:"+ File.separator+"ClaimEX_data"+ File.separator+"settings" + File.separator;  
-    //public static final String JasperReport_DirPath = File.separator + "ClaimEX_data"+ File.separator  +"JasperReport" +File.separator ;  //Windows Server
-    //public static final String User_Settings_DirPath = File.separator + "ClaimEX_data"+ File.separator +"settings" +File.separator ;
-    //public static final String JasperReport_DirPath =  File.separator+"ClaimEXINT_data"+ File.separator+"JasperReport" + File.separator;  //Windows Server
-    //public static final String User_Settings_DirPath =  File.separator+"ClaimEXINT_data"+ File.separator+"settings" + File.separator;
-    //public static final String JasperReport_DirPath = File.separator +"ClaimEXIN2_data"+File.separator+"JasperReport" + File.separator;  //Windows Server
-    //public static final String User_Settings_DirPath = File.separator + "ClaimEXIN2_data" + File.separator + "settings" + File.separator;
 
     private static String LocalAddress = DataBase_URL;
 
-    public static String getAddress(String SiteName) {
+    public static String getDataBase_USER() {
+		return DataBase_USER;
+	}
+
+	public static String getDataBase_PWD() {
+		return DataBase_PWD;
+	}
+
+	public static String getAddress(String SiteName) {
         
 //        return LocalAddress;
         return getSiteAddress(SiteName);
@@ -188,7 +170,7 @@ public class BaseDAL {
         try {
           //  Class.forName(JavaDB2Driver);
               Class.forName(JavaMySQLDriver);
-            conn = DriverManager.getConnection(getSiteAddress(SiteName), DataBase_USER, DataBase_PWD);
+            conn = DriverManager.getConnection(getSiteAddress(SiteName), getDataBase_USER(), getDataBase_PWD());
             conn.setAutoCommit(blncommit);
         } catch (Exception ex) {
             Object_BLL_Common.write_log("Get_Connection Error : " + ex.toString(), s_path);
@@ -204,7 +186,7 @@ public class BaseDAL {
         try {
             //Class.forName(JavaDB2Driver);
             Class.forName(JavaMySQLDriver);
-            conn = DriverManager.getConnection(getAddress(SiteName), DataBase_USER, DataBase_PWD);
+            conn = DriverManager.getConnection(getAddress(SiteName), getDataBase_USER(), getDataBase_PWD());
         } catch (Exception ex) {
             Object_BLL_Common.write_log("Get_Connection Error : " + ex.toString(), s_path);
             Object_BLL_Common.closeEverything(null, null, conn, s_path);
@@ -221,7 +203,7 @@ public class BaseDAL {
         try {
             //Class.forName(JavaDB2Driver);
             Class.forName(JavaMySQLDriver);
-            conn = DriverManager.getConnection(getSiteAddress(SiteName), DataBase_USER, DataBase_PWD);
+            conn = DriverManager.getConnection(getSiteAddress(SiteName), getDataBase_USER(), getDataBase_PWD());
         } catch (Exception ex) {
             Object_BLL_Common.write_log("Get_Connection Error : " + ex.toString(), "");
             Object_BLL_Common.closeEverything(null, null, conn, "");
