@@ -36,8 +36,6 @@
 	<classpathentry kind="lib" path="build/web/WEB-INF/lib/poi-3.7-20101029.jar"/>
 	<classpathentry kind="lib" path="build/web/WEB-INF/lib/poi-3.9-20121203.jar"/>
 	<classpathentry kind="lib" path="web/WEB-INF/jstl-1.2.jar"/>
-	<classpathentry kind="con" path="org.eclipse.jst.j2ee.internal.web.container"/>
-	<classpathentry kind="con" path="org.eclipse.jst.j2ee.internal.module.container"/>
 	<classpathentry kind="src" output="target/test-classes" path="src/test/java">
 		<attributes>
 			<attribute name="test" value="true"/>
@@ -48,6 +46,7 @@
 	<classpathentry kind="con" path="org.eclipse.m2e.MAVEN2_CLASSPATH_CONTAINER">
 		<attributes>
 			<attribute name="maven.pomderived" value="true"/>
+			<attribute name="org.eclipse.jst.component.dependency" value="/WEB-INF/lib"/>
 		</attributes>
 	</classpathentry>
 	<classpathentry kind="output" path="target/classes"/>

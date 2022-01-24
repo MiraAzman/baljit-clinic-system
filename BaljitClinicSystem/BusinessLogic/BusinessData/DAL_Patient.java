@@ -35,6 +35,7 @@ public class DAL_Patient {
     	            patient.getHealthHistory(),
     	            patient.getAllergyNotes(),
     	            patient.getIsSmoking(),
+    	            patient.getIsAlcohol(),
     	            patient.getIsPregnant(),
     	            patient.getPanelCompany(),
     	            patient.getEmployeeName(),
