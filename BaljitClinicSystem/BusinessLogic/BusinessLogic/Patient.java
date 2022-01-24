@@ -166,48 +166,6 @@ public class Patient {
 		this.relationship = relationship;
 	}
 	
-	public void setPatient(HttpServletRequest request, String sIndex) {
-		
-		String sDOB = null;
-		String dHeight = "0";
-        String dWeight = "0";
-        
-        if (!request.getParameter("DOB").equals("")) {
-            sDOB = request.getParameter("DOB"); 
-        }
-		if (!request.getParameter("HEIGHT").equals("")) {
-            dHeight = request.getParameter("HEIGHT"); 
-        }       
-        if (!request.getParameter("WEIGHT").equals("")) {
-            dWeight = request.getParameter("WEIGHT"); 
-        }
-		
-        this.patientId = sIndex;
-        this.name = request.getParameter("NAME");
-        this.icNo = request.getParameter("IC_NO");
-        this.dob = sDOB;
-        this.contactNo = request.getParameter("CONTACT_NO");
-        this.email = request.getParameter("EMAIL");
-        this.gender = request.getParameter("GENDER");
-        this.address = request.getParameter("ADDRESS");
-        this.nationality = request.getParameter("NATIONALITY");
-        
-        this.ethnicGroup = request.getParameter("ETHNIC_GROUP");
-        this.bloodGroup = request.getParameter("BLOOD_GROUP");
-        this.height = dHeight;
-        this.weight = dWeight;
-        this.healthHistory = request.getParameter("HEALTH_HISTORY");
-        this.allergyNotes = request.getParameter("ALLERGY_NOTES");
-        this.isSmoking = request.getParameter("IS_SMOKING");
-        this.isAlcohol = request.getParameter("IS_ALCOHOL");
-        this.isPregnant = request.getParameter("IS_PREGNANT");
-        this.panelCompany = request.getParameter("PANEL_COMPANY");
-        
-        this.employeeName = request.getParameter("EMPLOYEE_NAME");
-        this.employeeCode = request.getParameter("EMPLOYEE_CODE");
-        this.relationship = request.getParameter("RELATIONSHIP");
-	}
-	
 	public CallableStatement set_SP_TRX_PATIENT_param(CallableStatement stmt, String SP_Method, String userCode) throws Exception {
 				
 		stmt.setString(1, SP_Method);

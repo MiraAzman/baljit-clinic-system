@@ -89,8 +89,6 @@ public class Servlet_Medicine extends HttpServlet {
             
         DAL_Medicine DAL_Medicine = new DAL_Medicine();
         BLL_Common.Common_Object obj = DAL_Medicine.DAL_UPDATE_MEDICINE(SiteName, medicine, sSP_Method, sUserCode);
-        
-        //boolean bReturn = BaseDAL.call_SP_TRX_MEDICINE(aryMedicine, SiteName, medicine);
 
         boolean bReturn = false;
 

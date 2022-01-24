@@ -48,6 +48,14 @@ public class BaseDAL {
     public static final String JavaMySQLDriver = "com.mysql.jdbc.Driver";
     public static final String MySQLDataBase_Name = "BaljitClinicSystem_empty"; 
      
+    public static String getDataBase_USER() {
+		return DataBase_USER;
+	}
+
+	public static String getDataBase_PWD() {
+		return DataBase_PWD;
+	}
+    
     //Local
     public static final String SiteDB_URL =  "jdbc:mysql://localhost:3306/" + "inventorycontrol_sites?serverTimezone=UTC" ;
     public static final String MySQL_EstablishConn = "jdbc:mysql://localhost:3306/" + MySQLDataBase_Name + "?serverTimezone=UTC";
@@ -59,13 +67,7 @@ public class BaseDAL {
 
     private static String LocalAddress = DataBase_URL;
 
-    public static String getDataBase_USER() {
-		return DataBase_USER;
-	}
-
-	public static String getDataBase_PWD() {
-		return DataBase_PWD;
-	}
+   
 
 	public static String getAddress(String SiteName) {
         
@@ -87,7 +89,8 @@ public class BaseDAL {
     
         try {          
             Class.forName(JavaMySQLDriver);
-            
+            BLL_Common.write_log("SiteDB_USER: " + SiteDB_USER, "");
+            BLL_Common.write_log("SiteDB_PWD: " + SiteDB_PWD, "");
             BLL_Common.write_log("getConnection: " + SiteDB_URL, "");
             conn = DriverManager.getConnection(SiteDB_URL, SiteDB_USER, SiteDB_PWD);
             conn.setAutoCommit(true);

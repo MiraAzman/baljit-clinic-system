@@ -1,6 +1,7 @@
 package BusinessLogic;
 
 import BusinessData.BaseDAL;
+import BusinessData.DAL_Patient;
 import BusinessData.DAL_PopulateData;
 import java.io.PrintWriter;
 import java.sql.SQLException;
@@ -133,12 +134,66 @@ public class Servlet_Patient extends HttpServlet {
 	        sSP_Method = "UPDATE_PATIENT";
 	        sIndex = request.getParameter("INDEX");
 	    }                
+	    
+		String sDOB = null;
+		String dHeight = "0";
+        String dWeight = "0";
+        
+        if (!request.getParameter("DOB").equals("")) {
+            sDOB = request.getParameter("DOB"); 
+        }
+		if (!request.getParameter("HEIGHT").equals("")) {
+            dHeight = request.getParameter("HEIGHT"); 
+        }       
+        if (!request.getParameter("WEIGHT").equals("")) {
+            dWeight = request.getParameter("WEIGHT"); 
+        }
         
 	    Patient patient = new Patient();
-	    patient.setPatient(request, sIndex);
+	    patient.setPatientId(sIndex);
+	    patient.setName(request.getParameter("NAME"));
+	    patient.setIcNo(request.getParameter("IC_NO"));
+	    patient.setDob(sDOB);
+	    patient.setContactNo(request.getParameter("CONTACT_NO"));
+	    patient.setEmail(request.getParameter("EMAIL"));
+	    patient.setGender(request.getParameter("GENDER"));
+	    patient.setAddress(request.getParameter("ADDRESS"));
+	    patient.setNationality(request.getParameter("NATIONALITY"));
+	    patient.setEthnicGroup(request.getParameter("ETHNIC_GROUP"));
+	    patient.setBloodGroup(request.getParameter("BLOOD_GROUP"));
+	    patient.setHeight(dHeight);
+	    patient.setWeight(dWeight);
+	    patient.setHealthHistory(request.getParameter("HEALTH_HISTORY"));
+	    patient.setAllergyNotes(request.getParameter("ALLERGY_NOTES"));
+	    patient.setIsSmoking(request.getParameter("IS_SMOKING"));
+	    patient.setIsAlcohol(request.getParameter("IS_ALCOHOL"));
+	    patient.setIsPregnant(request.getParameter("IS_PREGNANT"));
+	    patient.setPanelCompany(request.getParameter("PANEL_COMPANY"));
+	    patient.setEmployeeName(request.getParameter("EMPLOYEE_NAME"));
+	    patient.setEmployeeCode(request.getParameter("EMPLOYEE_CODE"));
+	    patient.setRelationship(request.getParameter("RELATIONSHIP"));	    
             
-        boolean bReturn = BaseDAL.call_SP_TRX_PATIENT(sSP_Method, sUserCode, SiteName, patient);
+        DAL_Patient DAL_Patient = new DAL_Patient();
+        BLL_Common.Common_Object obj = DAL_Patient.DAL_UPDATE_PATIENT(SiteName, patient, sSP_Method, sUserCode);
 
+        boolean bReturn = false;
+
+        try {
+            if (obj.getObjectArray(0).toString().equals("00000")) {
+
+                obj.commit();
+                bReturn = true;              
+            } 
+            else {
+                obj.rollback();
+            }
+        } catch (Exception e) {
+            try {
+                obj.rollback();
+            } catch (SQLException ex) {
+                bReturn = false;
+            }
+        }
         json.put("bool", bReturn);
         out.println(json);
         
