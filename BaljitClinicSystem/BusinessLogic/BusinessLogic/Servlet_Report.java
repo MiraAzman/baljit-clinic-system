@@ -59,7 +59,7 @@ public class Servlet_Report extends HttpServlet {
         String Param3 = request.getParameter("param3");
         String Param4 = request.getParameter("param4");
        // String jasperPath = session.getAttribute("jasperpath").toString();
-        BLL_Report BLL_Report = new BLL_Report();
+       // BLL_Report BLL_Report = new BLL_Report();
         BLL_Common BLL_Common = new BLL_Common();
         net.sf.json.JSONObject json = new net.sf.json.JSONObject();
         try {
